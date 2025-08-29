@@ -4,10 +4,8 @@ import { Viewport } from "next";
 import PlausibleProvider from "next-plausible";
 import { getSEOTags } from "@/libs/seo";
 import ClientLayout from "@/components/LayoutClient";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
 import config from "@/config";
-import "./globals.css";
+import "../globals.css";
 
 const font = Urbanist({ 
   subsets: ["latin"],
@@ -17,21 +15,18 @@ const font = Urbanist({
 });
 
 export const viewport: Viewport = {
-  // Will use the primary color of your theme to show a nice theme color in the URL bar of supported browsers
   themeColor: config.colors.main,
   width: "device-width",
   initialScale: 1,
 };
 
-// This adds default SEO tags to all pages in our app.
-// You can override them in each page passing params to getSOTags() function.
 export const metadata = getSEOTags({
-  title: "The #1 AI PNGTuber Maker for Streamers",
-  description: "The #1 AI PNGTuber Maker for Streamers. Create custom PNGTuber avatars with AI — complete with multiple expressions and simple animations. Perfect for Twitch, YouTube, and Discord.",
-  keywords: ["pngtuber maker", "ai pngtuber", "vtuber avatar generator", "pngtuber for twitch", "anime avatar for streaming"],
+  title: "Sign In - PNGTuberMaker | Create Your Streaming Avatar",
+  description: "Sign in to PNGTuberMaker and start creating your custom PNGTuber avatar. Join thousands of streamers using AI to generate unique streaming characters.",
+  keywords: ["pngtuber maker login", "pngtuber sign in", "streaming avatar creator", "ai pngtuber account", "vtuber maker login"],
   openGraph: {
-    title: "The #1 AI PNGTuber Maker for Streamers",
-    description: "The #1 AI PNGTuber Maker for Streamers. Create custom PNGTuber avatars with AI — complete with multiple expressions and simple animations. Perfect for Twitch, YouTube, and Discord.",
+    title: "Sign In - PNGTuberMaker | Create Your Streaming Avatar",
+    description: "Sign in to PNGTuberMaker and start creating your custom PNGTuber avatar. Join thousands of streamers using AI to generate unique streaming characters.",
     images: [
       {
         url: "/og-image.png",
@@ -43,17 +38,16 @@ export const metadata = getSEOTags({
   extraTags: {
     "theme-color": "#06b6d4",
     "author": "PNGTuberMaker",
-    "robots": "index, follow",
+    "robots": "noindex, nofollow",
   }
 });
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+export default function AuthLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" data-theme={config.colors.theme} className={`${font.className} ${font.variable}`}>
       {config.domainName && (
         <head>
           <PlausibleProvider domain={config.domainName} />
-          {/* Favicon */}
           <link rel="icon" type="image/x-icon" href="/favicon/favicon.ico" />
           <link rel="icon" type="image/png" sizes="16x16" href="/favicon/favicon-16x16.png" />
           <link rel="icon" type="image/png" sizes="32x32" href="/favicon/favicon-32x32.png" />
@@ -62,7 +56,6 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         </head>
       )}
       <body className="bg-gray-50 text-gray-900">
-        {/* ClientLayout contains all the client wrappers (Crisp chat support, toast messages, tooltips, etc.) */}
         <ClientLayout>
           {children}
         </ClientLayout>

@@ -16,9 +16,18 @@ export default async function LayoutPrivate({
 }) {
   const session = await getServerSession(authOptions);
 
+  console.log("🔍 [DEBUG] Dashboard layout - Session check:", {
+    hasSession: !!session,
+    userId: session?.user?.id,
+    email: session?.user?.email
+  });
+
   if (!session) {
-    redirect(config.auth.loginUrl);
+    console.log("🔍 [DEBUG] No session, redirecting to signin");
+    // Use absolute URL to avoid redirect loops
+    redirect('/auth/signin?callbackUrl=/dashboard');
   }
 
+  console.log("🔍 [DEBUG] Session valid, rendering dashboard");
   return <>{children}</>;
 }

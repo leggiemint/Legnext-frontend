@@ -16,8 +16,17 @@ const ButtonAccount = () => {
   const { data: session, status } = useSession();
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  const handleSignOut = () => {
-    signOut({ callbackUrl: "/" });
+  const handleSignOut = async () => {
+    try {
+      await signOut({ 
+        callbackUrl: "/",
+        redirect: true 
+      });
+    } catch (error) {
+      console.error("Sign out error:", error);
+      // Fallback: redirect manually
+      window.location.href = "/";
+    }
   };
   const handleBilling = async () => {
     setIsLoading(true);

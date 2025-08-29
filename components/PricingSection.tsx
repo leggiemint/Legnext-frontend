@@ -23,14 +23,14 @@ const PricingSection = () => {
               <div className="relative w-full max-w-lg mx-auto">
                 {plan.isFeatured && (
                   <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20">
-                    <span className="badge text-xs text-white font-semibold border-0 bg-[#06b6d4] px-3 py-1 rounded-full">
+                    <span className="badge text-xs text-white font-semibold border-0 px-3 py-1 rounded-full" style={{ backgroundColor: config.colors.main }}>
                       POPULAR
                     </span>
                   </div>
                 )}
 
                 {plan.isFeatured && (
-                  <div className="absolute -inset-[1px] rounded-[9px] bg-[#06b6d4] z-10"></div>
+                  <div className="absolute -inset-[1px] rounded-[9px] z-10" style={{ backgroundColor: config.colors.main }}></div>
                 )}
 
                 <div className="relative flex flex-col h-full gap-5 lg:gap-8 z-10 bg-white p-8 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300 border border-gray-100">
@@ -108,7 +108,8 @@ const PricingSection = () => {
           </p>
           <a 
             href="/contact" 
-            className="text-[#06b6d4] hover:underline font-medium"
+            className="font-medium hover:underline"
+            style={{ color: config.colors.main }}
           >
             Contact our sales team →
           </a>

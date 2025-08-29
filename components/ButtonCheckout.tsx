@@ -41,14 +41,15 @@ const ButtonCheckout = ({
 
   return (
     <button
-      className="btn btn-primary btn-block group"
+      className="btn btn-block group text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 hover:scale-105 active:scale-95"
+      style={{ backgroundColor: config.colors.main }}
       onClick={() => handlePayment()}
     >
       {isLoading ? (
         <span className="loading loading-spinner loading-xs"></span>
       ) : (
         <svg
-          className="w-5 h-5 fill-primary-content group-hover:scale-110 group-hover:-rotate-3 transition-transform duration-200"
+          className="w-5 h-5 fill-white group-hover:scale-110 group-hover:-rotate-3 transition-transform duration-200"
           viewBox="0 0 375 509"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"

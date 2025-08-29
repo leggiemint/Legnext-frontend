@@ -10,7 +10,7 @@ import config from "@/config";
 // It automatically redirects user to callbackUrl (config.auth.callbackUrl) after login, which is normally a private page for users to manage their accounts.
 // If the user is already logged in, it will show their profile picture & redirect them to callbackUrl immediately.
 const ButtonSignin = ({
-  text = "Get started",
+  text = "Get Started",
   extraStyle,
 }: {
   text?: string;
@@ -31,19 +31,19 @@ const ButtonSignin = ({
     return (
       <Link
         href={config.auth.callbackUrl}
-        className={`btn ${extraStyle ? extraStyle : ""}`}
+        className="inline-flex items-center justify-center px-4 py-2 bg-[#06b6d4] text-white font-medium rounded-lg hover:bg-[#06b6d4]/90 transition-colors duration-200 shadow-sm"
       >
         {session.user?.image ? (
           <img
             src={session.user?.image}
             alt={session.user?.name || "Account"}
-            className="w-6 h-6 rounded-full shrink-0"
+            className="w-6 h-6 rounded-full shrink-0 mr-2"
             referrerPolicy="no-referrer"
             width={24}
             height={24}
           />
         ) : (
-          <span className="w-6 h-6 bg-base-300 flex justify-center items-center rounded-full shrink-0">
+          <span className="w-6 h-6 bg-white/20 flex justify-center items-center rounded-full shrink-0 mr-2 text-white font-medium">
             {session.user?.name?.charAt(0) || session.user?.email?.charAt(0)}
           </span>
         )}
@@ -54,7 +54,7 @@ const ButtonSignin = ({
 
   return (
     <button
-      className={`btn ${extraStyle ? extraStyle : ""}`}
+      className="inline-flex items-center justify-center px-4 py-2 bg-[#06b6d4] text-white font-medium rounded-lg hover:bg-[#06b6d4]/90 transition-colors duration-200 shadow-sm"
       onClick={handleClick}
     >
       {text}

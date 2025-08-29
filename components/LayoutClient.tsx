@@ -1,6 +1,6 @@
 "use client";
 
-import { ReactNode, useEffect } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Crisp } from "crisp-sdk-web";
@@ -52,6 +52,13 @@ const CrispChat = (): null => {
 // 4. Tooltip: Show tooltips if any JSX elements has these 2 attributes: data-tooltip-id="tooltip" data-tooltip-content=""
 // 5. CrispChat: Set Crisp customer chat support (see above)
 const ClientLayout = ({ children }: { children: ReactNode }) => {
+  const [mounted, setMounted] = useState(false);
+
+  // Ensure component is mounted on client side to prevent hydration issues
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   return (
     <>
       <SessionProvider>
@@ -61,12 +68,14 @@ const ClientLayout = ({ children }: { children: ReactNode }) => {
         {/* Content inside app/page.js files  */}
         {children}
 
-        {/* Show Success/Error messages anywhere from the app with toast() */}
-        <Toaster
-          toastOptions={{
-            duration: 3000,
-          }}
-        />
+        {/* Show Success/Error messages anywhere from the app with toast() - only after mounted */}
+        {mounted && (
+          <Toaster
+            toastOptions={{
+              duration: 3000,
+            }}
+          />
+        )}
 
         {/* Show tooltips if any JSX elements has these 2 attributes: data-tooltip-id="tooltip" data-tooltip-content="" */}
         <Tooltip
