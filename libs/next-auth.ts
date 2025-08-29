@@ -57,9 +57,9 @@ export const authOptions: NextAuthOptionsExtended = {
   },
   theme: {
     brandColor: config.colors.main,
-    // Add you own logo below. Recommended size is rectangle (i.e. 200x50px) and show your logo + name.
-    // It will be used in the login flow to display your logo. If you don't add it, it will look faded.
-    logo: `https://${config.domainName}/logoAndName.png`,
+    // PNGTuberMaker logo for authentication pages
+    // It will be used in the login flow to display your logo
+    logo: `https://${config.domainName}/logo.svg`,
   },
 };
 

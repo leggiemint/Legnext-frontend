@@ -86,7 +86,7 @@ export const renderSchemaTags = () => {
             "@type": "Organization",
             "name": "PNGTuberMaker",
             "url": `https://${config.domainName}`,
-            "logo": `https://${config.domainName}/images/logo.svg`,
+            "logo": `https://${config.domainName}/logo.svg`,
             "description": "AI-powered PNGTuber avatar creation platform for streamers",
             "foundingDate": "2024",
             "sameAs": [
