@@ -11,10 +11,8 @@ import config from "@/config";
 // If the user is already logged in, it will show their profile picture & redirect them to callbackUrl immediately.
 const ButtonSignin = ({
   text = "Get Started",
-  extraStyle,
 }: {
   text?: string;
-  extraStyle?: string;
 }) => {
   const router = useRouter();
   const { data: session, status } = useSession();

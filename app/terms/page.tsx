@@ -19,7 +19,7 @@ const Terms = () => {
             Terms of <span className="bg-gradient-to-r from-[#06b6d4] to-[#0891b2] bg-clip-text text-transparent">Service</span>
           </h1>
           <p className="text-lg text-gray-600 max-w-3xl mx-auto mb-4">
-            Please read these Terms of Service carefully before using PNGTuberMaker's services.
+            Please read these Terms of Service carefully before using PNGTuberMaker&apos;s services.
           </p>
           <p className="text-sm text-gray-500">
             Last updated: January 2025
@@ -35,7 +35,7 @@ const Terms = () => {
                 <h2 className="text-2xl font-bold text-gray-900 mb-6">1. Acceptance of Terms</h2>
                 <div className="text-gray-700 space-y-4">
                   <p>
-                    By accessing or using PNGTuberMaker's services ("Service"), operated by Dark Enlightenment Limited, you agree to be bound by these Terms of Service ("Terms"). If you disagree with any part of these terms, then you may not access the Service.
+                    By accessing or using PNGTuberMaker&apos;s services (&quot;Service&quot;), operated by Dark Enlightenment Limited, you agree to be bound by these Terms of Service (&quot;Terms&quot;). If you disagree with any part of these terms, then you may not access the Service.
                   </p>
                   <p>
                     These Terms apply to all visitors, users, and others who access or use the Service.
@@ -56,7 +56,7 @@ const Terms = () => {
                     <li>Image upscaling and variations</li>
                   </ul>
                   <p>
-                    The Service is provided on an "as-is" and "as-available" basis.
+                    The Service is provided on an &quot;as-is&quot; and &quot;as-available&quot; basis.
                   </p>
                 </div>
               </section>
@@ -86,7 +86,7 @@ const Terms = () => {
                     <li>Infringe on intellectual property rights of others</li>
                     <li>Attempt to reverse engineer or bypass security measures</li>
                     <li>Use the Service for spam, fraud, or other deceptive practices</li>
-                    <li>Overload or interfere with the Service's infrastructure</li>
+                    <li>Overload or interfere with the Service&apos;s infrastructure</li>
                     <li>Share your account credentials with unauthorized parties</li>
                   </ul>
                 </div>

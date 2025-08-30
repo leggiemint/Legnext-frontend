@@ -123,7 +123,7 @@ export async function PATCH(req: NextRequest) {
     }
 
     switch (action) {
-      case "increment_usage":
+      case "increment_usage": {
         // Increment monthly avatar usage
         user.monthlyUsage.avatarsGenerated += 1;
         user.totalAvatarsCreated += 1;
@@ -138,10 +138,12 @@ export async function PATCH(req: NextRequest) {
           user.monthlyUsage.lastResetDate = now;
         }
         break;
+      }
 
-      case "update_login":
+      case "update_login": {
         user.lastLoginAt = new Date();
         break;
+      }
 
       default:
         return NextResponse.json(

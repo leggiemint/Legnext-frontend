@@ -89,7 +89,7 @@ export async function validateSubscriptionEligibility(userId: string, priceId: s
 
   // Check for recent cancellation (prevent immediate re-subscription)
   const user = await User.findById(userId);
-  const recentCancellation = user?.subscriptionHistory?.find(history => 
+  const recentCancellation = user?.subscriptionHistory?.find((history: any) => 
     history.action === 'canceled' && 
     new Date().getTime() - history.timestamp.getTime() < 24 * 60 * 60 * 1000 // 24 hours
   );

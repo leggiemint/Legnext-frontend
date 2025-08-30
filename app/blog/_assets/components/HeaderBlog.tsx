@@ -10,6 +10,7 @@ import logo from "@/public/images/logo.svg";
 import config from "@/config";
 import { categories } from "../content";
 import ButtonSignin from "@/components/ButtonSignin";
+import { Suspense } from "react";
 
 const links: {
   href: string;
@@ -22,7 +23,7 @@ const links: {
 ];
 
 const cta: JSX.Element = (
-  <ButtonSignin text="Prevent disputes" extraStyle="btn-primary md:btn-sm" />
+  <ButtonSignin text="Prevent disputes" />
 );
 
 const ButtonPopoverCategories = () => {
@@ -144,6 +145,14 @@ const ButtonAccordionCategories = () => {
 // By default it shows the logo, the links, and the CTA.
 // In the links, there's a popover with the categories.
 const HeaderBlog = () => {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <HeaderBlogContent />
+    </Suspense>
+  );
+};
+
+const HeaderBlogContent = () => {
   const searchParams = useSearchParams();
   const [isOpen, setIsOpen] = useState<boolean>(false);
 

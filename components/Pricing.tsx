@@ -2,7 +2,6 @@ import config from "@/config";
 import ButtonCheckout from "./ButtonCheckout";
 import { useSession } from "next-auth/react";
 import { useState, useEffect } from "react";
-import apiClient from "@/libs/api";
 
 // <Pricing/> displays the pricing plans for your app
 // It's your Stripe config in config.js.stripe.plans[] that will be used to display the plans
@@ -12,11 +11,9 @@ const Pricing = () => {
   const { data: session } = useSession();
   const [userPlan, setUserPlan] = useState<string | null>(null);
   const [subscriptionStatus, setSubscriptionStatus] = useState<any>(null);
-  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (session?.user?.id) {
-      setLoading(true);
       // 获取用户数据  
       fetch('/api/user/settings')
         .then(res => res.json())
@@ -39,9 +36,6 @@ const Pricing = () => {
         .catch(err => {
           console.error('Failed to fetch user settings:', err);
           setUserPlan('free'); // Fallback
-        })
-        .finally(() => {
-          setLoading(false);
         });
     }
   }, [session?.user?.id]);

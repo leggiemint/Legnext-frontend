@@ -35,7 +35,7 @@ const Privacy = () => {
                   <h2 className="text-2xl font-bold text-gray-900 mb-6">1. Introduction</h2>
                   <div className="text-gray-700 space-y-4">
                     <p>
-                      This Privacy Policy describes how Dark Enlightenment Limited, operating PNGTuberMaker ("we," "our," or "us") collects, uses, and protects your information when you use our PNGTuber avatar creation platform ("Service").
+                      This Privacy Policy describes how Dark Enlightenment Limited, operating PNGTuberMaker (&quot;we,&quot; &quot;our,&quot; or &quot;us&quot;) collects, uses, and protects your information when you use our PNGTuber avatar creation platform (&quot;Service&quot;).
                     </p>
                     <p>
                       By using our Service, you agree to the collection and use of information in accordance with this Privacy Policy.
@@ -231,7 +231,7 @@ const Privacy = () => {
                 </section>
 
                 <section className="mb-12">
-                  <h2 className="text-2xl font-bold text-gray-900 mb-6">9. Children's Privacy</h2>
+                  <h2 className="text-2xl font-bold text-gray-900 mb-6">9. Children&apos;s Privacy</h2>
                   <div className="text-gray-700 space-y-4">
                     <p>
                       Our Service is not intended for children under 13 years of age. We do not knowingly collect personal information from children under 13. If you become aware that a child has provided us with personal information, please contact us immediately.

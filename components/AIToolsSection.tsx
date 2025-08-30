@@ -5,7 +5,7 @@ import Image from "next/image";
 
 const AIToolsSection = () => {
   const [activeTab, setActiveTab] = useState("avatar_generation");
-  const sectionsRef = useRef<{ [key: string]: HTMLDivElement | null }>({});
+  const sectionsRef = useRef<{ [key: string]: HTMLElement | null }>({});
 
   const tabs = [
     {
@@ -175,7 +175,7 @@ const AIToolsSection = () => {
             <section 
               id="avatar_generation" 
               className="scroll-mt-32 md:scroll-mt-40"
-              ref={(el) => sectionsRef.current.avatar_generation = el}
+              ref={(el) => { sectionsRef.current.avatar_generation = el; }}
             >
               <div className="block bg-white rounded-lg md:rounded-xl shadow-sm hover:shadow-md transition-shadow duration-300 border border-gray-100">
                 <div className="block md:grid md:grid-cols-2 md:gap-0">
@@ -263,7 +263,7 @@ const AIToolsSection = () => {
             <section 
               id="expression_pack" 
               className="scroll-mt-32 md:scroll-mt-40"
-              ref={(el) => sectionsRef.current.expression_pack = el}
+              ref={(el) => { sectionsRef.current.expression_pack = el; }}
             >
               <div className="block bg-white rounded-lg md:rounded-xl shadow-sm hover:shadow-md transition-shadow duration-300 border border-gray-100">
                 <div className="block md:grid md:grid-cols-2 md:gap-0">
@@ -347,7 +347,7 @@ const AIToolsSection = () => {
             <section 
               id="animation_stills" 
               className="scroll-mt-32 md:scroll-mt-40"
-              ref={(el) => sectionsRef.current.animation_stills = el}
+              ref={(el) => { sectionsRef.current.animation_stills = el; }}
             >
               <div className="block bg-white rounded-lg md:rounded-xl shadow-sm hover:shadow-md transition-shadow duration-300 border border-gray-100">
                 <div className="block md:grid md:grid-cols-2 md:gap-0">
@@ -437,7 +437,7 @@ const AIToolsSection = () => {
             <section 
               id="smart_upscale" 
               className="scroll-mt-32 md:scroll-mt-40"
-              ref={(el) => sectionsRef.current.smart_upscale = el}
+              ref={(el) => { sectionsRef.current.smart_upscale = el; }}
             >
               <div className="block bg-white rounded-lg md:rounded-xl shadow-sm hover:shadow-md transition-shadow duration-300 border border-gray-100">
                 <div className="block md:grid md:grid-cols-2 md:gap-0">

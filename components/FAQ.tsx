@@ -1,7 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
-import type { JSX } from "react";
+import { useState } from "react";
 
 // <FAQ> component is a list of <FAQItem> component
 // Now supports custom configuration for different use cases

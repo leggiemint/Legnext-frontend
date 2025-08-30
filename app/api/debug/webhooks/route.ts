@@ -1,11 +1,14 @@
-import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/libs/next-auth";
+import { NextResponse } from "next/server";
 import connectMongo from "@/libs/mongoose";
 import User from "@/models/User";
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+
 // GET /api/debug/webhooks - 调试webhook事件记录
-export async function GET(req: NextRequest) {
+export async function GET() {
   try {
     const session = await getServerSession(authOptions);
     

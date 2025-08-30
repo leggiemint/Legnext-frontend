@@ -1,11 +1,20 @@
 "use client";
 
+import { Suspense } from "react";
 import { signIn } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
 import config from "@/config";
 import Image from "next/image";
 
-export default function SignIn() {
+const SigninPage = () => {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <SigninContent />
+    </Suspense>
+  );
+};
+
+const SigninContent = () => {
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") || config.auth.callbackUrl;
 
@@ -87,4 +96,6 @@ export default function SignIn() {
       </div>
     </main>
   );
-}
+};
+
+export default SigninPage;

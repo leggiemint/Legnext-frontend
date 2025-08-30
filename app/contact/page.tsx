@@ -20,7 +20,7 @@ const Contact = () => {
               Contact <span className="bg-gradient-to-r from-[#06b6d4] to-[#0891b2] bg-clip-text text-transparent">Us</span>
             </h1>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Have questions about PNGTuberMaker? We're here to help. Reach out to our team and we'll get back to you as soon as possible.
+              Have questions about PNGTuberMaker? We&apos;re here to help. Reach out to our team and we&apos;ll get back to you as soon as possible.
             </p>
           </div>
 

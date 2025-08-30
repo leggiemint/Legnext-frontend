@@ -68,7 +68,7 @@ const Pricing = () => {
                     Can I upgrade from Free to Pro anytime?
                   </h3>
                   <p className="text-gray-600">
-                    Absolutely! You can upgrade from the Free plan to Pro at any time. Changes take effect immediately, and we'll adjust your billing accordingly.
+                    Absolutely! You can upgrade from the Free plan to Pro at any time. Changes take effect immediately, and we&apos;ll adjust your billing accordingly.
                   </p>
                 </div>
                 
@@ -95,10 +95,10 @@ const Pricing = () => {
                 {/* FAQ Item 4 */}
                 <div className="bg-white backdrop-blur-sm border border-gray-200 rounded-2xl p-6 shadow-sm">
                   <h3 className="text-lg font-semibold text-gray-900 mb-3">
-                    What's your refund policy?
+                    What&apos;s your refund policy?
                   </h3>
                   <p className="text-gray-600">
-                    We offer a 14-day money-back guarantee for the Pro plan. If you're not satisfied with your avatar results, contact our support team for a full refund.
+                    We offer a 14-day money-back guarantee for the Pro plan. If you&apos;re not satisfied with your avatar results, contact our support team for a full refund.
                   </p>
                 </div>
                 

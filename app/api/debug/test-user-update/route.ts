@@ -7,10 +7,10 @@ import { grantCreditsToUser } from "@/libs/user";
 
 // Test endpoint to manually trigger user upgrade (for debugging)
 export async function GET(req: NextRequest) {
-  return POST(req);
+  return POST();
 }
 
-export async function POST(req: NextRequest) {
+export async function POST() {
   try {
     const session = await getServerSession(authOptions);
     

@@ -4,8 +4,6 @@ import { Viewport } from "next";
 import PlausibleProvider from "next-plausible";
 import { getSEOTags } from "@/libs/seo";
 import ClientLayout from "@/components/LayoutClient";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
 import config from "@/config";
 import "./globals.css";
 

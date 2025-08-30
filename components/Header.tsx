@@ -1,13 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import type { JSX } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import Link from "next/link";
+import config from "@/config";
 import Image from "next/image";
+import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
 import logo from "@/app/logo.svg";
-import config from "@/config";
 
 const links: {
   href: string;
@@ -27,7 +26,7 @@ const links: {
   },
 ];
 
-const cta: JSX.Element = (
+const cta = (
   <Link href="/app">
     <button className="inline-flex items-center justify-center px-4 py-2 bg-[#06b6d4] text-white font-medium rounded-lg hover:bg-[#06b6d4]/90 transition-colors duration-200 shadow-sm">
       Create Now
@@ -35,9 +34,15 @@ const cta: JSX.Element = (
   </Link>
 );
 
-// A header with a logo on the left, links in the center (like Pricing, etc...), and a CTA (like Create Now) on the right.
-// The header is responsive, and on mobile, the links are hidden behind a burger button.
 const Header = () => {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <HeaderContent />
+    </Suspense>
+  );
+};
+
+const HeaderContent = () => {
   const searchParams = useSearchParams();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState<boolean>(false);

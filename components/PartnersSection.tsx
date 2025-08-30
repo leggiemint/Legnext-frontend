@@ -10,7 +10,7 @@ const PartnersSection = () => {
           Powered by AI models like
         </h2>
         <p className="text-center text-sm md:text-base lg:text-lg text-gray-600 mb-4 md:mb-8">
-          Powered by the world's most advanced AI models for PNGTuber creation
+          Powered by the world&apos;s most advanced AI models for PNGTuber creation
         </p>
         
         <div className="group flex overflow-hidden p-2 [gap:var(--gap)] flex-row py-2 [--duration:45s] [--gap:1rem]">

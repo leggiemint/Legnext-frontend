@@ -5,7 +5,7 @@ import connectMongo from "@/libs/mongoose";
 import User from "@/models/User";
 
 // GET /api/debug/user-status - 调试用户状态
-export async function GET(req: NextRequest) {
+export async function GET() {
   try {
     const session = await getServerSession(authOptions);
     

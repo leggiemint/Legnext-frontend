@@ -28,7 +28,7 @@ const RefundPolicy = () => {
               </h1>
               
               <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-                We're committed to your satisfaction. Here's our transparent refund policy for PNGTuberMaker services.
+                We&apos;re committed to your satisfaction. Here&apos;s our transparent refund policy for PNGTuberMaker services.
               </p>
             </div>
           </div>
@@ -54,7 +54,7 @@ const RefundPolicy = () => {
                 <section>
                   <h2 className="text-2xl font-bold text-gray-900 mb-4">Overview</h2>
                   <p className="text-gray-700 leading-relaxed">
-                    Dark Enlightenment Limited, operating PNGTuberMaker, strives to provide high-quality AI-generated avatar creation services. We understand that sometimes our service may not meet your expectations, and we're committed to resolving any issues fairly and transparently.
+                    Dark Enlightenment Limited, operating PNGTuberMaker, strives to provide high-quality AI-generated avatar creation services. We understand that sometimes our service may not meet your expectations, and we&apos;re committed to resolving any issues fairly and transparently.
                   </p>
                 </section>
 
@@ -162,7 +162,7 @@ const RefundPolicy = () => {
                   <h2 className="text-2xl font-bold text-gray-900 mb-4">Chargebacks and Disputes</h2>
                   <div className="bg-yellow-50 rounded-lg p-6">
                     <p className="text-yellow-800">
-                      <strong>Please contact us first!</strong> Before initiating a chargeback with your bank or credit card company, please reach out to our support team. We're committed to resolving issues directly and chargebacks can result in additional fees and account restrictions.
+                      <strong>Please contact us first!</strong> Before initiating a chargeback with your bank or credit card company, please reach out to our support team. We&apos;re committed to resolving issues directly and chargebacks can result in additional fees and account restrictions.
                     </p>
                   </div>
                 </section>
@@ -191,7 +191,7 @@ const RefundPolicy = () => {
                 <section>
                   <h2 className="text-2xl font-bold text-gray-900 mb-4">Policy Updates</h2>
                   <p className="text-gray-700 leading-relaxed">
-                    We may update this refund policy from time to time. Any changes will be posted on this page with an updated "Last modified" date. Continued use of our services after policy changes constitutes acceptance of the new terms.
+                    We may update this refund policy from time to time. Any changes will be posted on this page with an updated &quot;Last modified&quot; date. Continued use of our services after policy changes constitutes acceptance of the new terms.
                   </p>
                 </section>
               </div>
