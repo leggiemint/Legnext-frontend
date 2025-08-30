@@ -344,7 +344,7 @@ export async function findUserByIdOrEmail(userId: string, email?: string) {
     }
     
     // If still not found, try to find by googleId
-    if (!user && userId && userId.length > 15) {
+    if (!user && userId) {
       try {
         console.log(`🔍 [DEBUG] Trying to find user by googleId: ${userId}`);
         user = await User.findOne({ googleId: userId });
@@ -354,6 +354,38 @@ export async function findUserByIdOrEmail(userId: string, email?: string) {
         }
       } catch (error) {
         console.log(`❌ [DEBUG] findOne by googleId failed:`, error.message);
+      }
+    }
+
+    // 最后尝试通过多个条件联合查询
+    if (!user && (userId || email)) {
+      try {
+        console.log(`🔍 [DEBUG] Trying combined search with userId: ${userId}, email: ${email}`);
+        const searchConditions = [];
+        
+        if (email) {
+          searchConditions.push({ email: email });
+        }
+        
+        if (userId) {
+          // 如果userId看起来像ObjectId
+          if (/^[0-9a-fA-F]{24}$/.test(userId)) {
+            searchConditions.push({ _id: userId });
+          } else {
+            // 否则当作googleId处理
+            searchConditions.push({ googleId: userId });
+          }
+        }
+        
+        if (searchConditions.length > 0) {
+          user = await User.findOne({ $or: searchConditions });
+          if (user) {
+            console.log(`✅ [DEBUG] User found by combined search: ${user.email}`);
+            return user;
+          }
+        }
+      } catch (error) {
+        console.log(`❌ [DEBUG] Combined search failed:`, error.message);
       }
     }
     

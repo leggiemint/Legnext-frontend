@@ -16,8 +16,8 @@ let client: MongoClient | undefined;
 let clientPromise: Promise<MongoClient> | undefined;
 
 // 在构建时直接返回 undefined，避免连接数据库
-if (typeof window !== "undefined" || process.env.NODE_ENV === "production") {
-  // 客户端或生产环境构建时，不连接数据库
+if (typeof window !== "undefined") {
+  // 客户端不连接数据库
   clientPromise = undefined;
 } else if (!uri) {
   // 开发环境但没有 URI
