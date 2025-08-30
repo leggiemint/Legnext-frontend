@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import MainLayout from "@/components/MainLayout";
 // import { getSEOTags } from "@/libs/seo";
 import Link from "next/link";
