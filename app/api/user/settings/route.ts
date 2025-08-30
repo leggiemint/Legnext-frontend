@@ -7,24 +7,46 @@ import User from "@/models/User";
 
 // GET /api/user/settings - Fetch user settings and usage data
 export async function GET() {
+  let session;
   try {
-    const session = await getServerSession(authOptions);
+    session = await getServerSession(authOptions);
+    
+    console.log("🔍 [DEBUG] Session data:", {
+      hasSession: !!session,
+      userId: session?.user?.id,
+      userEmail: session?.user?.email,
+      userIdType: typeof session?.user?.id
+    });
     
     if (!session?.user?.id) {
+      console.log("❌ [DEBUG] No session or user ID");
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    console.log("🔍 [DEBUG] Attempting to fetch user data...");
     const userData = await getUserDashboardData(session.user.id, session.user.email);
 
     if (!userData) {
+      console.log("❌ [DEBUG] getUserDashboardData returned null");
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
+    console.log("✅ [DEBUG] User data fetched successfully:", {
+      userId: userData.user.id,
+      userEmail: userData.user.email,
+      userPlan: userData.user.plan
+    });
+
     return NextResponse.json(userData);
   } catch (error) {
-    console.error("Error fetching user settings:", error);
+    console.error("💥 [DEBUG] Error fetching user settings:", {
+      error: error.message,
+      stack: error.stack,
+      session: !!session,
+      userId: session?.user?.id
+    });
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: "Internal server error", details: error.message },
       { status: 500 }
     );
   }

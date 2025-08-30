@@ -254,42 +254,116 @@ export function formatUsageData(user: any, planLimits: UserLimits): UserUsageDat
 }
 
 export async function getUserDashboardData(userId: string, email?: string) {
-  let userData = await getUserWithUsage(userId);
+  console.log(`🔍 [DEBUG] getUserDashboardData called with ID: ${userId}, Email: ${email}`);
   
-  // 如果通过 ID 查询失败，尝试通过 email 查询
-  if (!userData && email) {
-    userData = await getUserWithUsageByEmail(email);
+  // Use the smart user lookup function
+  const user = await findUserByIdOrEmail(userId, email);
+  
+  if (!user) {
+    console.log(`❌ [DEBUG] User not found in getUserDashboardData`);
+    return null;
   }
   
-  if (!userData) return null;
-
-  const subscriptionStatus = await getUserSubscriptionStatus(userData.user._id, userData.user.email);
+  console.log(`✅ [DEBUG] User found in getUserDashboardData: ${user.email}`);
+  
+  // Get user data with usage
+  const userData = await getUserWithUsage(user._id.toString());
+  
+  if (!userData) {
+    console.log(`❌ [DEBUG] getUserWithUsage failed for user: ${user.email}`);
+    return null;
+  }
+  
+  const subscriptionStatus = await getUserSubscriptionStatus(user._id.toString(), user.email);
 
   return {
     user: {
-      id: userData.user._id,
-      name: userData.user.name,
-      email: userData.user.email,
-      image: userData.user.image,
-      plan: userData.user.plan,
-      subscriptionStatus: userData.user.subscriptionStatus,
-      totalAvatarsCreated: userData.user.totalAvatarsCreated || 0,
-      lastLoginAt: userData.user.lastLoginAt,
-      preferences: userData.user.preferences,
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      image: user.image,
+      plan: user.plan,
+      subscriptionStatus: user.subscriptionStatus,
+      totalAvatarsCreated: user.totalAvatarsCreated || 0,
+      lastLoginAt: user.lastLoginAt,
+      preferences: user.preferences,
     },
     credits: {
-      balance: userData.credits.balance,
-      totalEarned: userData.credits.totalEarned,
-      totalSpent: userData.credits.totalSpent,
-      lastCreditGrant: userData.credits.lastCreditGrant,
+      balance: user.credits.balance,
+      totalEarned: user.credits.totalEarned,
+      totalSpent: user.credits.totalSpent,
+      lastCreditGrant: user.credits.lastCreditGrant,
     },
-    planLimits: userData.planLimits,
+    planLimits: PLAN_LIMITS[user.plan] || PLAN_LIMITS.free,
     subscription: {
       isActive: subscriptionStatus.hasActiveSubscription,
-      plan: userData.user.plan,
+      plan: user.plan,
       endDate: subscriptionStatus.subscription?.endDate,
     },
   };
+}
+
+// Smart user lookup function that handles both ObjectId and Google ID
+export async function findUserByIdOrEmail(userId: string, email?: string) {
+  try {
+    await connectMongo();
+    
+    console.log(`🔍 [DEBUG] Smart user lookup - ID: ${userId}, Email: ${email}`);
+    
+    // First, try to find by ID (could be ObjectId or Google ID)
+    let user = null;
+    
+    try {
+      // Check if userId is a valid ObjectId
+      if (userId && /^[0-9a-fA-F]{24}$/.test(userId)) {
+        console.log(`🔍 [DEBUG] userId looks like ObjectId, trying findById`);
+        user = await User.findById(userId);
+        if (user) {
+          console.log(`✅ [DEBUG] User found by ObjectId: ${user.email}`);
+          return user;
+        }
+      } else {
+        console.log(`🔍 [DEBUG] userId is not ObjectId format: ${userId}`);
+      }
+    } catch (error) {
+      console.log(`❌ [DEBUG] findById failed:`, error.message);
+    }
+    
+    // If not found by ID, try by email
+    if (!user && email) {
+      try {
+        console.log(`🔍 [DEBUG] Trying to find user by email: ${email}`);
+        user = await User.findOne({ email });
+        if (user) {
+          console.log(`✅ [DEBUG] User found by email: ${user.email}`);
+          return user;
+        }
+      } catch (error) {
+        console.log(`❌ [DEBUG] findOne by email failed:`, error.message);
+      }
+    }
+    
+    // If still not found, try to find by googleId
+    if (!user && userId && userId.length > 15) {
+      try {
+        console.log(`🔍 [DEBUG] Trying to find user by googleId: ${userId}`);
+        user = await User.findOne({ googleId: userId });
+        if (user) {
+          console.log(`✅ [DEBUG] User found by googleId: ${user.email}`);
+          return user;
+        }
+      } catch (error) {
+        console.log(`❌ [DEBUG] findOne by googleId failed:`, error.message);
+      }
+    }
+    
+    console.log(`❌ [DEBUG] User not found by any method`);
+    return null;
+    
+  } catch (error) {
+    console.error(`💥 [DEBUG] findUserByIdOrEmail failed:`, error.message);
+    throw error;
+  }
 }
 
 export default {
