@@ -7,16 +7,31 @@ export async function GET() {
   try {
     console.log("🔍 [DEBUG] Testing database connection...");
     
-    // Test MongoDB connection
-    await connectMongo();
+    // Test MongoDB connection with timeout
+    const connectionPromise = connectMongo();
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error("Connection timeout after 5 seconds")), 5000)
+    );
+    
+    await Promise.race([connectionPromise, timeoutPromise]);
     console.log("✅ [DEBUG] MongoDB connection successful");
     
-    // Test basic user query
-    const userCount = await User.countDocuments();
+    // Test basic user query with timeout
+    const userCountPromise = User.countDocuments();
+    const countTimeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error("Count query timeout after 5 seconds")), 5000)
+    );
+    
+    const userCount = await Promise.race([userCountPromise, countTimeoutPromise]);
     console.log(`✅ [DEBUG] User count: ${userCount}`);
     
-    // Test sample user query
-    const sampleUser = await User.findOne({});
+    // Test sample user query with timeout
+    const sampleUserPromise = User.findOne({});
+    const userTimeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error("User query timeout after 5 seconds")), 5000)
+    );
+    
+    const sampleUser = await Promise.race([sampleUserPromise, userTimeoutPromise]);
     if (sampleUser) {
       console.log("✅ [DEBUG] Sample user found:", {
         _id: sampleUser._id,
@@ -50,7 +65,8 @@ export async function GET() {
       { 
         success: false, 
         error: "Database test failed", 
-        details: error.message 
+        details: error.message,
+        timestamp: new Date().toISOString()
       },
       { status: 500 }
     );
