@@ -80,6 +80,9 @@ dependencies:
   react-tooltip:
     specifier: ^5.26.3
     version: 5.29.1(react-dom@18.2.0)(react@18.2.0)
+  resend:
+    specifier: ^6.0.2
+    version: 6.0.2
   stripe:
     specifier: ^13.11.0
     version: 13.11.0
@@ -4468,6 +4471,16 @@ packages:
   /require-from-string@2.0.2:
     resolution: {integrity: sha512-Xf0nWe6RseziFMu+Ap9biiUbmplq6S9/p+7w7YXP/JBHhrUDDUhwa+vANyubuqfZWTveU//DYVGsDG7RKL/vEw==}
     engines: {node: '>=0.10.0'}
+    dev: false
+
+  /resend@6.0.2:
+    resolution: {integrity: sha512-um08qWpSVvEVqAePEy/bsa7pqtnJK+qTCZ0Et7YE7xuqM46J0C9gnSbIJKR3LIcRVMgO9jUeot8rH0UI84eqMQ==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      '@react-email/render': ^1.1.0
+    peerDependenciesMeta:
+      '@react-email/render':
+        optional: true
     dev: false
 
   /resolve-from@4.0.0:
