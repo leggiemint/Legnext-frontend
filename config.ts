@@ -39,7 +39,7 @@ const config = {
         isFeatured: true,
         name: "Pro",
         description: "Best Value",
-        price: 0.01, // 🧪 测试价格 - 测试完成后改回12
+        price: 12,
         credits: 260, // 60 (free) + 200 (pro) = 260 credits = $26 worth
         priceAnchor: 26,
         features: [
