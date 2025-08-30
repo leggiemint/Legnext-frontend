@@ -56,7 +56,9 @@ const PricingSection = () => {
         
         {/* Pricing Cards - Only Free and Pro */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-          {config.stripe.plans.map((plan, index) => (
+          {config.stripe.plans.map((plan, index) => {
+            console.log("🔍 PricingSection Plan Debug:", { name: plan.name, priceId: plan.priceId, isFree: plan.isFree });
+            return (
             <div key={plan.priceId || `plan-${index}`} className="pricing-card">
               <div className="relative w-full max-w-lg mx-auto">
                 {plan.isFeatured && (
@@ -197,7 +199,7 @@ const PricingSection = () => {
                 </div>
               </div>
             </div>
-          ))}
+          )})}
         </div>
         
         {/* FAQ Link */}

@@ -22,6 +22,7 @@ const ButtonCheckout = ({
   const { data: session } = useSession();
 
   const handleAction = async () => {
+    console.log("🔍 ButtonCheckout Debug:", { priceId, mode, isFree });
     setIsLoading(true);
 
     try {
