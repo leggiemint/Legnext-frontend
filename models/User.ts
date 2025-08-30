@@ -13,6 +13,7 @@ const userSchema = new mongoose.Schema(
       trim: true,
       lowercase: true,
       private: true,
+      unique: true,
     },
     image: {
       type: String,
@@ -35,6 +36,96 @@ const userSchema = new mongoose.Schema(
     hasAccess: {
       type: Boolean,
       default: false,
+    },
+    // Subscription management
+    subscriptionStatus: {
+      type: String,
+      enum: ["active", "inactive", "canceled", "past_due", "trialing"],
+      default: "inactive",
+    },
+    subscriptionEndDate: {
+      type: Date,
+    },
+    // PngTuber specific fields
+    plan: {
+      type: String,
+      enum: ["free", "pro"],
+      default: "free",
+    },
+    // Credits system (0.1$ = 1 credit)
+    credits: {
+      balance: {
+        type: Number,
+        default: 60, // Free plan starts with 60 credits ($6 worth)
+        min: 0,
+      },
+      totalEarned: {
+        type: Number,
+        default: 60,
+      },
+      totalSpent: {
+        type: Number,
+        default: 0,
+      },
+      lastCreditGrant: {
+        date: {
+          type: Date,
+          default: Date.now,
+        },
+        amount: {
+          type: Number,
+          default: 60,
+        },
+        reason: {
+          type: String,
+          default: "initial_free_credits",
+        },
+      },
+    },
+    // Usage tracking for current month (kept for compatibility)
+    monthlyUsage: {
+      avatarsGenerated: {
+        type: Number,
+        default: 0,
+      },
+      lastResetDate: {
+        type: Date,
+        default: Date.now,
+      },
+    },
+    // User preferences
+    preferences: {
+      defaultStyle: {
+        type: String,
+        enum: ["anime", "realistic", "cartoon", "chibi"],
+        default: "anime",
+      },
+      defaultFormat: {
+        type: String,
+        enum: ["png", "jpg", "webp"],
+        default: "png",
+      },
+      autoSave: {
+        type: Boolean,
+        default: true,
+      },
+      emailNotifications: {
+        type: Boolean,
+        default: true,
+      },
+    },
+    // Statistics
+    totalAvatarsCreated: {
+      type: Number,
+      default: 0,
+    },
+    // Account status
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
+    lastLoginAt: {
+      type: Date,
     },
   },
   {

@@ -71,7 +71,7 @@ const Pricing = () => {
                 {plan.features && (
                   <ul className="space-y-2.5 leading-relaxed text-base flex-1">
                     {plan.features.map((feature, i) => (
-                      <li key={i} className="flex items-center gap-2">
+                      <li key={`${plan.name}-feature-${i}`} className="flex items-center gap-2">
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
                           viewBox="0 0 20 20"

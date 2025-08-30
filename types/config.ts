@@ -38,6 +38,7 @@ export interface ConfigProps {
       name: string;
       description?: string;
       price: number;
+      credits?: number; // Credits included in plan
       priceAnchor?: number | null;
       features: {
         name: string;

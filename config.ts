@@ -16,18 +16,20 @@ const config = {
     onlyShowOnRoutes: ["/"],
   },
   stripe: {
-    // Simplified pricing with only Free and Pro plans
+    // Credit-based pricing system (0.1$ = 1 credit)
     plans: [
       {
         // Free plan - no priceId needed as it doesn't require payment
         name: "Free",
-        description: "Try It Out",
+        description: "Get Started",
         price: 0,
+        credits: 60, // 60 credits = $6 worth
         isFree: true,
         features: [
-          { name: "3 avatar generations / month" },
-          { name: "1 expression pack (with watermark)" },
-          { name: "Low-resolution exports" },
+          { name: "60 free credits (one-time, $6 worth)" },
+          { name: "Avatar generation (5 credits each)" },
+          { name: "Expression packs (3 credits each)" },
+          { name: "Standard exports with watermark" },
           { name: "Community support" },
         ],
       },
@@ -36,14 +38,16 @@ const config = {
         priceId: "price_1S1k2eKyeXh3bz3dL2jbl2VM", // Your actual Stripe price ID for Pro subscription
         isFeatured: true,
         name: "Pro",
-        description: "Most Popular",
+        description: "Best Value",
         price: 12,
-        priceAnchor: null,
+        credits: 260, // 60 (free) + 200 (pro) = 260 credits = $26 worth
+        priceAnchor: 26,
         features: [
-          { name: "100 generations / month" },
-          { name: "Unlimited expression packs (no watermark)" },
-          { name: "HD exports (PNG / GIF / MP4)" },
-          { name: "Simple animations (blinking, mouth movement)" },
+          { name: "260 credits monthly ($26 worth)" },
+          { name: "No watermark exports" },
+          { name: "HD exports (1 credit each)" },
+          { name: "Animations (2 credits each)" },
+          { name: "Commercial use license" },
           { name: "Priority support" },
         ],
       },
