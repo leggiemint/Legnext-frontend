@@ -1,35 +1,37 @@
-# ShipFast — Typescript
+# PNGTuberMaker
 
-Hey maker 👋 it's Marc from [ShipFast](https://shipfa.st/docs). Let's get your startup off the ground, FAST ⚡️
+The #1 AI PNGTuber Maker for Streamers 🎮
 
-<sub>**Watch/Star the repo to be notified when updates are pushed**</sub>
+Create custom PNGTuber avatars with AI — complete with multiple expressions and simple animations. Perfect for Twitch, YouTube, and Discord streaming.
+
+## Features
+
+- **AI-Powered Avatar Generation** - Create unique PNGTuber characters with artificial intelligence
+- **Multiple Expressions** - Generate various facial expressions for dynamic streaming
+- **Simple Animations** - Add life to your avatar with smooth animations
+- **Streaming Ready** - Optimized for Twitch, YouTube, and Discord
+- **Easy to Use** - Intuitive interface for streamers of all levels
 
 ## Get Started
 
-1. Follow the [Get Started Tutorial](https://shipfa.st/docs) to clone the repo and run your local server 💻
+1. Clone the repository
+2. Install dependencies: `npm install`
+3. Run the development server: `npm run dev`
+4. Open [http://localhost:3000](http://localhost:3000) in your browser
 
-<sub>**Looking for the /pages router version?** Use this [documentation](https://shipfa.st/docs-old) instead</sub>
+## Tech Stack
 
-2. Follow the [Ship In 5 Minutes Tutorial](https://shipfa.st/docs/tutorials/ship-in-5-minutes) to learn the foundation and ship your app quickly ⚡️
-
-## Links
-
--   [📚 Documentation](https://shipfa.st/docs)
--   [📣 Updates](https://shipfast.beehiiv.com/)
--   [🧑‍💻 Discord](https://shipfa.st/dashboard)
--   [🥇 Leaderboard](https://shipfa.st/leaderboard)
+- **Framework**: Next.js 14 with App Router
+- **Styling**: Tailwind CSS + DaisyUI
+- **Database**: MongoDB with Mongoose
+- **Authentication**: NextAuth.js
+- **Payments**: Stripe
+- **Deployment**: Vercel Ready
 
 ## Support
 
-Reach out to me on [Twitter](https://twitter.com/marc_louvion) or marc@shipfa.st
+For questions and support, contact us at support@pngtubermaker.com
 
-\_
+---
 
-Let's ship it, FAST ⚡️
-
-P.S.
-
--   Want to showcase your startups? Get your [Indie Page](https://indiepa.ge?ref=shipfast_readme) and share your entrepreneur's journey. Join 3,132 founders ⭐️
--   Don't get banned from Stripe for 1 dispute. Use [ByeDispute](https://byedispute.com/?ref=shipfast_readme) to prevent them from happenening 🛡️
--   Make your launch go viral and get your first customers with [LaunchViral](https://launchvir.al/?ref=shipfast_readme) 🚀
--   Stop paying 0.4% per Stripe invoices [Zenvoice](https://zenvoice.io/?ref=shipfast_readme) 🤕
+Built for content creators who want professional PNGTuber avatars without the complexity.
