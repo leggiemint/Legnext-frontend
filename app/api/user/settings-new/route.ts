@@ -57,7 +57,7 @@ export async function PUT(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { preferences, profile } = body;
+    const { preferences } = body;
 
     // 验证偏好设置结构
     if (preferences) {
@@ -80,9 +80,8 @@ export async function PUT(req: NextRequest) {
     }
 
     // 更新偏好设置
-    let updatedProfile;
     if (preferences) {
-      updatedProfile = await updateUserPreferences(user.id, {
+      await updateUserPreferences(user.id, {
         ...user.profile.preferences,
         ...preferences,
       });

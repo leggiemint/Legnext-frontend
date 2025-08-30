@@ -1,4 +1,4 @@
-import { NextResponse, NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/libs/next-auth";
 import connectMongo from "@/libs/mongoose";
@@ -6,7 +6,7 @@ import User from "@/models/User";
 import { grantCreditsToUser } from "@/libs/user";
 
 // Test endpoint to manually trigger user upgrade (for debugging)
-export async function GET(req: NextRequest) {
+export async function GET() {
   return POST();
 }
 

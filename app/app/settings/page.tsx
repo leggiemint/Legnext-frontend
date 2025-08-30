@@ -183,7 +183,7 @@ export default function SettingsPage() {
             </div>
             <h3 className="text-xl font-semibold mb-2">Settings Unavailable</h3>
             <p className="text-base-content/60 mb-6 max-w-md mx-auto">
-              Settings are only available for logged-in users. Your preferences and account details can be managed once you're signed in.
+              Settings are only available for logged-in users. Your preferences and account details can be managed once you&apos;re signed in.
             </p>
             <div className="space-y-3">
               <p className="text-sm text-base-content/50">
