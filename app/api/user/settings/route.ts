@@ -86,6 +86,8 @@ export async function PUT(req: NextRequest) {
           name: updatedUser.name,
           email: updatedUser.email,
           image: updatedUser.image,
+          plan: updatedUser.plan, // 🔧 添加计划字段
+          subscriptionStatus: updatedUser.subscriptionStatus, // 🔧 添加订阅状态
           preferences: updatedUser.preferences,
           lastLoginAt: updatedUser.lastLoginAt,
         },

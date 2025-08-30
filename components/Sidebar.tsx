@@ -69,7 +69,7 @@ const Sidebar = () => {
   }, [session?.user?.id]);
 
   return (
-    <div className="w-64 fixed left-0 top-16 h-[calc(100vh-4rem)] flex flex-col z-40 border-r border-base-300">
+    <div className="bg-white w-64 fixed left-0 top-16 h-[calc(100vh-4rem)] flex flex-col z-40">
       {/* Scrollable content area */}
       <div className="overflow-y-auto flex-grow pt-8 pr-0">
         {/* Navigation */}
@@ -100,9 +100,9 @@ const Sidebar = () => {
 
       </div>
 
-      {/* Plan Section */}
-      {session && (
-        <div className="p-4 border-t border-base-300 bg-base-50">
+             {/* Plan Section */}
+       {session && (
+         <div className="p-4 border-t border-gray-200 bg-white">
           {loading ? (
             <div className="animate-pulse">
               <div className="h-4 bg-base-300 rounded w-20 mb-2"></div>

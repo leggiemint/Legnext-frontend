@@ -35,7 +35,9 @@ const config = {
       },
       {
         // Pro subscription plan
-        priceId: "price_1S1k2eKyeXh3bz3dL2jbl2VM", // Your actual Stripe price ID for Pro subscription
+        priceId: process.env.NODE_ENV === 'production' 
+          ? "price_1S1k2eKyeXh3bz3dL2jbl2VM" // Production price ID
+          : process.env.STRIPE_PRO_PRICE_ID || "price_1S1k2eKyeXh3bz3dL2jbl2VM", // 🔧 Use production price ID for development too
         isFeatured: true,
         name: "Pro",
         description: "Best Value",

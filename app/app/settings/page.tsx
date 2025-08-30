@@ -254,7 +254,7 @@ export default function SettingsPage() {
           <div className="card-body">
             <div className="flex justify-between items-start mb-4">
               <h2 className="card-title">Credits & Subscription</h2>
-              <div className={`badge ${userData?.user?.plan === 'pro' ? 'badge-primary' : 'badge-outline'}`}>
+              <div className={`badge ${userData?.user?.plan === 'pro' ? '!bg-[#06b6d4] !text-white' : 'badge-outline'}`}>
                 {userData?.user?.plan?.toUpperCase() || 'FREE'} Plan
               </div>
             </div>
@@ -340,7 +340,7 @@ export default function SettingsPage() {
             </div>
 
             <div className="flex gap-2">
-              <Link href="/#pricing">
+              <Link href="/pricing">
                 <button className="btn bg-[#06b6d4] hover:bg-[#06b6d4]/90 text-white border-none">
                   {userData?.user?.plan === 'pro' ? 'Manage Subscription' : 'Upgrade to Pro'}
                 </button>

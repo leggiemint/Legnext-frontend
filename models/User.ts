@@ -46,6 +46,43 @@ const userSchema = new mongoose.Schema(
     subscriptionEndDate: {
       type: Date,
     },
+    subscriptionStartDate: {
+      type: Date,
+    },
+    // 📊 Subscription history tracking (Industry Standard)
+    subscriptionHistory: [{
+      action: {
+        type: String,
+        enum: ['created', 'upgraded', 'downgraded', 'canceled', 'reactivated', 'expired'],
+        required: true
+      },
+      fromPlan: String,
+      toPlan: String,
+      timestamp: {
+        type: Date,
+        default: Date.now
+      },
+      priceId: String,
+      metadata: mongoose.Schema.Types.Mixed
+    }],
+    // 🔄 Webhook events tracking for idempotency
+    webhookEvents: [{
+      eventId: {
+        type: String,
+        required: true
+      },
+      eventType: {
+        type: String,
+        required: true
+      },
+      processed: {
+        type: Boolean,
+        default: false
+      },
+      processedAt: Date,
+      error: String,
+      metadata: mongoose.Schema.Types.Mixed
+    }],
     // PngTuber specific fields
     plan: {
       type: String,

@@ -37,6 +37,20 @@ const ButtonCheckout = ({
       } else {
         // Pro plan logic based on login state
         if (session) {
+          // 🔒 简化验证：直接使用已有的用户设置API
+          try {
+            const userResponse = await fetch('/api/user/settings');
+            const userData = await userResponse.json();
+            
+            if (userData?.user?.plan === "pro" && userData?.user?.subscriptionStatus === "active") {
+              alert("You are already subscribed to the Pro plan!");
+              return;
+            }
+          } catch (error) {
+            console.error("Failed to check user status:", error);
+            // 继续处理，允许用户尝试订阅
+          }
+          
           // Logged in: proceed to Stripe checkout
           if (!priceId) {
             console.error("Price ID is required for paid plans");
@@ -47,7 +61,7 @@ const ButtonCheckout = ({
             "/stripe/create-checkout",
             {
               priceId,
-              successUrl: window.location.href,
+              successUrl: `${window.location.origin}/app`,
               cancelUrl: window.location.href,
               mode,
             }
@@ -74,16 +88,36 @@ const ButtonCheckout = ({
       {isLoading ? (
         <span className="loading loading-spinner loading-xs"></span>
       ) : (
-        <svg
-          className="w-5 h-5 fill-white group-hover:scale-110 group-hover:-rotate-3 transition-transform duration-200"
-          viewBox="0 0 375 509"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path d="M249.685 14.125C249.685 11.5046 248.913 8.94218 247.465 6.75675C246.017 4.57133 243.957 2.85951 241.542 1.83453C239.126 0.809546 236.463 0.516683 233.882 0.992419C231.301 1.46815 228.917 2.69147 227.028 4.50999L179.466 50.1812C108.664 118.158 48.8369 196.677 2.11373 282.944C0.964078 284.975 0.367442 287.272 0.38324 289.605C0.399039 291.938 1.02672 294.226 2.20377 296.241C3.38082 298.257 5.06616 299.929 7.09195 301.092C9.11775 302.255 11.4133 302.867 13.75 302.869H129.042V494.875C129.039 497.466 129.791 500.001 131.205 502.173C132.62 504.345 134.637 506.059 137.01 507.106C139.383 508.153 142.01 508.489 144.571 508.072C147.131 507.655 149.516 506.503 151.432 504.757L172.698 485.394C247.19 417.643 310.406 338.487 359.975 250.894L373.136 227658C374.292 225.626 374.894 223.327 374.882 220.99C374.87 218.653 374.243 216.361 373.065 214.341C371.887 212.322 370.199 210.646 368.17 209.482C366.141 208.318 363.841 207.706 361.5 207.707H249.685V14.125Z" />
-        </svg>
+        <div className="flex items-center justify-center gap-2">
+          {isFree ? (
+            // 🎯 Free Plan Icon - Rocket for "Get Started"
+            <svg
+              className="w-5 h-5 fill-white group-hover:scale-110 group-hover:-translate-y-1 transition-transform duration-200"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path d="M12.5 2C12.5 2 16.5 4.5 19 7.5C21.5 10.5 22 15.5 22 15.5C22 15.5 21.5 16 20.5 16H17L13 20V17C13 17 10.5 16.5 8.5 15C6.5 13.5 5 11 5 11L12.5 2Z" fill="currentColor"/>
+              <path d="M7 21C6.5 21 6 20.5 6 20C6 19.5 6.5 19 7 19H9C9.5 19 10 19.5 10 20C10 20.5 9.5 21 9 21H7Z" fill="currentColor"/>
+              <path d="M3 17C2.5 17 2 16.5 2 16C2 15.5 2.5 15 3 15H5C5.5 15 6 15.5 6 16C6 16.5 5.5 17 5 17H3Z" fill="currentColor"/>
+              <path d="M6 13C5.5 13 5 12.5 5 12C5 11.5 5.5 11 6 11H8C8.5 11 9 11.5 9 12C9 12.5 8.5 13 8 13H6Z" fill="currentColor"/>
+            </svg>
+          ) : (
+            // 💎 Pro Plan Icon - Crown for Premium
+            <svg
+              className="w-5 h-5 fill-white group-hover:scale-110 group-hover:-rotate-12 transition-transform duration-200"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path d="M5 16L3 8L8 12L12 6L16 12L21 8L19 16H5Z" fill="currentColor"/>
+              <path d="M19 18H5C4.45 18 4 18.45 4 19C4 19.55 4.45 20 5 20H19C19.55 20 20 19.55 20 19C20 18.45 19.55 18 19 18Z" fill="currentColor"/>
+              <circle cx="12" cy="9" r="1.5" fill="white"/>
+            </svg>
+          )}
+          <span>{isFree ? "Try Free" : "Go Pro"}</span>
+        </div>
       )}
-      {isFree ? "Try Free" : "Go Pro"}
     </button>
   );
 };
