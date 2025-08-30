@@ -57,13 +57,15 @@ const PricingSection = () => {
                       </div>
                     )}
                     <p className="text-5xl tracking-tight font-extrabold text-gray-900">
-                      ${plan.price}
+                      {plan.isFree ? "Free" : `$${plan.price}`}
                     </p>
-                    <div className="flex flex-col justify-end mb-[4px]">
-                      <p className="text-xs text-gray-500 uppercase font-semibold">
-                        USD
-                      </p>
-                    </div>
+                    {!plan.isFree && (
+                      <div className="flex flex-col justify-end mb-[4px]">
+                        <p className="text-xs text-gray-500 uppercase font-semibold">
+                          USD
+                        </p>
+                      </div>
+                    )}
                   </div>
                   
                   {plan.features && (
@@ -89,10 +91,14 @@ const PricingSection = () => {
                   )}
                   
                   <div className="space-y-2">
-                    <ButtonCheckout priceId={plan.priceId} />
+                    <ButtonCheckout 
+                      priceId={plan.priceId} 
+                      isFree={plan.isFree}
+                      mode="subscription"
+                    />
                     
                     <p className="flex items-center justify-center gap-2 text-sm text-center text-gray-500 font-medium relative">
-                      Pay once. Access forever.
+                      {plan.isFree ? "No credit card required" : "/month"}
                     </p>
                   </div>
                 </div>

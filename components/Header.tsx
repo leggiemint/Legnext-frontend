@@ -5,6 +5,7 @@ import type { JSX } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
+import { useSession, signOut } from "next-auth/react";
 import logo from "@/app/logo.svg";
 import config from "@/config";
 
@@ -39,10 +40,13 @@ const cta: JSX.Element = (
 const Header = () => {
   const searchParams = useSearchParams();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
+  const [isUserDropdownOpen, setIsUserDropdownOpen] = useState<boolean>(false);
+  const { data: session } = useSession();
 
   // Close menus when the route changes
   useEffect(() => {
     setIsMobileMenuOpen(false);
+    setIsUserDropdownOpen(false);
   }, [searchParams]);
 
   // Handle body class for mobile menu
@@ -64,17 +68,18 @@ const Header = () => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         if (isMobileMenuOpen) setIsMobileMenuOpen(false);
+        if (isUserDropdownOpen) setIsUserDropdownOpen(false);
       }
     };
 
-    if (isMobileMenuOpen) {
+    if (isMobileMenuOpen || isUserDropdownOpen) {
       document.addEventListener('keydown', handleEscape);
     }
 
     return () => {
       document.removeEventListener('keydown', handleEscape);
     };
-  }, [isMobileMenuOpen]);
+  }, [isMobileMenuOpen, isUserDropdownOpen]);
 
   // Handle click outside to close menus
   useEffect(() => {
@@ -85,16 +90,94 @@ const Header = () => {
       if (isMobileMenuOpen && !target.closest('.mobile-menu-overlay') && !target.closest('.mobile-menu-btn')) {
         setIsMobileMenuOpen(false);
       }
+      
+      // Close user dropdown if clicking outside
+      if (isUserDropdownOpen && !target.closest('.user-dropdown') && !target.closest('.user-avatar-btn')) {
+        setIsUserDropdownOpen(false);
+      }
     };
 
-    if (isMobileMenuOpen) {
+    if (isMobileMenuOpen || isUserDropdownOpen) {
       document.addEventListener('mousedown', handleClickOutside);
     }
 
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [isMobileMenuOpen]);
+  }, [isMobileMenuOpen, isUserDropdownOpen]);
+
+  // User avatar component
+  const UserAvatar = () => (
+    <div className="flex items-center space-x-3">
+      {/* Dashboard Button - Hidden on mobile */}
+      <div className="hidden md:block">
+        <Link href="/app">
+          <button className="inline-flex items-center justify-center px-4 py-2 bg-[#06b6d4] text-white font-medium rounded-lg hover:bg-[#06b6d4]/90 transition-colors duration-200 shadow-sm">
+            Dashboard
+          </button>
+        </Link>
+      </div>
+      
+      {/* User Avatar - Hidden on mobile */}
+      <div className="hidden md:block relative">
+        <button
+          onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
+          className="user-avatar-btn flex items-center justify-center w-10 h-10 rounded-full border-2 border-[#06b6d4] bg-white hover:bg-gray-50 transition-colors duration-200"
+          aria-label="User menu"
+        >
+          {session?.user?.image ? (
+            <Image
+              src={session.user.image}
+              alt={session.user.name || "User avatar"}
+              width={36}
+              height={36}
+              className="w-9 h-9 rounded-full"
+            />
+          ) : (
+            <svg
+              className="w-6 h-6 text-[#06b6d4]"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
+              <path
+                fillRule="evenodd"
+                d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
+                clipRule="evenodd"
+              />
+            </svg>
+          )}
+        </button>
+        
+        {/* User Dropdown Menu */}
+        {isUserDropdownOpen && (
+          <div className="user-dropdown absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 py-1 z-50">
+            <div className="px-4 py-2 border-b border-gray-100">
+              <p className="text-sm font-medium text-gray-900">
+                {session?.user?.name || "User"}
+              </p>
+              <p className="text-sm text-gray-500">
+                {session?.user?.email}
+              </p>
+            </div>
+            <button
+              onClick={async () => {
+                try {
+                  await signOut({ callbackUrl: "/" });
+                  setIsUserDropdownOpen(false);
+                } catch (error) {
+                  console.error("Sign out error:", error);
+                  window.location.href = "/";
+                }
+              }}
+              className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+            >
+              Sign out
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
 
   return (
     <header className="sticky top-0 z-40 flex w-full p-0 justify-center border-b border-gray-200/20 bg-white/60 backdrop-blur-xl transition-all">
@@ -136,19 +219,26 @@ const Header = () => {
 
         {/* Right Side Actions */}
         <div className="flex items-center space-x-2 sm:space-x-3 flex-shrink-0">
-          {/* CTA Button (Hidden on small mobile) */}
-          <div className="hidden sm:block auth-button-placeholder">
-            {cta}
-          </div>
-          
-          {/* Mobile CTA Display (Visible only on small screens) */}
-          <div className="block sm:hidden">
-            <Link href="/app">
-              <button className="inline-flex items-center justify-center px-4 py-2 bg-[#06b6d4] text-white font-medium rounded-lg hover:bg-[#06b6d4]/90 transition-colors duration-200 shadow-sm">
-                Create Now
-              </button>
-            </Link>
-          </div>
+          {/* Show user avatar and dashboard when logged in, otherwise show CTA */}
+          {session ? (
+            <UserAvatar />
+          ) : (
+            <>
+              {/* CTA Button (Hidden on small mobile) */}
+              <div className="hidden sm:block auth-button-placeholder">
+                {cta}
+              </div>
+              
+              {/* Mobile CTA Display (Visible only on small screens) */}
+              <div className="block sm:hidden">
+                <Link href="/app">
+                  <button className="inline-flex items-center justify-center px-4 py-2 bg-[#06b6d4] text-white font-medium rounded-lg hover:bg-[#06b6d4]/90 transition-colors duration-200 shadow-sm">
+                    Create Now
+                  </button>
+                </Link>
+              </div>
+            </>
+          )}
           
           {/* Mobile Menu Button */}
           <button
@@ -213,13 +303,45 @@ const Header = () => {
               Join Discord
             </Link>
             
-            {/* Mobile CTA Section */}
+            {/* Mobile CTA/Auth Section */}
             <div className="mt-4 p-2">
-              <Link href="/app" className="w-full">
-                <button className="w-full inline-flex items-center justify-center px-4 py-2 bg-[#06b6d4] text-white font-medium rounded-lg hover:bg-[#06b6d4]/90 transition-colors duration-200 shadow-sm">
-                  Create Now
-                </button>
-              </Link>
+              {session ? (
+                <div className="space-y-2">
+                  <div className="px-2 py-1 border-b border-gray-100">
+                    <p className="text-sm font-medium text-gray-900">
+                      {session.user?.name || "User"}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {session.user?.email}
+                    </p>
+                  </div>
+                  <Link href="/app" className="w-full">
+                    <button className="w-full inline-flex items-center justify-center px-4 py-2 bg-[#06b6d4] text-white font-medium rounded-lg hover:bg-[#06b6d4]/90 transition-colors duration-200 shadow-sm">
+                      Dashboard
+                    </button>
+                  </Link>
+                  <button
+                    onClick={async () => {
+                      try {
+                        await signOut({ callbackUrl: "/" });
+                        setIsMobileMenuOpen(false);
+                      } catch (error) {
+                        console.error("Sign out error:", error);
+                        window.location.href = "/";
+                      }
+                    }}
+                    className="w-full inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-background bg-gray-100 text-gray-700 hover:bg-gray-200 h-9 px-3 rounded-md text-sm"
+                  >
+                    Sign out
+                  </button>
+                </div>
+              ) : (
+                <Link href="/app" className="w-full">
+                  <button className="w-full inline-flex items-center justify-center px-4 py-2 bg-[#06b6d4] text-white font-medium rounded-lg hover:bg-[#06b6d4]/90 transition-colors duration-200 shadow-sm">
+                    Create Now
+                  </button>
+                </Link>
+              )}
             </div>
           </nav>
         </div>

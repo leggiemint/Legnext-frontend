@@ -54,7 +54,7 @@ const Hero = () => {
             
             <div className="mt-16 flex justify-center">
               <button
-                onClick={() => window.location.href = '/auth'}
+                onClick={() => window.location.href = '/app'}
                 className="relative flex h-11 items-center justify-center px-6 before:absolute before:inset-0 before:rounded-full before:bg-[#06b6d4] before:transition before:duration-300 hover:before:scale-105 active:duration-75 active:before:scale-95 cursor-pointer"
               >
                 <svg className="relative w-5 h-5 mr-2" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">

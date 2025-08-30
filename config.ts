@@ -33,7 +33,7 @@ const config = {
       },
       {
         // Pro subscription plan
-        priceId: "price_1S1YJW3W9QrG6Tfejn8G27jO", // Your actual Stripe price ID for Pro subscription
+        priceId: "price_1S1k2eKyeXh3bz3dL2jbl2VM", // Your actual Stripe price ID for Pro subscription
         isFeatured: true,
         name: "Pro",
         description: "Most Popular",
