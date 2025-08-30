@@ -36,7 +36,12 @@ export async function POST(req: NextRequest) {
 
     await connectMongo();
 
-    const user = await User.findById(session?.user?.id);
+    let user = await User.findById(session?.user?.id);
+    
+    // 如果通过 ID 查询失败，尝试通过 email 查询
+    if (!user && session?.user?.email) {
+      user = await User.findOne({ email: session.user.email });
+    }
 
     const { priceId, mode, successUrl, cancelUrl } = body;
 

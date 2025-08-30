@@ -13,13 +13,13 @@ let connectMongo: any = null;
 let MongoDBAdapterInstance: any = null;
 
 // 动态导入，避免构建时执行
-if (typeof window === "undefined" && process.env.NODE_ENV !== "production") {
-  // 开发环境
+if (typeof window === "undefined") {
+  // 生产环境和开发环境都尝试导入
   try {
     connectMongo = require("./mongo").default;
     MongoDBAdapterInstance = MongoDBAdapter;
   } catch (error) {
-    console.warn("MongoDB not available in development");
+    console.warn("MongoDB not available:", error.message);
   }
 }
 
@@ -48,11 +48,20 @@ export const authOptions: NextAuthOptionsExtended = {
   }),
 
   callbacks: {
-    session: async ({ session, token }) => {
+    session: async ({ session, token, user }) => {
       if (session?.user) {
-        session.user.id = token.sub;
+        // 如果使用 MongoDB 适配器，使用 user.id (MongoDB ObjectId)
+        // 如果使用 JWT 策略，使用 token.sub (Google ID)
+        session.user.id = user?.id || token.sub;
       }
       return session;
+    },
+    jwt: async ({ token, user, account }) => {
+      // 如果是首次登录，将用户信息添加到 token
+      if (account && user) {
+        token.userId = user.id;
+      }
+      return token;
     },
   },
   session: {

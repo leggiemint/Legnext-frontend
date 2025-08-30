@@ -14,7 +14,7 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const userData = await getUserDashboardData(session.user.id);
+    const userData = await getUserDashboardData(session.user.id, session.user.email);
 
     if (!userData) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
@@ -65,16 +65,16 @@ export async function PUT(req: NextRequest) {
     // Update preferences and profile using utility functions
     let updatedUser;
     if (preferences) {
-      updatedUser = await updateUserPreferences(session.user.id, preferences);
+      updatedUser = await updateUserPreferences(session.user.id, preferences, session.user.email);
     }
     
     if (profile) {
-      updatedUser = await updateUserProfile(session.user.id, profile);
+      updatedUser = await updateUserProfile(session.user.id, profile, session.user.email);
     }
 
     // If neither preferences nor profile were updated, just fetch current user
     if (!updatedUser) {
-      const userData = await getUserDashboardData(session.user.id);
+      const userData = await getUserDashboardData(session.user.id, session.user.email);
       updatedUser = userData?.user;
     }
 
@@ -116,7 +116,12 @@ export async function PATCH(req: NextRequest) {
 
     await connectMongo();
 
-    const user = await User.findById(session.user.id);
+    let user = await User.findById(session.user.id);
+    
+    // 如果通过 ID 查询失败，尝试通过 email 查询
+    if (!user && session.user.email) {
+      user = await User.findOne({ email: session.user.email });
+    }
     
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });

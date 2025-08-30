@@ -28,10 +28,16 @@ export interface SubscriptionValidationResult {
  * 🔍 Get comprehensive subscription status for a user
  * Industry Standard: Always validate subscription state before actions
  */
-export async function getUserSubscriptionStatus(userId: string): Promise<SubscriptionStatus> {
+export async function getUserSubscriptionStatus(userId: string, email?: string): Promise<SubscriptionStatus> {
   await connectMongo();
   
-  const user = await User.findById(userId);
+  let user = await User.findById(userId);
+  
+  // 如果通过 ID 查询失败，尝试通过 email 查询
+  if (!user && email) {
+    user = await User.findOne({ email });
+  }
+  
   if (!user) {
     throw new Error("User not found");
   }
@@ -64,8 +70,8 @@ export async function getUserSubscriptionStatus(userId: string): Promise<Subscri
  * 🚫 Validate if user can proceed with a new subscription
  * Industry Standard: Prevent duplicate subscriptions at multiple levels
  */
-export async function validateSubscriptionEligibility(userId: string, priceId: string): Promise<SubscriptionValidationResult> {
-  const userStatus = await getUserSubscriptionStatus(userId);
+export async function validateSubscriptionEligibility(userId: string, priceId: string, email?: string): Promise<SubscriptionValidationResult> {
+  const userStatus = await getUserSubscriptionStatus(userId, email);
   
   // Check if user already has an active subscription
   if (userStatus.isActive && userStatus.plan === "pro") {
@@ -88,7 +94,13 @@ export async function validateSubscriptionEligibility(userId: string, priceId: s
   }
 
   // Check for recent cancellation (prevent immediate re-subscription)
-  const user = await User.findById(userId);
+  let user = await User.findById(userId);
+  
+  // 如果通过 ID 查询失败，尝试通过 email 查询
+  if (!user && email) {
+    user = await User.findOne({ email });
+  }
+  
   const recentCancellation = user?.subscriptionHistory?.find((history: any) => 
     history.action === 'canceled' && 
     new Date().getTime() - history.timestamp.getTime() < 24 * 60 * 60 * 1000 // 24 hours
@@ -119,11 +131,18 @@ export async function recordSubscriptionAction(
   action: 'created' | 'upgraded' | 'downgraded' | 'canceled' | 'reactivated' | 'expired',
   fromPlan: string,
   toPlan: string,
-  metadata: any = {}
+  metadata: any = {},
+  email?: string
 ) {
   await connectMongo();
   
-  const user = await User.findById(userId);
+  let user = await User.findById(userId);
+  
+  // 如果通过 ID 查询失败，尝试通过 email 查询
+  if (!user && email) {
+    user = await User.findOne({ email });
+  }
+  
   if (!user) {
     throw new Error("User not found");
   }

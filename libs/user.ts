@@ -46,7 +46,39 @@ export const OPERATION_COSTS = {
 export async function getUserWithUsage(userId: string) {
   await connectMongo();
   
-  const user = await User.findById(userId).select(
+  let user;
+  
+  // 尝试通过 ID 查询（可能是 MongoDB ObjectId 或 Google ID）
+  try {
+    user = await User.findById(userId).select(
+      'name email image plan subscriptionStatus preferences credits totalAvatarsCreated lastLoginAt'
+    );
+  } catch (error) {
+    // 如果 ID 查询失败，尝试通过 email 查询
+    // 这种情况通常发生在 Google 登录时，session.user.id 是 Google ID 而不是 MongoDB ObjectId
+    console.log(`Failed to find user by ID ${userId}, trying alternative methods...`);
+    
+    // 从 session 中获取 email 信息
+    // 由于这里无法直接访问 session，我们需要修改调用方式
+    // 暂时返回 null，让调用方处理
+    return null;
+  }
+  
+  if (!user) return null;
+
+  const planLimits = PLAN_LIMITS[user.plan] || PLAN_LIMITS.free;
+
+  return {
+    user,
+    credits: user.credits,
+    planLimits,
+  };
+}
+
+export async function getUserWithUsageByEmail(email: string) {
+  await connectMongo();
+  
+  const user = await User.findOne({ email }).select(
     'name email image plan subscriptionStatus preferences credits totalAvatarsCreated lastLoginAt'
   );
   
@@ -61,10 +93,16 @@ export async function getUserWithUsage(userId: string) {
   };
 }
 
-export async function canUserGenerateAvatar(userId: string): Promise<boolean> {
+export async function canUserGenerateAvatar(userId: string, email?: string): Promise<boolean> {
   await connectMongo();
   
-  const user = await User.findById(userId);
+  let user = await User.findById(userId);
+  
+  // 如果通过 ID 查询失败，尝试通过 email 查询
+  if (!user && email) {
+    user = await User.findOne({ email });
+  }
+  
   if (!user) return false;
   
   return user.credits.balance >= OPERATION_COSTS.avatar_generation;
@@ -80,7 +118,7 @@ export async function consumeCreditsForOperation(
   return await (Usage as any).recordUsage(userId, operationType, metadata, sessionInfo);
 }
 
-export async function getUserSubscriptionStatus(userId: string) {
+export async function getUserSubscriptionStatus(userId: string, email?: string) {
   await connectMongo();
   
   const subscription = await Subscription.findOne({
@@ -113,11 +151,12 @@ export function canAffordOperation(balance: number, operationType: keyof typeof 
 export async function grantCreditsToUser(
   userId: string, 
   amount: number, 
-  reason: string = "subscription_upgrade"
+  reason: string = "subscription_upgrade",
+  email?: string
 ): Promise<any> {
   await connectMongo();
   
-  const user = await User.findByIdAndUpdate(
+  let user = await User.findByIdAndUpdate(
     userId,
     {
       $inc: {
@@ -135,6 +174,27 @@ export async function grantCreditsToUser(
     { new: true }
   );
   
+  // 如果通过 ID 查询失败，尝试通过 email 查询
+  if (!user && email) {
+    user = await User.findOneAndUpdate(
+      { email },
+      {
+        $inc: {
+          "credits.balance": amount,
+          "credits.totalEarned": amount,
+        },
+        $set: {
+          "credits.lastCreditGrant": {
+            date: new Date(),
+            amount,
+            reason,
+          },
+        },
+      },
+      { new: true }
+    );
+  }
+  
   if (!user) {
     throw new Error("User not found");
   }
@@ -142,10 +202,16 @@ export async function grantCreditsToUser(
   return user;
 }
 
-export async function updateUserPreferences(userId: string, preferences: any) {
+export async function updateUserPreferences(userId: string, preferences: any, email?: string) {
   await connectMongo();
   
-  const user = await User.findById(userId);
+  let user = await User.findById(userId);
+  
+  // 如果通过 ID 查询失败，尝试通过 email 查询
+  if (!user && email) {
+    user = await User.findOne({ email });
+  }
+  
   if (!user) throw new Error('User not found');
 
   user.preferences = {
@@ -157,10 +223,16 @@ export async function updateUserPreferences(userId: string, preferences: any) {
   return user;
 }
 
-export async function updateUserProfile(userId: string, profileData: { name?: string }) {
+export async function updateUserProfile(userId: string, profileData: { name?: string }, email?: string) {
   await connectMongo();
   
-  const user = await User.findById(userId);
+  let user = await User.findById(userId);
+  
+  // 如果通过 ID 查询失败，尝试通过 email 查询
+  if (!user && email) {
+    user = await User.findOne({ email });
+  }
+  
   if (!user) throw new Error('User not found');
 
   if (profileData.name && profileData.name.trim()) {
@@ -181,11 +253,17 @@ export function formatUsageData(user: any, planLimits: UserLimits): UserUsageDat
   };
 }
 
-export async function getUserDashboardData(userId: string) {
-  const userData = await getUserWithUsage(userId);
+export async function getUserDashboardData(userId: string, email?: string) {
+  let userData = await getUserWithUsage(userId);
+  
+  // 如果通过 ID 查询失败，尝试通过 email 查询
+  if (!userData && email) {
+    userData = await getUserWithUsageByEmail(email);
+  }
+  
   if (!userData) return null;
 
-  const subscriptionStatus = await getUserSubscriptionStatus(userId);
+  const subscriptionStatus = await getUserSubscriptionStatus(userData.user._id, userData.user.email);
 
   return {
     user: {

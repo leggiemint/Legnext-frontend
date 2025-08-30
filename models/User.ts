@@ -18,6 +18,12 @@ const userSchema = new mongoose.Schema(
     image: {
       type: String,
     },
+    // Google OAuth ID for authentication
+    googleId: {
+      type: String,
+      sparse: true, // Allow multiple users without googleId
+      index: true,
+    },
     // Used in the Stripe webhook to identify the user in Stripe and later create Customer Portal or prefill user credit card details
     customerId: {
       type: String,
