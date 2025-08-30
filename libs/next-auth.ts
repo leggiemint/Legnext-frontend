@@ -3,10 +3,24 @@ import type { NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import { MongoDBAdapter } from "@auth/mongodb-adapter";
 import config from "@/config";
-import connectMongo from "./mongo";
 
 interface NextAuthOptionsExtended extends NextAuthOptions {
   adapter?: any;
+}
+
+// 只在运行时导入 MongoDB 相关代码
+let connectMongo: any = null;
+let MongoDBAdapterInstance: any = null;
+
+// 动态导入，避免构建时执行
+if (typeof window === "undefined" && process.env.NODE_ENV !== "production") {
+  // 开发环境
+  try {
+    connectMongo = require("./mongo").default;
+    MongoDBAdapterInstance = MongoDBAdapter;
+  } catch (error) {
+    console.warn("MongoDB not available in development");
+  }
 }
 
 export const authOptions: NextAuthOptionsExtended = {
@@ -28,10 +42,10 @@ export const authOptions: NextAuthOptionsExtended = {
       },
     }),
   ],
-  // New users will be saved in Database (MongoDB Atlas). Each user (model) has some fields like name, email, image, etc..
-  // Requires a MongoDB database. Set MONOGODB_URI env variable.
-  // Learn more about the model type: https://next-auth.js.org/v3/adapters/models
-  ...(process.env.MONGODB_URI && connectMongo && { adapter: MongoDBAdapter(connectMongo) }),
+  // 只在有 MongoDB 连接时才使用适配器
+  ...(connectMongo && MongoDBAdapterInstance && { 
+    adapter: MongoDBAdapterInstance(connectMongo) 
+  }),
 
   callbacks: {
     session: async ({ session, token }) => {
