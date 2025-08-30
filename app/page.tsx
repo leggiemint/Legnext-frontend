@@ -5,6 +5,7 @@ import ComparisonSection from "@/components/ComparisonSection";
 import AIToolsSection from "@/components/AIToolsSection";
 import PricingSection from "@/components/PricingSection";
 import FAQ from "@/components/FAQ";
+import { defaultFAQList } from "@/components/FAQData";
 import DiscordCommunity from "@/components/DiscordCommunity";
 import MainLayout from "@/components/MainLayout";
 
@@ -17,7 +18,7 @@ export default function HomePage() {
       <ComparisonSection />
       <AIToolsSection />
       <PricingSection />
-      <FAQ />
+      <FAQ faqList={defaultFAQList} />
       <DiscordCommunity />
     </MainLayout>
   );

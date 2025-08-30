@@ -178,7 +178,7 @@ export default function CreatePage() {
                     {selectedAvatar === index && (
                       <div className="mt-2 text-center">
                         <button className="btn btn-xs bg-[#06b6d4] hover:bg-[#06b6d4]/90 text-white border-none">
-                          Upscale
+                          Expression
                         </button>
                       </div>
                     )}
@@ -186,18 +186,17 @@ export default function CreatePage() {
                 ))}
               </div>
 
-              {/* Edit Options */}
-              <div className="mt-6">
-                <div className="form-control">
-                  <label className="label">
-                    <span className="label-text font-semibold">Want to refine? Edit your prompt:</span>
-                  </label>
-                  <textarea 
-                    className="textarea textarea-bordered h-20" 
-                    placeholder="Modify your description to get better results..."
-                    value={textDescription}
-                    onChange={(e) => setTextDescription(e.target.value)}
-                  ></textarea>
+              {/* Generated Results Placeholder */}
+              <div className="mt-8">
+                <h3 className="font-semibold mb-4 text-center">Generated Expressions</h3>
+                <div className="w-full">
+                  <div className="w-full h-32 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg flex items-center justify-center border-2 border-dashed border-gray-300">
+                    <div className="text-center">
+                      <p className="text-sm text-gray-500 px-4">
+                        Your complete expression pack will be generated here
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -206,7 +205,7 @@ export default function CreatePage() {
                   ← Back
                 </button>
                 <div className="flex gap-2">
-                  <button className="btn btn-outline">
+                  <button className="btn btn-outline" onClick={() => setCurrentStep(1)}>
                     Regenerate
                   </button>
                   <button 
@@ -259,7 +258,7 @@ export default function CreatePage() {
                       Save to My PngTubers
                     </button>
                     <button className="btn btn-block btn-outline">
-                      Download with Variations
+                      Further Edit (Coming Soon)
                     </button>
                   </div>
 
