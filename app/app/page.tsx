@@ -1,7 +1,7 @@
 "use client";
 
 import { useSession } from "next-auth/react";
-import ButtonAccount from "@/components/ButtonAccount";
+import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
@@ -27,51 +27,76 @@ export default function AppDashboard() {
         <h1 className="text-3xl md:text-4xl font-extrabold mb-4">
           Welcome back, {session?.user?.name || "Creator"}! 👋
         </h1>
-        <p className="text-lg text-base-content/80">
-          Ready to create amazing PNGTuber avatars? Let's get started!
+        <p className="text-lg text-base-content/80 mb-6">
+          Ready to create your PNGTuber avatar?
         </p>
+        
+        {/* Primary CTA Button */}
+        <Link href="/app/create">
+          <button className="btn btn-lg bg-[#06b6d4] hover:bg-[#06b6d4]/90 text-white border-none px-8 py-3 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-200">
+            <svg className="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.5v15m7.5-7.5h-15" />
+            </svg>
+            Create Avatar
+          </button>
+        </Link>
       </div>
 
-      {/* Quick Actions */}
-      <div className="grid md:grid-cols-3 gap-6">
-        <div className="card bg-base-200 shadow-lg">
-          <div className="card-body">
-            <h3 className="card-title">Create New Avatar</h3>
-            <p className="text-sm text-base-content/70">Generate a new PNGTuber avatar with AI</p>
-            <div className="card-actions justify-end">
-              <button className="btn bg-[#06b6d4] hover:bg-[#06b6d4]/90 text-white border-none btn-sm">Create</button>
-            </div>
-          </div>
-        </div>
-
-        <div className="card bg-base-200 shadow-lg">
-          <div className="card-body">
-            <h3 className="card-title">My Avatars</h3>
-            <p className="text-sm text-base-content/70">View and manage your created avatars</p>
-            <div className="card-actions justify-end">
-              <button className="btn btn-ghost btn-sm">View All</button>
-            </div>
-          </div>
-        </div>
-
-        <div className="card bg-base-200 shadow-lg">
-          <div className="card-body">
-            <h3 className="card-title">Usage Stats</h3>
-            <p className="text-sm text-base-content/70">Track your monthly usage and limits</p>
-            <div className="card-actions justify-end">
-              <button className="btn btn-ghost btn-sm">View Stats</button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Account Management */}
+      {/* My Avatars Section */}
       <div className="card bg-base-200 shadow-lg">
         <div className="card-body">
-          <h3 className="card-title mb-4">Account Settings</h3>
-          <ButtonAccount />
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="card-title text-xl">My Avatars</h2>
+            <Link href="/app/avatars">
+              <button className="btn btn-ghost btn-sm">View All →</button>
+            </Link>
+          </div>
+          
+          {/* Recent Avatars Grid - Placeholder for now */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="aspect-square bg-base-300 rounded-lg flex items-center justify-center">
+              <div className="text-center">
+                <svg className="w-8 h-8 mx-auto mb-2 text-base-content/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.5v15m7.5-7.5h-15" />
+                </svg>
+                <p className="text-xs text-base-content/60">Create your first avatar</p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
+      
+      {/* Usage/Upgrade Section */}
+      <div className="grid md:grid-cols-2 gap-6">
+        <div className="card bg-base-200 shadow-lg">
+          <div className="card-body">
+            <h3 className="card-title">Usage This Month</h3>
+            <div className="mt-4">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-sm">Free Plan</span>
+                <span className="text-sm font-semibold">0 / 3 credits used</span>
+              </div>
+              <div className="w-full bg-base-300 rounded-full h-2">
+                <div className="bg-[#06b6d4] h-2 rounded-full" style={{width: '0%'}}></div>
+              </div>
+              <p className="text-xs text-base-content/60 mt-2">3 avatar generations remaining</p>
+            </div>
+          </div>
+        </div>
+        
+        <div className="card bg-gradient-to-r from-[#06b6d4]/10 to-[#6ecfe0]/10 shadow-lg border border-[#06b6d4]/20">
+          <div className="card-body">
+            <h3 className="card-title text-[#06b6d4]">Upgrade to Pro</h3>
+            <p className="text-sm text-base-content/70 mb-4">Get unlimited generations, HD exports, and more!</p>
+            <Link href="/#pricing">
+              <button className="btn bg-[#06b6d4] hover:bg-[#06b6d4]/90 text-white border-none btn-sm">
+                Upgrade Now
+              </button>
+            </Link>
+          </div>
+        </div>
+      </div>
+
     </div>
   );
 }
