@@ -11,31 +11,15 @@ export async function GET() {
   try {
     session = await getServerSession(authOptions);
     
-    console.log("🔍 [DEBUG] Session data:", {
-      hasSession: !!session,
-      userId: session?.user?.id,
-      userEmail: session?.user?.email,
-      userIdType: typeof session?.user?.id
-    });
-    
     if (!session?.user?.id) {
-      console.log("❌ [DEBUG] No session or user ID");
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    console.log("🔍 [DEBUG] Attempting to fetch user data...");
     const userData = await getUserDashboardData(session.user.id, session.user.email);
 
     if (!userData) {
-      console.log("❌ [DEBUG] getUserDashboardData returned null");
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
-
-    console.log("✅ [DEBUG] User data fetched successfully:", {
-      userId: userData.user.id,
-      userEmail: userData.user.email,
-      userPlan: userData.user.plan
-    });
 
     return NextResponse.json(userData);
   } catch (error) {

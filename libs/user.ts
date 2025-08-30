@@ -254,23 +254,17 @@ export function formatUsageData(user: any, planLimits: UserLimits): UserUsageDat
 }
 
 export async function getUserDashboardData(userId: string, email?: string) {
-  console.log(`🔍 [DEBUG] getUserDashboardData called with ID: ${userId}, Email: ${email}`);
-  
   // Use the smart user lookup function
   const user = await findUserByIdOrEmail(userId, email);
   
   if (!user) {
-    console.log(`❌ [DEBUG] User not found in getUserDashboardData`);
     return null;
   }
-  
-  console.log(`✅ [DEBUG] User found in getUserDashboardData: ${user.email}`);
   
   // Get user data with usage
   const userData = await getUserWithUsage(user._id.toString());
   
   if (!userData) {
-    console.log(`❌ [DEBUG] getUserWithUsage failed for user: ${user.email}`);
     return null;
   }
   
@@ -308,59 +302,48 @@ export async function findUserByIdOrEmail(userId: string, email?: string) {
   try {
     await connectMongo();
     
-    console.log(`🔍 [DEBUG] Smart user lookup - ID: ${userId}, Email: ${email}`);
-    
     // First, try to find by ID (could be ObjectId or Google ID)
     let user = null;
     
     try {
       // Check if userId is a valid ObjectId
       if (userId && /^[0-9a-fA-F]{24}$/.test(userId)) {
-        console.log(`🔍 [DEBUG] userId looks like ObjectId, trying findById`);
         user = await User.findById(userId);
         if (user) {
-          console.log(`✅ [DEBUG] User found by ObjectId: ${user.email}`);
           return user;
         }
-      } else {
-        console.log(`🔍 [DEBUG] userId is not ObjectId format: ${userId}`);
       }
     } catch (error) {
-      console.log(`❌ [DEBUG] findById failed:`, error.message);
+      // Continue to next method
     }
     
     // If not found by ID, try by email
     if (!user && email) {
       try {
-        console.log(`🔍 [DEBUG] Trying to find user by email: ${email}`);
         user = await User.findOne({ email });
         if (user) {
-          console.log(`✅ [DEBUG] User found by email: ${user.email}`);
           return user;
         }
       } catch (error) {
-        console.log(`❌ [DEBUG] findOne by email failed:`, error.message);
+        // Continue to next method
       }
     }
     
     // If still not found, try to find by googleId
     if (!user && userId) {
       try {
-        console.log(`🔍 [DEBUG] Trying to find user by googleId: ${userId}`);
         user = await User.findOne({ googleId: userId });
         if (user) {
-          console.log(`✅ [DEBUG] User found by googleId: ${user.email}`);
           return user;
         }
       } catch (error) {
-        console.log(`❌ [DEBUG] findOne by googleId failed:`, error.message);
+        // Continue to next method
       }
     }
 
     // 最后尝试通过多个条件联合查询
     if (!user && (userId || email)) {
       try {
-        console.log(`🔍 [DEBUG] Trying combined search with userId: ${userId}, email: ${email}`);
         const searchConditions = [];
         
         if (email) {
@@ -380,20 +363,18 @@ export async function findUserByIdOrEmail(userId: string, email?: string) {
         if (searchConditions.length > 0) {
           user = await User.findOne({ $or: searchConditions });
           if (user) {
-            console.log(`✅ [DEBUG] User found by combined search: ${user.email}`);
             return user;
           }
         }
       } catch (error) {
-        console.log(`❌ [DEBUG] Combined search failed:`, error.message);
+        // Final fallback failed
       }
     }
     
-    console.log(`❌ [DEBUG] User not found by any method`);
     return null;
     
   } catch (error) {
-    console.error(`💥 [DEBUG] findUserByIdOrEmail failed:`, error.message);
+    console.error(`Error in findUserByIdOrEmail:`, error.message);
     throw error;
   }
 }
