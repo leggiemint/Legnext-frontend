@@ -15,7 +15,7 @@ const postData = JSON.stringify({
       line_items: {
         data: [{
           price: {
-            id: process.env.STRIPE_PRO_PRICE_ID || 'price_1S1k2eKyeXh3bz3dL2jbl2VM'
+            id: process.env.NEXT_PUBLIC_STRIPE_PRO_PRICE_ID || process.env.STRIPE_PRO_PRICE_ID || 'price_1S1k2eKyeXh3bz3dL2jbl2VM'
           }
         }]
       }

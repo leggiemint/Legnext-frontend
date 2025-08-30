@@ -35,7 +35,7 @@ const config = {
       },
       {
         // Pro subscription plan
-        priceId: process.env.STRIPE_PRO_PRICE_ID,
+        priceId: process.env.NEXT_PUBLIC_STRIPE_PRO_PRICE_ID,
         isFeatured: true,
         name: "Pro",
         description: "Best Value",
