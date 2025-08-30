@@ -35,9 +35,7 @@ const config = {
       },
       {
         // Pro subscription plan
-        priceId: process.env.NODE_ENV === 'production' 
-          ? "price_1S1k2eKyeXh3bz3dL2jbl2VM" // Production price ID
-          : process.env.STRIPE_PRO_PRICE_ID || "price_1S1k2eKyeXh3bz3dL2jbl2VM", // 🔧 Use production price ID for development too
+        priceId: process.env.STRIPE_PRO_PRICE_ID || "price_1S1qwI3W9QrG6TfeSztwI9lT", // 🔧 优先使用环境变量，fallback到正确的生产价格ID
         isFeatured: true,
         name: "Pro",
         description: "Best Value",

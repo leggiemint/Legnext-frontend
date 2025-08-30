@@ -10,9 +10,7 @@ The system first tries to match the incoming `priceId` with plans defined in `co
 ```typescript
 // config.ts
 {
-  priceId: process.env.NODE_ENV === 'production' 
-    ? "price_1S1k2eKyeXh3bz3dL2jbl2VM" // Production price ID
-    : process.env.STRIPE_PRO_PRICE_ID || "price_test_dev", // Development/test price ID
+  priceId: process.env.STRIPE_PRO_PRICE_ID || "price_1S1qwI3W9QrG6TfeSztwI9lT", // 优先使用环境变量
 }
 ```
 
