@@ -5,8 +5,6 @@ import type { JSX } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import ButtonSignin from "./ButtonSignin";
-import { useSession, signOut } from "next-auth/react";
 import logo from "@/app/logo.svg";
 import config from "@/config";
 
@@ -28,26 +26,23 @@ const links: {
   },
 ];
 
-const cta: JSX.Element = <ButtonSignin extraStyle="btn-primary" />;
+const cta: JSX.Element = (
+  <Link href="/app">
+    <button className="inline-flex items-center justify-center px-4 py-2 bg-[#06b6d4] text-white font-medium rounded-lg hover:bg-[#06b6d4]/90 transition-colors duration-200 shadow-sm">
+      Create Now
+    </button>
+  </Link>
+);
 
-// A header with a logo on the left, links in the center (like Pricing, etc...), and a CTA (like Get Started or Login) on the right.
+// A header with a logo on the left, links in the center (like Pricing, etc...), and a CTA (like Create Now) on the right.
 // The header is responsive, and on mobile, the links are hidden behind a burger button.
 const Header = () => {
   const searchParams = useSearchParams();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
-  const [isUserDropdownOpen, setIsUserDropdownOpen] = useState<boolean>(false);
-  const [mounted, setMounted] = useState<boolean>(false);
-  const { data: session, status } = useSession();
-
-  // Ensure component is mounted on client side
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   // Close menus when the route changes
   useEffect(() => {
     setIsMobileMenuOpen(false);
-    setIsUserDropdownOpen(false);
   }, [searchParams]);
 
   // Handle body class for mobile menu
@@ -69,18 +64,17 @@ const Header = () => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         if (isMobileMenuOpen) setIsMobileMenuOpen(false);
-        if (isUserDropdownOpen) setIsUserDropdownOpen(false);
       }
     };
 
-    if (isMobileMenuOpen || isUserDropdownOpen) {
+    if (isMobileMenuOpen) {
       document.addEventListener('keydown', handleEscape);
     }
 
     return () => {
       document.removeEventListener('keydown', handleEscape);
     };
-  }, [isMobileMenuOpen, isUserDropdownOpen]);
+  }, [isMobileMenuOpen]);
 
   // Handle click outside to close menus
   useEffect(() => {
@@ -91,145 +85,16 @@ const Header = () => {
       if (isMobileMenuOpen && !target.closest('.mobile-menu-overlay') && !target.closest('.mobile-menu-btn')) {
         setIsMobileMenuOpen(false);
       }
-      
-      // Close user dropdown if clicking outside
-      if (isUserDropdownOpen && !target.closest('.user-dropdown') && !target.closest('.user-avatar-btn')) {
-        setIsUserDropdownOpen(false);
-      }
     };
 
-    if (isMobileMenuOpen || isUserDropdownOpen) {
+    if (isMobileMenuOpen) {
       document.addEventListener('mousedown', handleClickOutside);
     }
 
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [isMobileMenuOpen, isUserDropdownOpen]);
-
-  // User avatar component
-  const UserAvatar = () => (
-    <div className="flex items-center space-x-3">
-      {/* Dashboard Button - Hidden on mobile */}
-      <div className="hidden md:block">
-        <Link href="/dashboard">
-          <button className="inline-flex items-center justify-center px-4 py-2 bg-[#06b6d4] text-white font-medium rounded-lg hover:bg-[#06b6d4]/90 transition-colors duration-200 shadow-sm">
-            Dashboard
-          </button>
-        </Link>
-      </div>
-      
-      {/* User Avatar - Hidden on mobile */}
-      <div className="hidden md:block relative">
-        <button
-          onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
-          className="user-avatar-btn flex items-center justify-center w-10 h-10 rounded-full border-2 border-[#06b6d4] bg-white hover:bg-gray-50 transition-colors duration-200"
-          aria-label="User menu"
-        >
-          {session?.user?.image ? (
-            <Image
-              src={session.user.image}
-              alt={session.user.name || "User avatar"}
-              width={36}
-              height={36}
-              className="w-9 h-9 rounded-full"
-            />
-          ) : (
-            <svg
-              className="w-6 h-6 text-[#06b6d4]"
-              fill="currentColor"
-              viewBox="0 0 20 20"
-            >
-              <path
-                fillRule="evenodd"
-                d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
-                clipRule="evenodd"
-              />
-            </svg>
-          )}
-        </button>
-        
-        {/* User Dropdown Menu */}
-        {isUserDropdownOpen && (
-          <div className="user-dropdown absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 py-1 z-50">
-            <div className="px-4 py-2 border-b border-gray-100">
-              <p className="text-sm font-medium text-gray-900">
-                {session?.user?.name || "User"}
-              </p>
-              <p className="text-sm text-gray-500">
-                {session?.user?.email}
-              </p>
-            </div>
-            <button
-              onClick={async () => {
-                try {
-                  console.log("Sign out button clicked"); // Debug log
-                  await signOut({ callbackUrl: "/" });
-                  setIsUserDropdownOpen(false);
-                } catch (error) {
-                  console.error("Sign out error:", error);
-                  // Fallback: redirect manually
-                  window.location.href = "/";
-                }
-              }}
-              className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-            >
-              Sign out
-            </button>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-
-  // Don't render until mounted to prevent hydration mismatch
-  if (!mounted) {
-    return (
-      <header className="sticky top-0 z-40 flex w-full p-0 justify-center border-b border-gray-200/20 bg-white/60 backdrop-blur-xl transition-all">
-        <div className="container flex justify-between items-center py-3 h-12 md:py-4 md:h-16 min-w-0">
-          {/* Left Side: Logo */}
-          <div className="flex items-center">
-            <Link
-              href="/"
-              aria-label={config.appName}
-              className="flex items-center space-x-2 basis-[120px] sm:basis-[160px] md:basis-[200px] flex-shrink-0 flex-grow-0"
-              title={`${config.appName} homepage`}
-            >
-              <div>
-                <Image
-                  src={logo}
-                  alt={`${config.appName} Logo`}
-                  className="w-[120px] sm:w-[160px] md:w-[200px] h-auto"
-                  priority={true}
-                  width={200}
-                  height={50}
-                />
-              </div>
-            </Link>
-          </div>
-          
-          {/* Center: Navigation Links (Hidden on mobile) */}
-          <div className="hidden md:flex items-center gap-4 overflow-x-auto absolute left-1/2 transform -translate-x-1/2">
-            {links.map((link) => (
-              <Link
-                href={link.href}
-                key={link.href}
-                className="flex items-center text-sm lg:text-[1rem] font-medium transition-colors text-gray-600 hover:text-gray-900 whitespace-nowrap flex-shrink-0"
-                title={link.label}
-              >
-                {link.label}
-              </Link>
-            ))}
-          </div>
-
-          {/* Right Side Actions - Loading State */}
-          <div className="flex items-center space-x-2 sm:space-x-3 flex-shrink-0">
-            <div className="w-20 h-9 bg-gray-200 rounded-lg animate-pulse"></div>
-          </div>
-        </div>
-      </header>
-    );
-  }
+  }, [isMobileMenuOpen]);
 
   return (
     <header className="sticky top-0 z-40 flex w-full p-0 justify-center border-b border-gray-200/20 bg-white/60 backdrop-blur-xl transition-all">
@@ -271,28 +136,19 @@ const Header = () => {
 
         {/* Right Side Actions */}
         <div className="flex items-center space-x-2 sm:space-x-3 flex-shrink-0">
-          {/* Show user avatar and dashboard button when logged in, otherwise show sign-in button */}
-          {status === "loading" ? (
-            <div className="w-20 h-9 bg-gray-200 rounded-lg animate-pulse"></div>
-          ) : session ? (
-            <UserAvatar />
-          ) : (
-            <>
-              {/* Auth Button (Hidden on small mobile) */}
-              <div className="hidden sm:block auth-button-placeholder">
-                {cta}
-              </div>
-              
-              {/* Mobile Auth Display (Visible only on small screens) */}
-              <div className="block sm:hidden">
-                <Link href="/auth">
-                  <button className="inline-flex items-center justify-center px-4 py-2 bg-[#06b6d4] text-white font-medium rounded-lg hover:bg-[#06b6d4]/90 transition-colors duration-200 shadow-sm">
-                    Get Started
-                  </button>
-                </Link>
-              </div>
-            </>
-          )}
+          {/* CTA Button (Hidden on small mobile) */}
+          <div className="hidden sm:block auth-button-placeholder">
+            {cta}
+          </div>
+          
+          {/* Mobile CTA Display (Visible only on small screens) */}
+          <div className="block sm:hidden">
+            <Link href="/app">
+              <button className="inline-flex items-center justify-center px-4 py-2 bg-[#06b6d4] text-white font-medium rounded-lg hover:bg-[#06b6d4]/90 transition-colors duration-200 shadow-sm">
+                Create Now
+              </button>
+            </Link>
+          </div>
           
           {/* Mobile Menu Button */}
           <button
@@ -342,46 +198,28 @@ const Header = () => {
               </Link>
             ))}
             
-            {/* Mobile Auth Section */}
+            {/* Discord Link in Mobile Menu */}
+            <Link
+              href="https://discord.gg/zysPAnvP8f"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center p-2 w-full text-sm font-medium rounded-md hover:bg-gray-100 transition-colors mobile-menu-link"
+              title="Join Discord"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              <svg className="w-4 h-4 mr-2" fill="#5865F2" viewBox="0 0 24 24">
+                <path d="M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8852 1.515.0699.0699 0 00-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0785.0095c.1202.099.246.1981.3728.2924a.077.077 0 01-.0066.1276 12.2986 12.2986 0 01-1.873.8914.0766.0766 0 00-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 00.0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419-.019 1.3332-.9555 2.4189-2.1569 2.4189zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.9555 2.4189-2.1568 2.4189Z"/>
+              </svg>
+              Join Discord
+            </Link>
+            
+            {/* Mobile CTA Section */}
             <div className="mt-4 p-2">
-              {session ? (
-                <div className="space-y-2">
-                  <div className="px-2 py-1 border-b border-gray-100">
-                    <p className="text-sm font-medium text-gray-900">
-                      {session.user?.name || "User"}
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      {session.user?.email}
-                    </p>
-                  </div>
-                  <Link href="/dashboard" className="w-full">
-                    <button className="w-full inline-flex items-center justify-center px-4 py-2 bg-[#06b6d4] text-white font-medium rounded-lg hover:bg-[#06b6d4]/90 transition-colors duration-200 shadow-sm">
-                      Dashboard
-                    </button>
-                  </Link>
-                  <button
-                    onClick={async () => {
-                      try {
-                        await signOut({ callbackUrl: "/" });
-                        setIsMobileMenuOpen(false);
-                      } catch (error) {
-                        console.error("Sign out error:", error);
-                        // Fallback: redirect manually
-                        window.location.href = "/";
-                      }
-                    }}
-                    className="w-full inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-background bg-gray-100 text-gray-700 hover:bg-gray-200 h-9 px-3 rounded-md text-sm"
-                  >
-                    Sign out
-                  </button>
-                </div>
-              ) : (
-                <Link href="/auth" className="w-full">
-                  <button className="w-full inline-flex items-center justify-center px-4 py-2 bg-[#06b6d4] text-white font-medium rounded-lg hover:bg-[#06b6d4]/90 transition-colors duration-200 shadow-sm">
-                    Get Started
-                  </button>
-                </Link>
-              )}
+              <Link href="/app" className="w-full">
+                <button className="w-full inline-flex items-center justify-center px-4 py-2 bg-[#06b6d4] text-white font-medium rounded-lg hover:bg-[#06b6d4]/90 transition-colors duration-200 shadow-sm">
+                  Create Now
+                </button>
+              </Link>
             </div>
           </nav>
         </div>
@@ -442,26 +280,6 @@ const Header = () => {
         .mobile-menu-btn:hover {
           background-color: rgba(0, 0, 0, 0.05);
           transform: scale(1.05);
-        }
-        
-        /* Mobile auth container optimization */
-        .mobile-auth-container {
-          display: flex;
-          flex-direction: column;
-          gap: 0.75rem;
-          align-items: stretch;
-        }
-        
-        .mobile-auth-container .flex-row {
-          flex-direction: column !important;
-          gap: 0.75rem !important;
-        }
-        
-        .mobile-auth-container button {
-          width: 100% !important;
-          justify-content: center !important;
-          flex: none !important;
-          min-width: auto !important;
         }
         
         /* Prevent scroll when menu is open */

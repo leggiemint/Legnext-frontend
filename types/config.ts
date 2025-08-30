@@ -33,11 +33,12 @@ export interface ConfigProps {
   stripe: {
     plans: {
       isFeatured?: boolean;
-      priceId: string;
+      isFree?: boolean;
+      priceId?: string; // Optional for free plans
       name: string;
       description?: string;
       price: number;
-      priceAnchor?: number;
+      priceAnchor?: number | null;
       features: {
         name: string;
       }[];

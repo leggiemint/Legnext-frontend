@@ -16,45 +16,35 @@ const config = {
     onlyShowOnRoutes: ["/"],
   },
   stripe: {
-    // Create multiple plans in your Stripe dashboard, then add them here. You can add as many plans as you want, just make sure to add the priceId
+    // Simplified pricing with only Free and Pro plans
     plans: [
       {
-        // REQUIRED — we use this to find the plan in the webhook (for instance if you want to update the user's credits based on the plan)
-        priceId: "price_1S1YIc3W9QrG6TfeFEexYQ66", // Your actual Stripe price ID
-        //  REQUIRED - Name of the plan, displayed on the pricing page
-        name: "Starter",
-        // A friendly description of the plan, displayed on the pricing page. Tip: explain why this plan and not others
-        description: "Perfect for new streamers",
-        // The price you want to display, the one user will be charged on Stripe.
-        price: 19,
-        // If you have an anchor price (i.e. $29) that you want to display crossed out, put it here. Otherwise, leave it empty
-        priceAnchor: 29,
+        // Free plan - no priceId needed as it doesn't require payment
+        name: "Free",
+        description: "Try It Out",
+        price: 0,
+        isFree: true,
         features: [
-          {
-            name: "5 PNGTuber avatars",
-          },
-          { name: "Basic expressions" },
-          { name: "Standard animations" },
-          { name: "Email support" },
+          { name: "3 avatar generations / month" },
+          { name: "1 expression pack (with watermark)" },
+          { name: "Low-resolution exports" },
+          { name: "Community support" },
         ],
       },
       {
-        priceId: "price_1S1YJW3W9QrG6Tfejn8G27jO", // Your actual Stripe price ID
-        // This plan will look different on the pricing page, it will be highlighted. You can only have one plan with isFeatured: true
+        // Pro subscription plan
+        priceId: "price_1S1YJW3W9QrG6Tfejn8G27jO", // Your actual Stripe price ID for Pro subscription
         isFeatured: true,
         name: "Pro",
-        description: "For serious content creators",
-        price: 49,
-        priceAnchor: 79,
+        description: "Most Popular",
+        price: 12,
+        priceAnchor: null,
         features: [
-          {
-            name: "Unlimited PNGTuber avatars",
-          },
-          { name: "Advanced expressions" },
-          { name: "Custom animations" },
+          { name: "100 generations / month" },
+          { name: "Unlimited expression packs (no watermark)" },
+          { name: "HD exports (PNG / GIF / MP4)" },
+          { name: "Simple animations (blinking, mouth movement)" },
           { name: "Priority support" },
-          { name: "1 year of updates" },
-          { name: "24/7 support" },
         ],
       },
     ],
@@ -85,10 +75,10 @@ const config = {
     main: "#06b6d4",
   },
   auth: {
-    // REQUIRED — the path to log in users. It's use to protect private routes (like /dashboard). It's used in apiClient (/libs/api.js) upon 401 errors from our API
+    // REQUIRED — the path to log in users. It's use to protect private routes (like /app). It's used in apiClient (/libs/api.js) upon 401 errors from our API
     loginUrl: "/api/auth/signin",
-    // REQUIRED — the path you want to redirect users after successfull login (i.e. /dashboard, /private). This is normally a private page for users to manage their accounts. It's used in apiClient (/libs/api.js) upon 401 errors from our API & in ButtonSignin.js
-    callbackUrl: "/dashboard",
+    // REQUIRED — the path you want to redirect users after successfull login (i.e. /app, /private). This is normally a private page for users to manage their accounts. It's used in apiClient (/libs/api.js) upon 401 errors from our API & in ButtonSignin.js
+    callbackUrl: "/app",
   },
 } as ConfigProps;
 

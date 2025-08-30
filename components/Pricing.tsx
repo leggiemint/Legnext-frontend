@@ -18,7 +18,7 @@ const Pricing = () => {
 
         <div className="relative flex justify-center flex-col lg:flex-row items-center lg:items-stretch gap-8">
           {config.stripe.plans.map((plan) => (
-            <div key={plan.priceId} className="relative w-full max-w-lg">
+            <div key={plan.name} className="relative w-full max-w-lg">
               {plan.isFeatured && (
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20">
                   <span
@@ -58,13 +58,15 @@ const Pricing = () => {
                     </div>
                   )}
                   <p className={`text-5xl tracking-tight font-extrabold`}>
-                    ${plan.price}
+                    {plan.isFree ? "Free" : `$${plan.price}`}
                   </p>
-                  <div className="flex flex-col justify-end mb-[4px]">
-                    <p className="text-xs text-base-content/60 uppercase font-semibold">
-                      USD
-                    </p>
-                  </div>
+                  {!plan.isFree && (
+                    <div className="flex flex-col justify-end mb-[4px]">
+                      <p className="text-xs text-base-content/60 uppercase font-semibold">
+                        USD
+                      </p>
+                    </div>
+                  )}
                 </div>
                 {plan.features && (
                   <ul className="space-y-2.5 leading-relaxed text-base flex-1">
@@ -89,10 +91,14 @@ const Pricing = () => {
                   </ul>
                 )}
                 <div className="space-y-2">
-                  <ButtonCheckout priceId={plan.priceId} />
+                  <ButtonCheckout 
+                    priceId={plan.priceId} 
+                    isFree={plan.isFree}
+                    mode="subscription"
+                  />
 
                   <p className="flex items-center justify-center gap-2 text-sm text-center text-base-content/80 font-medium relative">
-                    Pay once. Access forever.
+                    {plan.isFree ? "No credit card required" : "/month"}
                   </p>
                 </div>
               </div>
