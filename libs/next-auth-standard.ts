@@ -34,6 +34,7 @@ if (typeof window === "undefined") {
   mongoClientPromise = Promise.reject(new Error("MongoDB client only available on server"));
 }
 
+// 标准NextAuth配置
 export const authOptions: NextAuthOptions = {
   secret: process.env.NEXTAUTH_SECRET,
   
@@ -64,15 +65,20 @@ export const authOptions: NextAuthOptions = {
       return session;
     },
   },
+
+  // 页面配置
   pages: {
     signIn: "/auth/signin",
   },
+
+  // 主题配置
   theme: {
     brandColor: config.colors.main,
-    // PNGTuberMaker logo for authentication pages
-    // It will be used in the login flow to display your logo
     logo: `https://${config.domainName}/logo.svg`,
   },
+
+  // 调试配置 - 生产环境应设为false
+  debug: process.env.NODE_ENV === "development",
 };
 
 export default NextAuth(authOptions);

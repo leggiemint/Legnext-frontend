@@ -7,7 +7,14 @@
     "build": "next build",
     "postbuild": "next-sitemap",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "migrate:schema": "node scripts/migrate-user-schema.js",
+    "migrate:google": "node scripts/migrate-google-login.js",
+    "migrate:all": "npm run migrate:schema && npm run migrate:google",
+    "migrate:production": "npm run migrate:all",
+    "migrate:check": "node scripts/migrate-to-standard-auth.js check",
+    "migrate:standard": "node scripts/migrate-to-standard-auth.js migrate",
+    "auth:standard": "npm run migrate:standard"
   },
   "dependencies": {
     "@auth/mongodb-adapter": "^1.0.0",
