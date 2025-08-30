@@ -3,8 +3,29 @@
 import { useRef, useState } from "react";
 import type { JSX } from "react";
 
-// <FAQ> component is a list of <Item> component
-// Just import the FAQ & add your FAQ content to the const faqList array below.
+// <FAQ> component is a list of <FAQItem> component
+// Now supports custom configuration for different use cases
+//
+// Usage examples:
+// 
+// Default FAQ (original style):
+// <FAQ faqList={defaultFAQList} />
+//
+// PngTuber specific FAQ:
+// <FAQ 
+//   title="Frequently Asked Questions" 
+//   faqList={pngtuberFAQList} 
+//   variant="pngtuber" 
+// />
+//
+// Custom FAQ with custom styling:
+// <FAQ 
+//   title="Custom Title" 
+//   faqList={customFAQList} 
+//   variant="custom" 
+//   className="bg-blue-50" 
+//   maxWidth="max-w-6xl" 
+// />
 
 interface FAQItemProps {
   id: string;
@@ -12,48 +33,13 @@ interface FAQItemProps {
   answer: string;
 }
 
-const faqList: FAQItemProps[] = [
-  {
-    id: "1",
-    question: "What is PNGTuberMaker and how does it work?",
-    answer: "PNGTuberMaker is an AI-powered tool that lets you create custom PNG avatars for streaming. Just describe your character or upload a reference image, and our AI will generate multiple avatar options — complete with expressions and optional animations. No art skills needed."
-  },
-  {
-    id: "2", 
-    question: "Do I need to know how to draw to use PNGTuberMaker?",
-    answer: "Not at all! PNGTuberMaker is designed for everyone — from complete beginners to experienced creators. You can simply write a short description (e.g. \"anime cat girl with blue hair\") or upload a reference picture, and the AI handles the rest."
-  },
-  {
-    id: "3",
-    question: "Can I upload my own sketches or reference images?",
-    answer: "Yes. You can upload sketches, character references, or screenshots. The AI will use them to match your style and keep your character consistent across expressions and animations."
-  },
-  {
-    id: "4",
-    question: "What file formats do you export?",
-    answer: "We support transparent PNG for static avatars and GIF / MP4 / WebM for animations. Perfect for OBS, Discord, or Twitch overlays."
-  },
-  {
-    id: "5",
-    question: "Are the avatars I generate unique and safe to use?",
-    answer: "Yes. All avatars are generated from your own inputs and are unique. You get a full license to use them for streaming, content creation, and commercial use."
-  },
-  {
-    id: "6",
-    question: "Can I use the avatars commercially?",
-    answer: "Absolutely. The Pro plan comes with a full commercial license. You can use your avatars in streams, videos, thumbnails, merchandise, or even resell to clients."
-  },
-  {
-    id: "7",
-    question: "What's included in the free plan?",
-    answer: "The free plan lets you try PNGTuberMaker with 3 avatar generations per month (with watermark and low resolution). It's perfect for testing the tool before upgrading to Pro to unlock HD export, watermark-free assets, and unlimited expression packs."
-  },
-  {
-    id: "8",
-    question: "How long does it take to generate an avatar?",
-    answer: "Most avatars are generated in under 1 minute. Expression packs and short animations take 1–3 minutes depending on complexity. You can preview, pick your favorite, and refine instantly."
-  }
-];
+interface FAQProps {
+  title?: string;
+  faqList: FAQItemProps[];
+  variant?: "default" | "pngtuber" | "custom";
+  className?: string;
+  maxWidth?: string;
+}
 
 const FaqItem = ({ item }: { item: FAQItemProps }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -87,15 +73,41 @@ const FaqItem = ({ item }: { item: FAQItemProps }) => {
   );
 };
 
-const FAQ = () => {
+const FAQ = ({ 
+  title = "Frequently Asked Questions", 
+  faqList, 
+  variant = "default",
+  className = "",
+  maxWidth = "max-w-4xl"
+}: FAQProps) => {
+  const getVariantStyles = () => {
+    switch (variant) {
+      case "pngtuber":
+        return ""; // No background for pngtuber variant, inherit from parent
+      case "custom":
+        return className;
+      default:
+        return "bg-gray-50";
+    }
+  };
+
+  const getTitleStyles = () => {
+    switch (variant) {
+      case "pngtuber":
+        return "text-center text-3xl md:text-4xl font-bold text-[#06b6d4] mb-16";
+      default:
+        return "text-center text-3xl font-bold text-gray-900 mb-16";
+    }
+  };
+
   return (
-    <section className="bg-gray-50" id="faq">
+    <section className={getVariantStyles()} id="faq">
       <div className="py-20 md:py-24 px-8 max-w-7xl mx-auto">
-        <h2 className="text-center text-3xl font-bold text-gray-900 mb-16">
-          Frequently Asked Questions
+        <h2 className={getTitleStyles()}>
+          {title}
         </h2>
         
-        <div className="max-w-4xl mx-auto space-y-4">
+        <div className={`${maxWidth} mx-auto space-y-4`}>
           {faqList.map((item) => (
             <FaqItem key={item.id} item={item} />
           ))}

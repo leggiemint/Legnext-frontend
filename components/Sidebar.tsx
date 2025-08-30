@@ -5,17 +5,8 @@ import { usePathname } from "next/navigation";
 
 const sidebarItems = [
   {
-    name: "Home",
-    href: "/app",
-    icon: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="m3 12 2-2m0 0 7-7 7 7M5 10v10a1 1 0 0 0 1 1h3m0 0V11a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v10m3 0a1 1 0 0 0 1-1V10m0 0 7-7" />
-      </svg>
-    ),
-  },
-  {
-    name: "Create Avatar",
-    href: "/app/create",
+    name: "PngTuber Maker",
+    href: "/app/pngtuber-maker",
     icon: (
       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.5v15m7.5-7.5h-15" />
@@ -23,7 +14,7 @@ const sidebarItems = [
     ),
   },
   {
-    name: "My Avatars",
+    name: "My PngTubers",
     href: "/app/avatars",
     icon: (
       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -49,26 +40,26 @@ const Sidebar = () => {
   return (
     <div className="bg-base-200 w-64 fixed left-0 top-16 h-[calc(100vh-4rem)] flex flex-col z-40 border-r border-base-300">
       {/* Scrollable content area */}
-      <div className="overflow-y-auto flex-grow pt-4 pr-0">
+      <div className="overflow-y-auto flex-grow pt-8 pr-0">
         {/* Navigation */}
         <nav className="px-4">
-          <ul className="space-y-1">
+          <ul className="space-y-3">
             {sidebarItems.map((item) => {
-              const isActive = pathname === item.href || (item.href === "/app" && pathname === "/app");
+              const isActive = pathname === item.href;
               return (
                 <li key={item.name}>
                   <Link
                     href={item.href}
-                    className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
+                    className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl text-sm transition-all duration-200 hover:scale-[1.02] ${
                       isActive
-                        ? "bg-[#06b6d4]/10 text-[#06b6d4] font-semibold"
-                        : "text-slate-600 hover:bg-base-300"
+                        ? "bg-[#06b6d4]/10 text-[#06b6d4] font-semibold shadow-sm"
+                        : "text-slate-600 hover:bg-base-300 hover:text-slate-800"
                     }`}
                   >
-                    <div className={isActive ? "text-[#06b6d4]" : "text-slate-500"}>
+                    <div className={`${isActive ? "text-[#06b6d4]" : "text-slate-500"} flex-shrink-0`}>
                       {item.icon}
                     </div>
-                    <span className="truncate">{item.name}</span>
+                    <span className="truncate font-medium">{item.name}</span>
                   </Link>
                 </li>
               );
