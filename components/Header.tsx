@@ -13,12 +13,12 @@ const links: {
   label: string;
 }[] = [
   {
-    href: "/pricing",
-    label: "Pricing",
+    href: "/app/pngtuber-maker",
+    label: "PngTuber Maker",
   },
   {
-    href: "/blog",
-    label: "Blog",
+    href: "/pricing",
+    label: "Pricing",
   },
   {
     href: "/contact",

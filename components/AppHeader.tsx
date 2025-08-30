@@ -15,7 +15,7 @@ const AppHeader = () => {
     <header className="z-40 flex px-6 gap-4 w-full flex-row relative flex-nowrap items-center justify-between h-16 max-w-full bg-base-100 shadow-sm">
       {/* Left side - Logo */}
       <div className="flex basis-0 flex-row flex-grow flex-nowrap justify-start bg-transparent items-center no-underline text-medium whitespace-nowrap box-border">
-        <Link href="/app">
+        <Link href="/">
           <div className="relative shadow-black/5 shadow-none rounded-large" style={{ maxWidth: "fit-content" }}>
             <div className="flex items-center gap-3">
               {/* Logo from logo.svg */}

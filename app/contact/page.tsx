@@ -1,15 +1,66 @@
-import MainLayout from "@/components/MainLayout";
-import { getSEOTags } from "@/libs/seo";
-import Link from "next/link";
+"use client";
 
-export const metadata = getSEOTags({
-  title: "Contact PNGTuberMaker | Get Support for Avatar Creation",
-  description: "Get in touch with PNGTuberMaker team for support with PNGTuber avatar creation. Email, Discord, and documentation available. We're here to help with your streaming avatar needs.",
-  keywords: "contact pngtubermaker, pngtuber support, avatar creation help, streaming avatar support, pngtuber customer service, vtuber maker contact",
-  canonicalUrlRelative: "/contact",
-});
+import { useState } from "react";
+import MainLayout from "@/components/MainLayout";
+// import { getSEOTags } from "@/libs/seo";
+import Link from "next/link";
+import toast from "react-hot-toast";
+
+// Note: metadata moved to layout or parent component due to "use client"
 
 const Contact = () => {
+  const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    subject: '',
+    message: ''
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    try {
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        toast.success(data.message || 'Thank you for your message! We\'ll get back to you soon.');
+        // 重置表单
+        setFormData({
+          firstName: '',
+          lastName: '',
+          email: '',
+          subject: '',
+          message: ''
+        });
+      } else {
+        toast.error(data.error || 'Something went wrong. Please try again.');
+      }
+    } catch (error) {
+      console.error('Contact form error:', error);
+      toast.error('Failed to send message. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
   return (
     <MainLayout>
       <main className="min-h-screen pt-24 pb-20">
@@ -30,7 +81,7 @@ const Contact = () => {
             <div className="bg-white backdrop-blur-sm rounded-2xl p-8 border border-gray-200 shadow-sm">
               <h2 className="text-2xl font-bold text-gray-900 mb-6">Send us a message</h2>
               
-              <form className="space-y-6">
+              <form className="space-y-6" onSubmit={handleSubmit}>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-2">
@@ -40,9 +91,12 @@ const Contact = () => {
                       type="text"
                       id="firstName"
                       name="firstName"
+                      value={formData.firstName}
+                      onChange={handleInputChange}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#06b6d4] focus:border-transparent transition-colors"
                       placeholder="Your first name"
                       required
+                      disabled={isSubmitting}
                     />
                   </div>
                   <div>
@@ -53,9 +107,12 @@ const Contact = () => {
                       type="text"
                       id="lastName"
                       name="lastName"
+                      value={formData.lastName}
+                      onChange={handleInputChange}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#06b6d4] focus:border-transparent transition-colors"
                       placeholder="Your last name"
                       required
+                      disabled={isSubmitting}
                     />
                   </div>
                 </div>
@@ -68,9 +125,12 @@ const Contact = () => {
                     type="email"
                     id="email"
                     name="email"
+                    value={formData.email}
+                    onChange={handleInputChange}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#06b6d4] focus:border-transparent transition-colors"
                     placeholder="your.email@example.com"
                     required
+                    disabled={isSubmitting}
                   />
                 </div>
                 
@@ -81,8 +141,11 @@ const Contact = () => {
                   <select
                     id="subject"
                     name="subject"
+                    value={formData.subject}
+                    onChange={handleInputChange}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#06b6d4] focus:border-transparent transition-colors"
                     required
+                    disabled={isSubmitting}
                   >
                     <option value="">Select a subject</option>
                     <option value="general">General Inquiry</option>
@@ -100,18 +163,32 @@ const Contact = () => {
                   <textarea
                     id="message"
                     name="message"
+                    value={formData.message}
+                    onChange={handleInputChange}
                     rows={6}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#06b6d4] focus:border-transparent transition-colors resize-none"
                     placeholder="Tell us how we can help you..."
                     required
+                    disabled={isSubmitting}
                   ></textarea>
                 </div>
                 
                 <button
                   type="submit"
-                  className="w-full bg-[#06b6d4] hover:bg-[#06b6d4]/90 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200"
+                  disabled={isSubmitting}
+                  className="w-full bg-[#06b6d4] hover:bg-[#06b6d4]/90 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 flex items-center justify-center"
                 >
-                  Send Message
+                  {isSubmitting ? (
+                    <>
+                      <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Sending...
+                    </>
+                  ) : (
+                    'Send Message'
+                  )}
                 </button>
               </form>
             </div>
