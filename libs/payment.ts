@@ -9,7 +9,10 @@ type PaymentGateway = 'stripe' | 'square';
 
 // 获取当前配置的支付网关
 function getCurrentGateway(): PaymentGateway {
-  const gateway = process.env.PAYMENT_GATEWAY?.toLowerCase() as PaymentGateway;
+  const gateway = (
+    process.env.NEXT_PUBLIC_PAYMENT_GATEWAY || 
+    process.env.PAYMENT_GATEWAY
+  )?.toLowerCase() as PaymentGateway;
   return gateway === 'square' ? 'square' : 'stripe'; // 默认使用stripe
 }
 

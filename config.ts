@@ -126,16 +126,24 @@ const config = {
 
 // 根据支付网关返回对应配置
 export function getPaymentConfig() {
-  const gateway = process.env.PAYMENT_GATEWAY?.toLowerCase();
+  // 支持客户端和服务端调用
+  const gateway = (
+    process.env.NEXT_PUBLIC_PAYMENT_GATEWAY || 
+    process.env.PAYMENT_GATEWAY
+  )?.toLowerCase();
+  
+  console.log('🔍 Payment gateway detected:', gateway);
   
   switch (gateway) {
     case 'square':
+      console.log('✅ Using Square configuration');
       return { 
         gateway: 'square',
         plans: config.square.plans 
       };
     case 'stripe':
     default:
+      console.log('✅ Using Stripe configuration (default)');
       return { 
         gateway: 'stripe',
         plans: config.stripe.plans 
