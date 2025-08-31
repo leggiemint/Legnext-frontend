@@ -27,7 +27,7 @@ export const createCheckout = async ({
   cancelUrl,
   priceId,
   couponId,
-}: CreateCheckoutParams): Promise<string> => {
+}: CreateCheckoutParams): Promise<string | null> => {
   try {
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
       apiVersion: "2023-08-16", // TODO: update this when Stripe updates their API

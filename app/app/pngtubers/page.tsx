@@ -1,3 +1,4 @@
+import Image from "next/image";
 "use client";
 
 import { useState, useEffect } from "react";
@@ -315,10 +316,12 @@ export default function AvatarsPage() {
               {/* PngTuber Preview */}
               <div className="aspect-square bg-gradient-to-br from-[#06b6d4]/20 to-[#6ecfe0]/20 relative">
                 {avatar.images?.thumbnail?.url ? (
-                  <img 
-                    src={avatar.images.thumbnail.url} 
+                  <Image 
+                    src={avatar.images.thumbnail.url}
                     alt={avatar.name}
-                    className="w-full h-full object-cover"
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                   />
                 ) : (
                   <div className="absolute inset-0 flex items-center justify-center">
@@ -465,10 +468,12 @@ export default function AvatarsPage() {
               <div key={avatar._id} className="aspect-square bg-gradient-to-br from-[#06b6d4]/20 to-[#6ecfe0]/20 rounded-lg p-4 flex items-center justify-center">
                 <div className="text-center">
                   {avatar.images?.thumbnail?.url ? (
-                    <img 
-                      src={avatar.images.thumbnail.url} 
+                    <Image 
+                      src={avatar.images.thumbnail.url}
                       alt={avatar.name}
-                      className="w-16 h-16 rounded-full mx-auto mb-2 object-cover"
+                      width={64}
+                      height={64}
+                      className="rounded-full mx-auto mb-2 object-cover"
                     />
                   ) : (
                     <div className="w-16 h-16 bg-[#06b6d4]/30 rounded-full mx-auto mb-2"></div>

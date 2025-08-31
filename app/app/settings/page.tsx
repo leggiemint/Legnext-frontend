@@ -1,3 +1,4 @@
+import Image from "next/image";
 "use client";
 
 import { useSession } from "next-auth/react";
@@ -252,7 +253,7 @@ export default function SettingsPage() {
               <div className="avatar">
                 <div className="w-16 h-16 rounded-full">
                   {userData?.user?.image ? (
-                    <img src={userData.user.image} alt="Profile" />
+                    <Image src={userData.user.image} alt="Profile" width={64} height={64} />
                   ) : (
                     <div className="w-16 h-16 bg-[#06b6d4] rounded-full flex items-center justify-center text-white font-semibold text-lg">
                       {userData?.user?.name?.[0]?.toUpperCase() || "U"}

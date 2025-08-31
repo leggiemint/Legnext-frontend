@@ -1,3 +1,4 @@
+import Image from "next/image";
 "use client";
 
 const OCMakerExamples = () => {
@@ -39,10 +40,12 @@ const OCMakerExamples = () => {
             key={example.id}
             className="flex overflow-hidden flex-col bg-white rounded-xl shadow-lg transition-all duration-300 hover:shadow-xl"
           >
-            <img 
-              src={example.image} 
-              alt={example.alt} 
-              className="object-cover w-full h-full" 
+            <Image 
+              src={example.image}
+              alt={example.alt}
+              width={800}
+              height={800}
+              className="object-cover w-full h-full"
             />
             <div className="p-2 md:p-4 bg-primary-50 h-[170px] border-box">
               <p className="h-full text-xs font-medium text-primary-800 md:text-sm">

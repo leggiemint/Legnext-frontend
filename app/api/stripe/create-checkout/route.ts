@@ -58,6 +58,9 @@ export async function POST(req: NextRequest) {
       // couponId: body.couponId,
     });
 
+    if (!stripeSessionURL) {
+      return NextResponse.json({ error: "Failed to create checkout session" }, { status: 502 });
+    }
     return NextResponse.json({ url: stripeSessionURL });
   } catch (e) {
     console.error(e);

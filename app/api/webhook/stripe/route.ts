@@ -7,6 +7,7 @@ import User from "@/models/User";
 import { findCheckoutSession } from "@/libs/stripe";
 import { grantCreditsToUser } from "@/libs/user";
 import { grantCredits, updateSubscriptionStatus } from "@/libs/user-service";
+import WebhookEvent from "@/models/WebhookEvent";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
   apiVersion: "2023-08-16",
@@ -94,6 +95,21 @@ export async function POST(req: NextRequest) {
 
   eventType = event.type;
   console.log(`Received Stripe webhook event: ${eventType}`);
+
+  // Global idempotency claim (insert first, duplicate -> early return)
+  try {
+    await WebhookEvent.create({
+      provider: "stripe",
+      eventId: event.id,
+      eventType: event.type,
+    });
+  } catch (err: any) {
+    if (err?.code === 11000) {
+      console.log(`⏭️ Stripe webhook ${event.id} already processed`);
+      return NextResponse.json({ received: true, duplicate: true });
+    }
+    throw err;
+  }
 
   try {
     switch (eventType) {

@@ -4,7 +4,7 @@ import { authOptions } from "@/libs/next-auth-standard";
 import connectMongo from "@/libs/mongoose";
 import Avatar from "@/models/Avatar";
 
-export async function GET(req: NextRequest) {
+export async function GET() {
   try {
     const session = await getServerSession(authOptions);
     
