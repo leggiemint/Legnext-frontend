@@ -6,6 +6,7 @@ import configFile from "@/config";
 import User from "@/models/User";
 import { findCheckoutSession } from "@/libs/stripe";
 import { grantCreditsToUser } from "@/libs/user";
+import { grantCredits, updateSubscriptionStatus } from "@/libs/user-service";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
   apiVersion: "2023-08-16",
@@ -223,6 +224,15 @@ export async function POST(req: NextRequest) {
           // Only grant credits if this is a new Pro subscription
           if (!wasAlreadyPro) {
             console.log(`New Pro subscription: Granting ${plan.credits} credits to user ${user._id}`);
+            // Use UserProfile-based credit granting
+            await grantCredits(
+              user._id.toString(), 
+              plan.credits, 
+              "subscription_upgrade",
+              user.email,
+              { plan: "pro", subscriptionStatus: "active" }
+            );
+            // Also update User model for backward compatibility
             await grantCreditsToUser(user._id.toString(), plan.credits, "subscription_upgrade");
           } else {
             console.log(`User ${user._id} already has active Pro plan, skipping credit grant`);
@@ -304,6 +314,14 @@ export async function POST(req: NextRequest) {
           user.subscriptionStatus = "active"; // Still active until period ends
           user.subscriptionEndDate = new Date(stripeObject.current_period_end * 1000);
           
+          // Update UserProfile as well
+          await updateSubscriptionStatus(
+            user._id.toString(),
+            "active",
+            user.plan,
+            user.email
+          );
+          
           // Track in subscription history
           user.subscriptionHistory = user.subscriptionHistory || [];
           user.subscriptionHistory.push({
@@ -347,6 +365,15 @@ export async function POST(req: NextRequest) {
           // Handle credit allocation for upgrades
           if (newPlanName === "pro" && oldPlan === "free") {
             console.log(`Upgrading user ${user._id} to Pro - granting credits`);
+            // Use UserProfile-based credit granting
+            await grantCredits(
+              user._id.toString(), 
+              newPlan.credits, 
+              "plan_upgrade",
+              user.email,
+              { plan: "pro", subscriptionStatus: "active" }
+            );
+            // Also update User model for backward compatibility
             await grantCreditsToUser(user._id.toString(), newPlan.credits, "plan_upgrade");
           }
         }
@@ -419,6 +446,14 @@ export async function POST(req: NextRequest) {
         user.subscriptionStatus = "canceled";
         user.subscriptionEndDate = new Date();
         user.plan = "free"; // Downgrade to free plan
+        
+        // Update UserProfile as well
+        await updateSubscriptionStatus(
+          user._id.toString(),
+          "canceled",
+          "free",
+          user.email
+        );
         
         // 📝 Record webhook processing
         user.webhookEvents = user.webhookEvents || [];
@@ -501,6 +536,15 @@ export async function POST(req: NextRequest) {
           });
           
           // Grant monthly Pro credits (260 credits) for renewal
+          // Use UserProfile-based credit granting
+          await grantCredits(
+            user._id.toString(), 
+            plan.credits, 
+            "monthly_subscription_renewal",
+            user.email,
+            { plan: "pro", subscriptionStatus: "active" }
+          );
+          // Also update User model for backward compatibility
           await grantCreditsToUser(user._id.toString(), plan.credits, "monthly_subscription_renewal");
         }
         
@@ -540,6 +584,14 @@ export async function POST(req: NextRequest) {
         if (user) {
           user.subscriptionStatus = "past_due";
           await user.save();
+          
+          // Update UserProfile as well
+          await updateSubscriptionStatus(
+            user._id.toString(),
+            "past_due",
+            user.plan,
+            user.email
+          );
         }
 
         break;

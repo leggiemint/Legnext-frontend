@@ -162,12 +162,18 @@ export async function updateUserPreferences(userId: string, preferences: any) {
   }
 }
 
-// 添加积分
-export async function grantCredits(userId: string, amount: number, reason: string = "manual_grant") {
+// 添加积分 - 支持通过用户ID或邮箱查找
+export async function grantCredits(
+  userId: string, 
+  amount: number, 
+  reason: string = "manual_grant",
+  email?: string,
+  planUpdate?: { plan?: string; subscriptionStatus?: string }
+) {
   try {
     await connectMongo();
     
-    const profile = await UserProfile.findOneAndUpdate(
+    let profile = await UserProfile.findOneAndUpdate(
       { userId },
       {
         $inc: {
@@ -181,11 +187,48 @@ export async function grantCredits(userId: string, amount: number, reason: strin
             reason,
           },
           lastLoginAt: new Date(),
+          ...(planUpdate && planUpdate.plan && { plan: planUpdate.plan }),
+          ...(planUpdate && planUpdate.subscriptionStatus && { subscriptionStatus: planUpdate.subscriptionStatus }),
         },
       },
       { new: true, upsert: true }
     );
     
+    // 如果没有找到profile且提供了email，尝试通过其他方式查找用户
+    if (!profile && email) {
+      // 这种情况下创建新的profile
+      console.log(`Creating new UserProfile for email: ${email}`);
+      profile = await UserProfile.create({
+        userId,
+        plan: planUpdate?.plan || "free",
+        credits: {
+          balance: amount,
+          totalEarned: amount,
+          totalSpent: 0,
+          lastCreditGrant: {
+            date: new Date(),
+            amount,
+            reason,
+          },
+        },
+        subscriptionStatus: planUpdate?.subscriptionStatus || "inactive",
+        preferences: {
+          defaultStyle: "anime",
+          defaultFormat: "png",
+          autoSave: true,
+          emailNotifications: true,
+          theme: "light"
+        },
+        totalAvatarsCreated: 0,
+        lastLoginAt: new Date()
+      });
+    }
+    
+    if (!profile) {
+      throw new Error(`UserProfile not found for userId: ${userId}`);
+    }
+    
+    console.log(`✅ Granted ${amount} credits to user ${userId} (reason: ${reason})`);
     return profile;
   } catch (error) {
     console.error("💥 Error granting credits:", error);
@@ -217,10 +260,74 @@ export async function consumeCredits(userId: string, amount: number) {
   }
 }
 
+// 更新订阅状态
+export async function updateSubscriptionStatus(
+  userId: string, 
+  subscriptionStatus: string, 
+  plan?: string,
+  email?: string
+) {
+  try {
+    await connectMongo();
+    
+    let profile = await UserProfile.findOneAndUpdate(
+      { userId },
+      {
+        $set: {
+          subscriptionStatus,
+          ...(plan && { plan }),
+          lastLoginAt: new Date(),
+        },
+      },
+      { new: true, upsert: true }
+    );
+    
+    // 如果没有找到profile且提供了email，创建新的profile
+    if (!profile && email) {
+      console.log(`Creating new UserProfile for email: ${email}`);
+      profile = await UserProfile.create({
+        userId,
+        plan: plan || "free",
+        credits: {
+          balance: 60,
+          totalEarned: 60,
+          totalSpent: 0,
+          lastCreditGrant: {
+            date: new Date(),
+            amount: 60,
+            reason: "welcome_bonus"
+          },
+        },
+        subscriptionStatus,
+        preferences: {
+          defaultStyle: "anime",
+          defaultFormat: "png",
+          autoSave: true,
+          emailNotifications: true,
+          theme: "light"
+        },
+        totalAvatarsCreated: 0,
+        lastLoginAt: new Date()
+      });
+    }
+    
+    if (!profile) {
+      throw new Error(`UserProfile not found for userId: ${userId}`);
+    }
+    
+    console.log(`✅ Updated subscription status for user ${userId}: ${subscriptionStatus}`);
+    return profile;
+  } catch (error) {
+    console.error("💥 Error updating subscription status:", error);
+    throw error;
+  }
+}
+
 export default {
   getCurrentUser,
   getUserProfile,
   updateUserPreferences,
   grantCredits,
   consumeCredits,
+  updateSubscriptionStatus,
 };
