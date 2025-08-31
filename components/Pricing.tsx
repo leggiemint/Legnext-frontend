@@ -187,11 +187,17 @@ const Pricing = () => {
                           Already Subscribed
                         </div>
                       ) : (
-                        <ButtonCheckout 
-                          priceId={plan.priceId} 
-                          isFree={plan.isFree}
-                          mode="subscription"
-                        />
+                        <>
+                          <ButtonCheckout 
+                            priceId={plan.priceId} 
+                            isFree={plan.isFree}
+                            mode="subscription"
+                          />
+                          {/* 调试信息 */}
+                          <div className="mt-2 text-xs text-gray-500 text-center">
+                            Debug: priceId = "{plan.priceId}"
+                          </div>
+                        </>
                       )}
                     </div>
                   )}
