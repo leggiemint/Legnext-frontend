@@ -2,54 +2,72 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 
 interface Avatar {
-  id: number;
+  _id: string;
+  avatarId: string;
   name: string;
   createdAt: string;
   isFavorite: boolean;
-  hasAnimations: boolean;
-  format: "PNG" | "GIF" | "MP4";
+  animations: {
+    hasAnimations: boolean;
+  };
+  metadata: {
+    format: string;
+  };
+  images: {
+    thumbnail?: {
+      url: string;
+    };
+    original?: {
+      url: string;
+    };
+  };
+  status: string;
 }
 
-// Mock data - replace with real data from your API
-const mockAvatars: Avatar[] = [
-  {
-    id: 1,
-    name: "Cute Anime Girl",
-    createdAt: "2024-01-15",
-    isFavorite: true,
-    hasAnimations: false,
-    format: "PNG",
-  },
-  {
-    id: 2,
-    name: "Cool Robot Character",
-    createdAt: "2024-01-14",
-    isFavorite: false,
-    hasAnimations: true,
-    format: "GIF",
-  },
-  {
-    id: 3,
-    name: "Fantasy Wizard",
-    createdAt: "2024-01-13",
-    isFavorite: false,
-    hasAnimations: false,
-    format: "PNG",
-  },
-];
-
 export default function AvatarsPage() {
-  const [avatars, setAvatars] = useState<Avatar[]>(mockAvatars);
-  const [selectedAvatars, setSelectedAvatars] = useState<number[]>([]);
+  const { data: session, status } = useSession();
+  const [avatars, setAvatars] = useState<Avatar[]>([]);
+  const [selectedAvatars, setSelectedAvatars] = useState<string[]>([]);
   const [isSelecting, setIsSelecting] = useState(false);
   const [isClient, setIsClient] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   // Fix hydration mismatch for date formatting
   useEffect(() => {
     setIsClient(true);
   }, []);
+
+          // Fetch user's PngTubers
+  useEffect(() => {
+    const fetchAvatars = async () => {
+      if (status === "loading") return;
+      
+      if (!session?.user) {
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        setIsLoading(true);
+        const response = await fetch('/api/avatars');
+        if (!response.ok) {
+          throw new Error('Failed to fetch PngTubers');
+        }
+        const data = await response.json();
+        setAvatars(data);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load PngTubers');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchAvatars();
+  }, [session, status]);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -60,15 +78,24 @@ export default function AvatarsPage() {
     });
   };
 
-  const toggleFavorite = (id: number) => {
-    setAvatars(prev => 
-      prev.map(avatar => 
-        avatar.id === id ? { ...avatar, isFavorite: !avatar.isFavorite } : avatar
-      )
-    );
+  const toggleFavorite = async (avatarId: string) => {
+    try {
+      const response = await fetch(`/api/avatars/${avatarId}/favorite`, {
+        method: 'POST',
+      });
+      if (!response.ok) throw new Error('Failed to update favorite');
+      
+      setAvatars(prev => 
+        prev.map(avatar => 
+          avatar._id === avatarId ? { ...avatar, isFavorite: !avatar.isFavorite } : avatar
+        )
+      );
+    } catch (err) {
+      console.error('Error updating favorite:', err);
+    }
   };
 
-  const toggleSelect = (id: number) => {
+  const toggleSelect = (id: string) => {
     setSelectedAvatars(prev => 
       prev.includes(id) 
         ? prev.filter(avatarId => avatarId !== id)
@@ -76,26 +103,124 @@ export default function AvatarsPage() {
     );
   };
 
-  const deleteSelected = () => {
-    setAvatars(prev => prev.filter(avatar => !selectedAvatars.includes(avatar.id)));
-    setSelectedAvatars([]);
-    setIsSelecting(false);
+  const deleteSelected = async () => {
+    try {
+      const response = await fetch('/api/avatars/batch', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ avatarIds: selectedAvatars })
+      });
+      if (!response.ok) throw new Error('Failed to delete PngTubers');
+      
+      setAvatars(prev => prev.filter(avatar => !selectedAvatars.includes(avatar._id)));
+      setSelectedAvatars([]);
+      setIsSelecting(false);
+    } catch (err) {
+              console.error('Error deleting PngTubers:', err);
+    }
   };
 
-  const downloadSelected = () => {
-    // Implement batch download functionality
-    console.log("Downloading avatars:", selectedAvatars);
-    setIsSelecting(false);
+  const downloadSelected = async () => {
+    try {
+      const response = await fetch('/api/avatars/download', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ avatarIds: selectedAvatars })
+      });
+      if (!response.ok) throw new Error('Failed to download PngTubers');
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'avatars.zip';
+      a.click();
+      window.URL.revokeObjectURL(url);
+      
+      setIsSelecting(false);
+    } catch (err) {
+              console.error('Error downloading PngTubers:', err);
+    }
   };
+
+  // Show loading state
+  if (status === "loading" || isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <div>
+                      <h1 className="text-2xl font-bold">My PngTubers</h1>
+          <p className="text-base-content/70">Loading your PngTubers...</p>
+          </div>
+        </div>
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="card bg-base-200 shadow-lg animate-pulse">
+              <div className="aspect-square bg-base-300"></div>
+              <div className="card-body">
+                <div className="h-4 bg-base-300 rounded w-3/4"></div>
+                <div className="h-3 bg-base-300 rounded w-1/2 mt-2"></div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // Show login required state
+  if (!session?.user) {
+    return (
+      <div className="space-y-6">
+        <div className="text-center py-12">
+          <div className="w-32 h-32 bg-base-300 rounded-full mx-auto mb-4 flex items-center justify-center">
+            <svg className="w-16 h-16 text-base-content/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+          </div>
+          <h3 className="text-xl font-semibold mb-2">Please log in to view your PngTubers</h3>
+          <p className="text-base-content/60 mb-6">You need to be logged in to see and manage your PngTubers.</p>
+          <Link href="/auth/signin">
+            <button className="btn bg-[#06b6d4] hover:bg-[#06b6d4]/90 text-white border-none">
+              Sign In
+            </button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <div className="text-center py-12">
+          <div className="w-32 h-32 bg-red-100 rounded-full mx-auto mb-4 flex items-center justify-center">
+            <svg className="w-16 h-16 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <h3 className="text-xl font-semibold mb-2">Failed to load PngTubers</h3>
+          <p className="text-base-content/60 mb-6">{error}</p>
+          <button 
+            className="btn bg-[#06b6d4] hover:bg-[#06b6d4]/90 text-white border-none"
+            onClick={() => window.location.reload()}
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold">My Avatars</h1>
+          <h1 className="text-2xl font-bold">My PngTubers</h1>
           <p className="text-base-content/70">
-            {avatars.length} avatar{avatars.length !== 1 ? 's' : ''} created
+            {avatars.length} PngTuber{avatars.length !== 1 ? 's' : ''} created
           </p>
         </div>
         <div className="flex gap-2">
@@ -157,22 +282,22 @@ export default function AvatarsPage() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
             </svg>
           </div>
-          <h3 className="text-xl font-semibold mb-2">No avatars yet</h3>
+          <h3 className="text-xl font-semibold mb-2">No PngTubers yet</h3>
           <p className="text-base-content/60 mb-6">Create your first PNGTuber avatar to get started!</p>
           <Link href="/app/create">
             <button className="btn bg-[#06b6d4] hover:bg-[#06b6d4]/90 text-white border-none">
-              Create Your First Avatar
+              Create Your First PngTuber
             </button>
           </Link>
         </div>
       ) : (
-        /* Avatar Grid */
+        /* PngTuber Grid */
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {avatars.map((avatar) => (
             <div 
-              key={avatar.id} 
+              key={avatar._id} 
               className={`card bg-base-200 shadow-lg transition-all hover:shadow-xl ${
-                selectedAvatars.includes(avatar.id) ? 'ring-2 ring-[#06b6d4]' : ''
+                selectedAvatars.includes(avatar._id) ? 'ring-2 ring-[#06b6d4]' : ''
               }`}
             >
               {/* Selection Checkbox */}
@@ -181,24 +306,32 @@ export default function AvatarsPage() {
                   <input 
                     type="checkbox" 
                     className="checkbox checkbox-primary"
-                    checked={selectedAvatars.includes(avatar.id)}
-                    onChange={() => toggleSelect(avatar.id)}
+                    checked={selectedAvatars.includes(avatar._id)}
+                    onChange={() => toggleSelect(avatar._id)}
                   />
                 </div>
               )}
 
-              {/* Avatar Preview */}
+              {/* PngTuber Preview */}
               <div className="aspect-square bg-gradient-to-br from-[#06b6d4]/20 to-[#6ecfe0]/20 relative">
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-24 h-24 bg-[#06b6d4]/30 rounded-full"></div>
-                </div>
+                {avatar.images?.thumbnail?.url ? (
+                  <img 
+                    src={avatar.images.thumbnail.url} 
+                    alt={avatar.name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="w-24 h-24 bg-[#06b6d4]/30 rounded-full"></div>
+                  </div>
+                )}
                 
                 {/* Favorite Button */}
                 <button 
                   className={`absolute top-4 right-4 btn btn-ghost btn-sm btn-circle ${
                     avatar.isFavorite ? 'text-red-500' : 'text-base-content/40'
                   }`}
-                  onClick={() => toggleFavorite(avatar.id)}
+                  onClick={() => toggleFavorite(avatar._id)}
                 >
                   <svg className="w-5 h-5" fill={avatar.isFavorite ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
@@ -207,19 +340,35 @@ export default function AvatarsPage() {
 
                 {/* Format Badge */}
                 <div className="absolute bottom-4 left-4">
-                  <div className={`badge badge-sm ${avatar.format === 'PNG' ? 'badge-neutral' : avatar.format === 'GIF' ? 'badge-success' : 'badge-warning'}`}>
-                    {avatar.format}
+                  <div className={`badge badge-sm ${
+                    avatar.metadata.format === 'png' ? 'badge-neutral' : 
+                    avatar.metadata.format === 'gif' ? 'badge-success' : 'badge-warning'
+                  }`}>
+                    {avatar.metadata.format?.toUpperCase() || 'PNG'}
                   </div>
                 </div>
 
                 {/* Animation Badge */}
-                {avatar.hasAnimations && (
+                {avatar.animations?.hasAnimations && (
                   <div className="absolute bottom-4 right-4">
                     <div className="badge badge-sm badge-primary">
                       <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M9.5 15.584V8.416a.5.5 0 0 1 .77-.42l5.576 3.583a.5.5 0 0 1 0 .842l-5.576 3.584a.5.5 0 0 1-.77-.42Z"/>
                       </svg>
                       Animated
+                    </div>
+                  </div>
+                )}
+
+                {/* Status Badge */}
+                {avatar.status !== 'completed' && (
+                  <div className="absolute top-4 left-4">
+                    <div className={`badge badge-sm ${
+                      avatar.status === 'generating' ? 'badge-warning' :
+                      avatar.status === 'processing' ? 'badge-info' :
+                      avatar.status === 'failed' ? 'badge-error' : 'badge-neutral'
+                    }`}>
+                      {avatar.status}
                     </div>
                   </div>
                 )}
@@ -236,7 +385,7 @@ export default function AvatarsPage() {
                 </div>
 
                 {/* Coming Soon for animations */}
-                {!avatar.hasAnimations && (
+                {!avatar.animations?.hasAnimations && (
                   <div className="mt-2">
                     <div className="flex items-center gap-2 text-sm text-base-content/50">
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -313,9 +462,17 @@ export default function AvatarsPage() {
           </h2>
           <div className="grid md:grid-cols-3 lg:grid-cols-4 gap-4">
             {avatars.filter(avatar => avatar.isFavorite).map((avatar) => (
-              <div key={avatar.id} className="aspect-square bg-gradient-to-br from-[#06b6d4]/20 to-[#6ecfe0]/20 rounded-lg p-4 flex items-center justify-center">
+              <div key={avatar._id} className="aspect-square bg-gradient-to-br from-[#06b6d4]/20 to-[#6ecfe0]/20 rounded-lg p-4 flex items-center justify-center">
                 <div className="text-center">
-                  <div className="w-16 h-16 bg-[#06b6d4]/30 rounded-full mx-auto mb-2"></div>
+                  {avatar.images?.thumbnail?.url ? (
+                    <img 
+                      src={avatar.images.thumbnail.url} 
+                      alt={avatar.name}
+                      className="w-16 h-16 rounded-full mx-auto mb-2 object-cover"
+                    />
+                  ) : (
+                    <div className="w-16 h-16 bg-[#06b6d4]/30 rounded-full mx-auto mb-2"></div>
+                  )}
                   <p className="text-sm font-medium">{avatar.name}</p>
                 </div>
               </div>
