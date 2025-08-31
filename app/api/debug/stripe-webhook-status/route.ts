@@ -99,9 +99,9 @@ export async function GET(req: NextRequest) {
       } : null,
       stripeCustomer: stripeCustomer ? {
         id: stripeCustomer.id,
-        email: stripeCustomer.email,
-        created: stripeCustomer.created,
-        subscriptions: stripeCustomer.subscriptions?.data || []
+        email: (stripeCustomer as any).email || null,
+        created: (stripeCustomer as any).created || null,
+        subscriptions: (stripeCustomer as any).subscriptions?.data || []
       } : null,
       webhooks: {
         recent: recentWebhooks.map(w => ({
@@ -109,14 +109,14 @@ export async function GET(req: NextRequest) {
           eventId: w.eventId,
           eventType: w.eventType,
           processed: w.processed,
-          error: w.metadata?.error || null,
+          error: (w.metadata as any)?.error || null,
           createdAt: w.createdAt
         })),
         failed: failedWebhooks.map(w => ({
           id: w.id,
           eventId: w.eventId,
           eventType: w.eventType,
-          error: w.metadata?.error || null,
+          error: (w.metadata as any)?.error || null,
           createdAt: w.createdAt
         }))
       },
