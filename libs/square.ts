@@ -479,16 +479,14 @@ export const verifySquareWebhook = (payload: string, signature: string, secret: 
     }
 
     // Square webhook 签名验证
-    // Square使用基于HMAC-SHA256的签名验证
-    const notificationUrl = process.env.SQUARE_WEBHOOK_NOTIFICATION_URL;
-    if (!notificationUrl) {
-      console.error('❌ Missing SQUARE_WEBHOOK_NOTIFICATION_URL');
-      return false;
-    }
-    const requestBody = payload;
-
-    // 生成预期的签名
-    const stringToSign = notificationUrl + requestBody;
+    // 根据Square官方文档：https://developer.squareup.com/docs/webhooks/step3#verify-the-webhook
+    // 签名格式：HMAC-SHA256(webhook_url + request_body, signature_key)
+    
+    // 获取当前请求的URL（从环境变量或请求中获取）
+    const webhookUrl = process.env.SQUARE_WEBHOOK_NOTIFICATION_URL || 'https://pngtubermaker.com/api/webhooks/square';
+    
+    // 构建签名字符串：webhook_url + request_body
+    const stringToSign = webhookUrl + payload;
     const expectedSignature = crypto
       .createHmac('sha256', secret)
       .update(stringToSign, 'utf8')
@@ -519,8 +517,9 @@ export const verifySquareWebhook = (payload: string, signature: string, secret: 
         duration: `${duration}ms`,
         expectedSignature: expectedSignature.substring(0, 20) + '...',
         receivedSignature: signature.substring(0, 20) + '...',
-        notificationUrl: notificationUrl,
-        payloadPreview: payload.substring(0, 100) + '...'
+        webhookUrl: webhookUrl,
+        payloadPreview: payload.substring(0, 100) + '...',
+        stringToSignPreview: stringToSign.substring(0, 100) + '...'
       });
     }
 
