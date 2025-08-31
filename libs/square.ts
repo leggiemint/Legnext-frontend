@@ -128,7 +128,7 @@ export const createSquareCheckout = async (params: SquareCheckoutParams): Promis
       },
       // 添加用户ID作为reference，这样webhook就能识别用户
       ...(params.clientReferenceId && {
-        paymentNote: `User ID: ${params.clientReferenceId}` // Square在paymentNote中存储用户ID
+        paymentNote: `User ID: ${params.clientReferenceId} - ${plan.name} subscription` // Square在paymentNote中存储用户ID
       })
     };
 

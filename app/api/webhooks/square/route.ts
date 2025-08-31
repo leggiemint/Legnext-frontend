@@ -19,8 +19,17 @@ export async function POST(req: NextRequest) {
   let eventId: string | null = null;
 
   try {
+    console.log("🔔 Square webhook received - starting processing...");
+    
     const body = await req.text();
     const signature = req.headers.get("x-square-hmacsha256-signature");
+
+    console.log("📋 Webhook headers:", {
+      contentType: req.headers.get("content-type"),
+      signature: signature ? "Present" : "Missing",
+      userAgent: req.headers.get("user-agent"),
+      host: req.headers.get("host")
+    });
 
     if (!signature) {
       console.error("❌ Missing Square signature");
@@ -34,6 +43,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Missing webhook secret" }, { status: 500 });
     }
 
+    console.log("🔐 Attempting to verify webhook signature...");
     const isValid = verifySquareWebhook(body, signature, webhookSecret);
     if (!isValid) {
       console.error("❌ Invalid Square webhook signature");
@@ -41,9 +51,14 @@ export async function POST(req: NextRequest) {
     }
 
     // Parse event data
-    event = JSON.parse(body);
-    eventType = event.type;
-    eventId = event.event_id;
+    try {
+      event = JSON.parse(body);
+      eventType = event.type;
+      eventId = event.event_id;
+    } catch (parseError) {
+      console.error("❌ Failed to parse webhook body:", parseError);
+      return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+    }
 
     console.log(`🔔 Square webhook received: ${eventType}`, {
       eventId: eventId,
@@ -91,14 +106,18 @@ export async function POST(req: NextRequest) {
           amount: payment?.amount_money,
           referenceId: payment?.reference_id,
           orderId: payment?.order_id,
-          buyerEmailAddress: payment?.buyer_email_address
+          buyerEmailAddress: payment?.buyer_email_address,
+          note: payment?.note
         });
         
         if (payment?.source_type === 'CARD') {
           let userId = payment.reference_id; // This should be the user ID from checkout
           
+          console.log(`🔍 Looking for user ID. Reference ID: ${userId}`);
+          
           // 如果没有reference_id，尝试从paymentNote中提取用户ID
           if (!userId && payment.note) {
+            console.log(`🔍 Checking payment note for user ID: ${payment.note}`);
             const userIdMatch = payment.note.match(/User ID: ([a-zA-Z0-9-_]+)/);
             if (userIdMatch) {
               userId = userIdMatch[1];
@@ -108,7 +127,7 @@ export async function POST(req: NextRequest) {
           
           // 如果还是没有用户ID，尝试通过邮箱查找用户
           if (!userId && payment.buyer_email_address) {
-            console.log(`❌ No reference_id, trying to find user by email: ${payment.buyer_email_address}`);
+            console.log(`🔍 No reference_id, trying to find user by email: ${payment.buyer_email_address}`);
             
             const user = await prisma.user.findUnique({
               where: { email: payment.buyer_email_address }
@@ -156,6 +175,11 @@ export async function POST(req: NextRequest) {
             console.log(`✅ Square Pro subscription activated for user ${userId}, new credit balance: ${creditResult.newBalance}`);
           } else {
             console.error('❌ Cannot process Square payment without user identification');
+            console.error('Payment details:', {
+              referenceId: payment.reference_id,
+              note: payment.note,
+              buyerEmail: payment.buyer_email_address
+            });
           }
         }
         break;
@@ -187,35 +211,24 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ received: true });
 
   } catch (error: any) {
-    console.error(`❌ Square webhook error (${eventType}):`, {
-      error: error.message,
-      stack: error.stack,
-      eventId: eventId,
-      eventType: eventType
-    });
-
-    // Record failed webhook event
-    try {
-      if (eventId && eventType) {
-        await prisma.webhookEvent.create({
-          data: {
-            provider: "square",
-            eventId: eventId,
-            eventType: eventType,
-            processed: false,
-            metadata: {
-              error: error.message,
-              source: 'square_webhook_error'
-            }
-          }
-        });
-      }
-    } catch (logError) {
-      console.error('Failed to log webhook error:', logError);
+    console.error("❌ Square webhook processing error:", error);
+    
+    // Mark as processed with error
+    if (eventId) {
+      await prisma.webhookEvent.updateMany({
+        where: {
+          provider: "square",
+          eventId: eventId
+        },
+        data: {
+          processed: true,
+          processedAt: new Date()
+        }
+      });
     }
-
+    
     return NextResponse.json(
-      { error: "Webhook processing failed" },
+      { error: "Internal server error" },
       { status: 500 }
     );
   }
