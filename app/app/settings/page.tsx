@@ -103,32 +103,31 @@ export default function SettingsPage() {
       setError(null);
       setSuccessMessage(null);
 
-      const response = await fetch("/api/user/settings", {
+      const response = await fetch("/api/user/profile", {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          profile: {
-            name: formData.name,
-          },
+          name: formData.name,
         }),
       });
 
       if (!response.ok) {
-        throw new Error("Failed to save settings");
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to save settings");
       }
 
-      await response.json();
+      const result = await response.json();
       setSuccessMessage("Settings saved successfully!");
       
       // Update local user data
-      if (userData) {
+      if (userData && result.user) {
         setUserData({
           ...userData,
           user: {
             ...userData.user,
-            name: formData.name,
+            name: result.user.name,
           },
         });
       }

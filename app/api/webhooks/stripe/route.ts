@@ -44,11 +44,11 @@ async function processSubscriptionActivation(userId: string, customerId: string,
     throw new Error(`Subscription update failed: ${updateResult.error}`);
   }
 
-  // Grant initial Pro plan credits (200 credits)
+  // Grant Pro plan credits (200 credits - user already has 60 free credits)
   const creditResult = await grantCredits(
     userId,
     200,
-    "Pro subscription initial credits",
+    "Pro subscription credits",
     "stripe",
     session.id
   );

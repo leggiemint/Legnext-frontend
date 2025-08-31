@@ -4,7 +4,7 @@ import { authOptions } from "@/libs/next-auth";
 import { updateSubscription, grantCredits } from "@/libs/user-service";
 import { prisma } from "@/libs/prisma";
 
-export async function POST(req: NextRequest) {
+export async function POST() {
   try {
     const session = await getServerSession(authOptions);
     
@@ -87,10 +87,10 @@ export async function POST(req: NextRequest) {
           throw new Error(`Subscription update failed: ${updateResult.error}`);
         }
 
-        // 授予Pro计划积分
+        // 授予Pro计划积分 (200 credits - 用户已有60免费积分)
         const creditResult = await grantCredits(
           userId,
-          200, // 200 + 60 welcome = 260 total
+          200, // 200 credits for Pro subscription
           "Square Pro subscription purchase",
           "square",
           payment.id

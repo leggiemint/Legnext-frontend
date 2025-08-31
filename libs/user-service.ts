@@ -71,12 +71,12 @@ export async function getUserWithProfile(userId: string): Promise<UserWithProfil
       image: user.image,
       profile: {
         plan: user.profile.plan,
-        credits: user.profile.credits,
+        credits: user.profile.credits as number,
         subscriptionStatus: user.profile.subscriptionStatus,
-        avatarsCreated: user.profile.avatarsCreated,
+        avatarsCreated: user.profile.avatarsCreated as number,
         preferences: user.profile.preferences,
-        totalCreditsEarned: user.profile.totalCreditsEarned,
-        totalCreditsSpent: user.profile.totalCreditsSpent
+        totalCreditsEarned: user.profile.totalCreditsEarned as number,
+        totalCreditsSpent: user.profile.totalCreditsSpent as number
       }
     };
   } catch (error) {

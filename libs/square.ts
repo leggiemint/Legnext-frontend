@@ -125,7 +125,11 @@ export const createSquareCheckout = async (params: SquareCheckoutParams): Promis
         redirectUrl: successUrl,
         askForShippingAddress: false,
         merchantSupportEmail: process.env.SQUARE_SUPPORT_EMAIL || 'support@pngtubermaker.com'
-      }
+      },
+      // 添加用户ID作为reference，这样webhook就能识别用户
+      ...(params.clientReferenceId && {
+        paymentNote: `User ID: ${params.clientReferenceId}` // Square在paymentNote中存储用户ID
+      })
     };
 
     // 如果用户已登录，预填充邮箱
@@ -133,7 +137,10 @@ export const createSquareCheckout = async (params: SquareCheckoutParams): Promis
       (createPaymentLinkRequest as any).prePopulatedData = {
         buyerEmail: user.email
       };
-      console.log('👤 Pre-filling buyer email:', user.email);
+      console.log('👤 Pre-filling buyer email and user reference:', {
+        email: user.email,
+        userId: params.clientReferenceId
+      });
     }
 
     console.log('🔗 Creating Square payment link...', {

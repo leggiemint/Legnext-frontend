@@ -85,27 +85,77 @@ export async function POST(req: NextRequest) {
       case 'payment.completed': {
         const payment = event.data?.object;
         
+        console.log(`🎯 Processing payment.completed:`, {
+          paymentId: payment?.id,
+          sourceType: payment?.source_type,
+          amount: payment?.amount_money,
+          referenceId: payment?.reference_id,
+          orderId: payment?.order_id,
+          buyerEmailAddress: payment?.buyer_email_address
+        });
+        
         if (payment?.source_type === 'CARD') {
-          const userId = payment.reference_id; // This should be the user ID from checkout
+          let userId = payment.reference_id; // This should be the user ID from checkout
+          
+          // 如果没有reference_id，尝试从paymentNote中提取用户ID
+          if (!userId && payment.note) {
+            const userIdMatch = payment.note.match(/User ID: ([a-zA-Z0-9-_]+)/);
+            if (userIdMatch) {
+              userId = userIdMatch[1];
+              console.log(`✅ Found user ID in payment note: ${userId}`);
+            }
+          }
+          
+          // 如果还是没有用户ID，尝试通过邮箱查找用户
+          if (!userId && payment.buyer_email_address) {
+            console.log(`❌ No reference_id, trying to find user by email: ${payment.buyer_email_address}`);
+            
+            const user = await prisma.user.findUnique({
+              where: { email: payment.buyer_email_address }
+            });
+            
+            if (user) {
+              userId = user.id;
+              console.log(`✅ Found user by email: ${user.id} (${payment.buyer_email_address})`);
+            } else {
+              console.error(`❌ No user found with email: ${payment.buyer_email_address}`);
+            }
+          }
           
           if (userId) {
+            console.log(`💳 Processing Square Pro subscription for user ${userId}`);
+            
             // Grant Pro plan subscription (simplified logic)
-            await updateSubscription(
+            const updateResult = await updateSubscription(
               userId,
               "pro",
               "active",
               payment.order_id, // Use order ID as customer reference
-              "pro-monthly-subscription"
+              "square-pro-subscription"
             );
 
-            // Grant Pro plan credits
-            await grantCredits(
+            if (!updateResult.success) {
+              console.error(`❌ Failed to update subscription for user ${userId}:`, updateResult.error);
+              throw new Error(`Subscription update failed: ${updateResult.error}`);
+            }
+
+            // Grant Pro plan credits (200 credits - user already has 60 free credits)
+            const creditResult = await grantCredits(
               userId,
-              200, // 200 + 60 welcome = 260 total
+              200, // 200 credits for Pro subscription
               "Square Pro subscription purchase",
               "square",
               payment.id
             );
+
+            if (!creditResult.success) {
+              console.error(`❌ Failed to grant credits to user ${userId}:`, creditResult.error);
+              throw new Error(`Credit grant failed: ${creditResult.error}`);
+            }
+
+            console.log(`✅ Square Pro subscription activated for user ${userId}, new credit balance: ${creditResult.newBalance}`);
+          } else {
+            console.error('❌ Cannot process Square payment without user identification');
           }
         }
         break;
@@ -153,7 +203,6 @@ export async function POST(req: NextRequest) {
             eventId: eventId,
             eventType: eventType,
             processed: false,
-            error: error.message,
             metadata: {
               error: error.message,
               source: 'square_webhook_error'

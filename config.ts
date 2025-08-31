@@ -112,12 +112,31 @@ const config = {
         credits: 260,
         priceAnchor: 26,
         features: [
+          { name: "200 credits monthly ($20 worth)" },
+          { name: "No watermark exports" },
+          { name: "HD exports (1 credit each)" },
+          { name: "Animations (2 credits each)" },
+          { name: "Commercial use license" },
+          { name: "Priority support" },
+        ],
+      },
+      {
+        // 测试计划 - Square 0.01美元测试
+        priceId: "test-pro-subscription", // Square 测试标识
+        name: "Pro (Test)", 
+        description: "Test Payment",
+        price: 0.01, // 0.01美元用于测试
+        credits: 260,
+        priceAnchor: 26,
+        isTestPlan: true, // 标记为测试计划
+        features: [
           { name: "260 credits monthly ($26 worth)" },
           { name: "No watermark exports" },
           { name: "HD exports (1 credit each)" },
           { name: "Animations (2 credits each)" },
           { name: "Commercial use license" },
           { name: "Priority support" },
+          { name: "🧪 TEST PAYMENT - Only $0.01" },
         ],
       },
     ],
