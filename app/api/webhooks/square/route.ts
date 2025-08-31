@@ -6,6 +6,7 @@ import { verifySquareWebhook } from "@/libs/square";
 // Square webhook events we handle
 const RELEVANT_EVENTS = new Set([
   'payment.completed',
+  'payment.updated',  // 添加payment.updated事件
   'payment.failed',
   'subscription.created',
   'subscription.updated',
@@ -97,10 +98,11 @@ export async function POST(req: NextRequest) {
 
     // Process different event types
     switch (eventType) {
-      case 'payment.completed': {
+      case 'payment.completed':
+      case 'payment.updated': {
         const payment = event.data?.object;
         
-        console.log(`🎯 Processing payment.completed:`, {
+        console.log(`🎯 Processing ${eventType}:`, {
           paymentId: payment?.id,
           sourceType: payment?.source_type,
           amount: payment?.amount_money,
@@ -110,7 +112,8 @@ export async function POST(req: NextRequest) {
           note: payment?.note
         });
         
-        if (payment?.source_type === 'CARD') {
+        // 只处理已完成的支付
+        if (payment?.source_type === 'CARD' && payment?.status === 'COMPLETED') {
           let userId = payment.reference_id; // This should be the user ID from checkout
           
           console.log(`🔍 Looking for user ID. Reference ID: ${userId}`);
@@ -143,6 +146,19 @@ export async function POST(req: NextRequest) {
           
           if (userId) {
             console.log(`💳 Processing Square Pro subscription for user ${userId}`);
+            
+            // 检查是否已处理过这个支付
+            const existingTransaction = await prisma.transaction.findFirst({
+              where: {
+                gatewayTxnId: payment.id,
+                gateway: "square"
+              }
+            });
+
+            if (existingTransaction) {
+              console.log(`⏭️ Payment ${payment.id} already processed`);
+              return NextResponse.json({ received: true, duplicate: true });
+            }
             
             // Grant Pro plan subscription (simplified logic)
             const updateResult = await updateSubscription(
