@@ -35,7 +35,7 @@ const config = {
       },
       {
         // Pro subscription plan - Stripe 硬编码 Price ID
-        priceId: "price_1S1k2eKyeXh3bz3dL2jbl2VM",
+        priceId: "price_1S1qwI3W9QrG6TfeSztwI9lT",
         isFeatured: true,
         name: "Pro",
         description: "Best Value",
