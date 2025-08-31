@@ -93,37 +93,45 @@ export default function CreatePage() {
             <div className="card-body">
               <h2 className="card-title mb-4">Step 1: Describe Your PngTuber</h2>
               
-              {/* Unified Input Field */}
+              {/* Split Input Field */}
               <div className="form-control">
-                <div className="relative">
-                  <textarea 
-                    className="textarea w-full h-16 resize-none bg-gray-100 border-0 pl-12 pr-4 py-3 text-base-content placeholder-base-content/60" 
-                    placeholder="What do you want to see? Describe your ideal PngTuber character..."
-                    value={textDescription}
-                    onChange={(e) => setTextDescription(e.target.value)}
-                  ></textarea>
-                  
-                  {/* Upload Icon inside input */}
-                  <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
+                <div className="flex gap-4">
+                  {/* Left: Square Upload Area */}
+                  <div className="flex-shrink-0">
                     <label className="cursor-pointer">
-                      <div className="w-6 h-6 text-base-content/60 hover:text-[#06b6d4] transition-colors">
-                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                        </svg>
+                      <div className="w-32 h-32 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center bg-gray-50 hover:bg-gray-100 transition-colors">
+                        <div className="text-center">
+                          <div className="w-8 h-8 text-gray-400 hover:text-[#06b6d4] transition-colors mx-auto mb-2">
+                            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                            </svg>
+                          </div>
+                          <p className="text-xs text-gray-500">Upload Image</p>
+                        </div>
+                        <input 
+                          type="file" 
+                          className="hidden" 
+                          accept="image/*" 
+                          onChange={(e) => {
+                            // Handle file upload
+                            if (e.target.files && e.target.files[0]) {
+                              // Process uploaded file
+                              console.log('File uploaded:', e.target.files[0]);
+                            }
+                          }}
+                        />
                       </div>
-                      <input 
-                        type="file" 
-                        className="hidden" 
-                        accept="image/*" 
-                        onChange={(e) => {
-                          // Handle file upload
-                          if (e.target.files && e.target.files[0]) {
-                            // Process uploaded file
-                            console.log('File uploaded:', e.target.files[0]);
-                          }
-                        }}
-                      />
                     </label>
+                  </div>
+                  
+                  {/* Right: Text Input Area */}
+                  <div className="flex-1">
+                    <textarea 
+                      className="textarea w-full h-32 resize-none bg-gray-100 border-0 px-4 py-3 text-base-content placeholder-base-content/60" 
+                      placeholder="What do you want to see? Describe your ideal PngTuber character..."
+                      value={textDescription}
+                      onChange={(e) => setTextDescription(e.target.value)}
+                    ></textarea>
                   </div>
                 </div>
                 
@@ -190,7 +198,7 @@ export default function CreatePage() {
               <div className="mt-8">
                 <h3 className="font-semibold mb-4 text-center">Generated Expressions</h3>
                 <div className="w-full">
-                  <div className="w-full h-32 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg flex items-center justify-center border-2 border-dashed border-gray-300">
+                  <div className="w-full h-64 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg flex items-center justify-center border-2 border-dashed border-gray-300">
                     <div className="text-center">
                       <p className="text-sm text-gray-500 px-4">
                         Your complete expression pack will be generated here
