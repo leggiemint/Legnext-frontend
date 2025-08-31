@@ -8,7 +8,7 @@ import crypto from 'crypto';
 // 初始化 Square 客户端
 const getSquareClient = () => {
   const client = new SquareClient({
-    accessToken: process.env.SQUARE_ACCESS_TOKEN!,
+    token: process.env.SQUARE_ACCESS_TOKEN!,
     environment: process.env.SQUARE_ENVIRONMENT === 'production' 
       ? SquareEnvironment.Production 
       : SquareEnvironment.Sandbox
@@ -74,7 +74,7 @@ export const createSquareCheckout = async (params: SquareCheckoutParams): Promis
         name: plan.name,
         priceMoney: {
           amount: BigInt(priceInfo.amount),
-          currency: 'USD'
+          currency: "USD" as const
         },
         locationId: process.env.SQUARE_LOCATION_ID!
       },
@@ -98,13 +98,13 @@ export const createSquareCheckout = async (params: SquareCheckoutParams): Promis
       locationId: process.env.SQUARE_LOCATION_ID
     });
     
-    const response = await client.checkout.createPaymentLink(createPaymentLinkRequest);
+    const response = await client.checkout.paymentLinks.create(createPaymentLinkRequest);
     
-    if (response.result.paymentLink?.url) {
-      console.log('✅ Square payment link created:', response.result.paymentLink.url);
-      return response.result.paymentLink.url;
+    if (response.paymentLink?.url) {
+      console.log('✅ Square payment link created:', response.paymentLink.url);
+      return response.paymentLink.url;
     } else {
-      console.error('❌ Failed to create Square payment link:', response.result);
+      console.error('❌ Failed to create Square payment link:', response);
       return null;
     }
     
