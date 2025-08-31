@@ -132,18 +132,14 @@ export function getPaymentConfig() {
     process.env.PAYMENT_GATEWAY
   )?.toLowerCase();
   
-  console.log('🔍 Payment gateway detected:', gateway);
-  
   switch (gateway) {
     case 'square':
-      console.log('✅ Using Square configuration');
       return { 
         gateway: 'square',
         plans: config.square.plans 
       };
     case 'stripe':
     default:
-      console.log('✅ Using Stripe configuration (default)');
       return { 
         gateway: 'stripe',
         plans: config.stripe.plans 

@@ -15,12 +15,6 @@ const Pricing = () => {
   // 根据环境变量获取当前支付网关的配置
   const paymentConfig = getPaymentConfig();
   
-  // 调试：打印前端配置信息
-  console.log('🎯 Frontend payment config:', {
-    gateway: paymentConfig.gateway,
-    planCount: paymentConfig.plans.length,
-    plans: paymentConfig.plans.map(p => ({ name: p.name, priceId: p.priceId }))
-  });
 
   useEffect(() => {
     if (session?.user?.id) {
@@ -193,10 +187,6 @@ const Pricing = () => {
                             isFree={plan.isFree}
                             mode="subscription"
                           />
-                          {/* 调试信息 */}
-                          <div className="mt-2 text-xs text-gray-500 text-center">
-                            Debug: priceId = "{plan.priceId}"
-                          </div>
                         </>
                       )}
                     </div>

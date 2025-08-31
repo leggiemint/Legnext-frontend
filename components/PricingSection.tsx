@@ -1,6 +1,6 @@
 "use client";
 
-import config from "@/config";
+import config, { getPaymentConfig } from "@/config";
 import ButtonCheckout from "./ButtonCheckout";
 import { useSession } from "next-auth/react";
 import { useState, useEffect } from "react";
@@ -9,6 +9,9 @@ const PricingSection = () => {
   const { data: session } = useSession();
   const [userPlan, setUserPlan] = useState<string | null>(null);
   const [subscriptionStatus, setSubscriptionStatus] = useState<any>(null);
+  
+  // 获取当前支付网关配置
+  const paymentConfig = getPaymentConfig();
 
   useEffect(() => {
     if (session?.user?.id) {
@@ -56,7 +59,7 @@ const PricingSection = () => {
         
         {/* Pricing Cards - Only Free and Pro */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-          {config.stripe.plans.map((plan, index) => (
+          {paymentConfig.plans.map((plan, index) => (
             <div key={plan.priceId || `plan-${index}`} className="pricing-card">
               <div className="relative w-full max-w-lg mx-auto">
                 {plan.isFeatured && (
