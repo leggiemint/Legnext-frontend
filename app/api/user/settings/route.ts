@@ -1,13 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getCurrentUser, updateUserPreferences } from "@/libs/user-service";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/libs/next-auth";
+import { getUserWithProfile } from "@/libs/user-service";
+import { prisma } from "@/libs/prisma";
 
 // GET /api/user/settings - 获取用户设置和使用数据（标准架构）
 export async function GET() {
   try {
-    const user = await getCurrentUser();
+    const session = await getServerSession(authOptions);
+    
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const user = await getUserWithProfile(session.user.id);
     
     if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
     console.log(`✅ User data fetched successfully: ${user.email}`);
@@ -20,11 +29,19 @@ export async function GET() {
         image: user.image,
         plan: user.profile.plan,
         subscriptionStatus: user.profile.subscriptionStatus,
-        totalAvatarsCreated: user.profile.totalAvatarsCreated,
-        lastLoginAt: user.profile.lastLoginAt,
+        totalAvatarsCreated: user.profile.avatarsCreated,
         preferences: user.profile.preferences,
       },
-      credits: user.profile.credits,
+      credits: {
+        balance: user.profile.credits,
+        totalEarned: user.profile.totalCreditsEarned,
+        totalSpent: user.profile.totalCreditsSpent,
+        lastCreditGrant: {
+          date: new Date().toISOString(), // 临时，后续可以从交易记录获取
+          amount: 60,
+          reason: "Welcome bonus credits"
+        }
+      },
       planLimits: {
         creditsPerMonth: user.profile.plan === "pro" ? 260 : 0,
         animationsAllowed: user.profile.plan === "pro",
@@ -50,10 +67,16 @@ export async function GET() {
 // PUT /api/user/settings - 更新用户偏好设置
 export async function PUT(req: NextRequest) {
   try {
-    const user = await getCurrentUser();
+    const session = await getServerSession(authOptions);
+    
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const user = await getUserWithProfile(session.user.id);
     
     if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
     const body = await req.json();
@@ -81,14 +104,19 @@ export async function PUT(req: NextRequest) {
 
     // 更新偏好设置
     if (preferences) {
-      await updateUserPreferences(user.id, {
-        ...user.profile.preferences,
-        ...preferences,
+      await prisma.userProfile.update({
+        where: { userId: user.id },
+        data: {
+          preferences: {
+            ...user.profile.preferences,
+            ...preferences,
+          }
+        }
       });
     }
 
     // 返回更新后的用户信息
-    const updatedUser = await getCurrentUser();
+    const updatedUser = await getUserWithProfile(user.id);
 
     return NextResponse.json({
       message: "Settings updated successfully",
@@ -101,7 +129,7 @@ export async function PUT(req: NextRequest) {
           plan: updatedUser!.profile.plan,
           subscriptionStatus: updatedUser!.profile.subscriptionStatus,
           preferences: updatedUser!.profile.preferences,
-          lastLoginAt: updatedUser!.profile.lastLoginAt,
+
         },
       },
     });

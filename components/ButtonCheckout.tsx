@@ -58,7 +58,7 @@ const ButtonCheckout = ({
           }
           
           const { url }: { url: string } = await apiClient.post(
-            "/stripe/create-checkout",
+            "/payment/create-checkout",
             {
               priceId,
               successUrl: `${window.location.origin}/app`,

@@ -31,6 +31,8 @@ interface UserData {
   };
   credits: {
     balance: number;
+    totalEarned: number;
+    totalSpent: number;
   };
   planLimits: {
     creditsPerMonth: number;
@@ -117,16 +119,9 @@ const Sidebar = () => {
                   <span className="text-gray-600">Credits</span>
                   <span className="font-semibold text-gray-900">{userData.credits.balance}</span>
                 </div>
-                {userData.user.plan === 'pro' && userData.planLimits.creditsPerMonth > 0 && (
-                  <div className="w-full bg-gray-200 rounded-full h-1.5">
-                    <div 
-                      className="bg-[#06b6d4] h-1.5 rounded-full transition-all duration-300"
-                      style={{
-                        width: `${Math.min(100, (userData.credits.balance / userData.planLimits.creditsPerMonth) * 100)}%`
-                      }}
-                    ></div>
-                  </div>
-                )}
+                <div className="text-xs text-gray-500">
+                  {userData.user.plan === 'pro' ? 'Pro plan' : 'Free plan'}
+                </div>
               </div>
 
               {/* Upgrade Button for Free Users */}

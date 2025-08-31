@@ -1,69 +1,107 @@
-import { NextResponse, NextRequest } from "next/server";
-import { getServerSession } from "next-auth/next";
+import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
 import { authOptions } from "@/libs/next-auth";
-import { createCheckout } from "@/libs/payment";
-import connectMongo from "@/libs/mongoose";
-import User from "@/models/User";
+import { prisma } from "@/libs/prisma";
+import Stripe from "stripe";
+import config from "@/config";
 
-// This function creates a payment checkout session (supports Stripe/Square via PAYMENT_GATEWAY env var)
-// It's called by the <ButtonCheckout /> component
-// By default, it doesn't force users to be authenticated. But if they are, it will prefill the Checkout data with their email and/or credit card
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+  apiVersion: "2023-08-16",
+});
+
 export async function POST(req: NextRequest) {
-  const body = await req.json();
-
-  if (!body.priceId) {
-    return NextResponse.json(
-      { error: "Price ID is required" },
-      { status: 400 }
-    );
-  } else if (!body.successUrl || !body.cancelUrl) {
-    return NextResponse.json(
-      { error: "Success and cancel URLs are required" },
-      { status: 400 }
-    );
-  } else if (!body.mode) {
-    return NextResponse.json(
-      {
-        error:
-          "Mode is required (either 'payment' for one-time payments or 'subscription' for recurring subscription)",
-      },
-      { status: 400 }
-    );
-  }
-
   try {
-    const session = await getServerSession(authOptions);
-
-    await connectMongo();
-
-    let user = await User.findById(session?.user?.id);
-    
-    // 如果通过 ID 查询失败，尝试通过 email 查询
-    if (!user && session?.user?.email) {
-      user = await User.findOne({ email: session.user.email });
-    }
-
+    const body = await req.json();
     const { priceId, mode, successUrl, cancelUrl } = body;
 
-    const stripeSessionURL = await createCheckout({
-      priceId,
-      mode,
-      successUrl,
-      cancelUrl,
-      // If user is logged in, it will pass the user ID to the Stripe Session so it can be retrieved in the webhook later
-      clientReferenceId: user?._id?.toString(),
-      // If user is logged in, this will automatically prefill Checkout data like email and/or credit card for faster checkout
-      user,
-      // If you send coupons from the frontend, you can pass it here
-      // couponId: body.couponId,
+    // Validate required fields
+    if (!priceId) {
+      return NextResponse.json(
+        { error: "Price ID is required" },
+        { status: 400 }
+      );
+    }
+
+    if (!successUrl || !cancelUrl) {
+      return NextResponse.json(
+        { error: "Success and cancel URLs are required" },
+        { status: 400 }
+      );
+    }
+
+    if (!mode) {
+      return NextResponse.json(
+        { error: "Mode is required (either 'payment' for one-time payments or 'subscription' for recurring subscription)" },
+        { status: 400 }
+      );
+    }
+
+    // Get current user session
+    const session = await getServerSession(authOptions);
+    let user = null;
+    let customerId = undefined;
+
+    if (session?.user?.id) {
+      // Get user with profile for existing customer ID
+      user = await prisma.user.findUnique({
+        where: { id: session.user.id },
+        include: { profile: true }
+      });
+
+      // Use existing Stripe customer ID if available
+      if (user?.profile?.stripeCustomerId) {
+        customerId = user.profile.stripeCustomerId;
+      }
+    }
+
+    // Create Stripe checkout session
+    const checkoutSession = await stripe.checkout.sessions.create({
+      mode: mode as 'payment' | 'subscription',
+      payment_method_types: ['card'],
+      line_items: [
+        {
+          price: priceId,
+          quantity: 1,
+        },
+      ],
+      success_url: successUrl,
+      cancel_url: cancelUrl,
+      // If user is logged in, pass user ID for webhook processing
+      client_reference_id: user?.id || undefined,
+      // Pre-fill customer info if available
+      customer: customerId,
+      customer_email: !customerId && user?.email ? user.email : undefined,
+      // Enable customer portal for subscription management
+      customer_creation: mode === 'subscription' ? 'always' : 'if_required',
+      // Add metadata for tracking
+      metadata: {
+        userId: user?.id || '',
+        plan: 'pro', // Assuming this is for pro plan
+      },
+      // For subscriptions, collect tax if needed
+      ...(mode === 'subscription' && {
+        automatic_tax: { enabled: false }, // Enable if you want automatic tax calculation
+      }),
     });
 
-    if (!stripeSessionURL) {
-      return NextResponse.json({ error: "Failed to create checkout session" }, { status: 502 });
+    return NextResponse.json({ 
+      url: checkoutSession.url 
+    });
+
+  } catch (error: any) {
+    console.error("Stripe checkout error:", error);
+    
+    // Handle specific Stripe errors
+    if (error.type === 'StripeCardError') {
+      return NextResponse.json(
+        { error: "Your card was declined." },
+        { status: 402 }
+      );
     }
-    return NextResponse.json({ url: stripeSessionURL });
-  } catch (e) {
-    console.error(e);
-    return NextResponse.json({ error: e?.message }, { status: 500 });
+
+    return NextResponse.json(
+      { error: error.message || "Failed to create checkout session" },
+      { status: 500 }
+    );
   }
 }

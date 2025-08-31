@@ -1,355 +1,268 @@
-import { getServerSession } from "next-auth";
-import { authOptions } from "./next-auth-standard";
-import connectMongo from "./mongoose";
-import UserProfile from "@/models/UserProfile";
+import { prisma } from "@/libs/prisma";
 
 export interface UserWithProfile {
-  // NextAuth user fields
   id: string;
   name?: string | null;
   email?: string | null;
   image?: string | null;
-  // Business profile fields
   profile: {
     plan: string;
-    credits: {
-      balance: number;
-      totalEarned: number;
-      totalSpent: number;
-      lastCreditGrant?: {
-        date: Date;
-        amount: number;
-        reason: string;
-      };
-    };
+    credits: number;
     subscriptionStatus: string;
+    avatarsCreated: number;
     preferences: any;
-    totalAvatarsCreated: number;
-    lastLoginAt: Date;
+    totalCreditsEarned: number;
+    totalCreditsSpent: number;
   };
 }
 
-// 获取当前登录用户的完整信息
-export async function getCurrentUser(): Promise<UserWithProfile | null> {
+/**
+ * Get current user with profile
+ */
+export async function getUserWithProfile(userId: string): Promise<UserWithProfile | null> {
   try {
-    const session = await getServerSession(authOptions);
-    
-    if (!session?.user?.id) {
-      return null;
-    }
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      include: { profile: true }
+    });
 
-    await connectMongo();
-    
-    // 查找或创建用户业务档案
-    let profile = await UserProfile.findOne({ userId: session.user.id });
-    
-    if (!profile) {
-      // 首次登录，创建业务档案
-      console.log(`🔄 Creating profile for new user: ${session.user.email}`);
-      profile = await UserProfile.create({
-        userId: session.user.id,
-        plan: "free",
-        credits: {
-          balance: 60,
-          totalEarned: 60,
-          totalSpent: 0,
-          lastCreditGrant: {
-            date: new Date(),
-            amount: 60,
-            reason: "welcome_bonus"
+    if (!user) return null;
+
+    // Create profile if doesn't exist (failsafe)
+    if (!user.profile) {
+      // Use transaction to ensure consistency
+      const newProfile = await prisma.$transaction(async (tx) => {
+        // Create profile
+        const profile = await tx.userProfile.create({
+          data: {
+            userId: user.id,
+            plan: "free",
+            credits: 60,
+            totalCreditsEarned: 60,
+            preferences: {
+              defaultStyle: "anime",
+              emailNotifications: true,
+              theme: "light"
+            }
           }
-        },
-        subscriptionStatus: "inactive",
-        preferences: {
-          defaultStyle: "anime",
-          defaultFormat: "png",
-          autoSave: true,
-          emailNotifications: true,
-          theme: "light"
-        },
-        totalAvatarsCreated: 0,
-        lastLoginAt: new Date()
+        });
+
+        // Record welcome transaction
+        await tx.transaction.create({
+          data: {
+            userId: user.id,
+            type: "credit_purchase",
+            amount: 60,
+            description: "Welcome bonus credits",
+            status: "completed"
+          }
+        });
+
+        return profile;
       });
-      console.log(`✅ Profile created for user: ${session.user.email}`);
-    } else {
-      // 更新最后登录时间
-      profile.lastLoginAt = new Date();
-      await profile.save();
+
+      user.profile = newProfile;
     }
 
     return {
-      id: session.user.id,
-      name: session.user.name,
-      email: session.user.email,
-      image: session.user.image,
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      image: user.image,
       profile: {
-        plan: profile.plan,
-        credits: profile.credits,
-        subscriptionStatus: profile.subscriptionStatus,
-        preferences: profile.preferences,
-        totalAvatarsCreated: profile.totalAvatarsCreated,
-        lastLoginAt: profile.lastLoginAt,
+        plan: user.profile.plan,
+        credits: user.profile.credits,
+        subscriptionStatus: user.profile.subscriptionStatus,
+        avatarsCreated: user.profile.avatarsCreated,
+        preferences: user.profile.preferences,
+        totalCreditsEarned: user.profile.totalCreditsEarned,
+        totalCreditsSpent: user.profile.totalCreditsSpent
       }
     };
   } catch (error) {
-    console.error("💥 Error getting current user:", error);
+    console.error("Error getting user with profile:", error);
     return null;
   }
 }
 
-// 通过用户ID获取业务档案
-export async function getUserProfile(userId: string) {
-  try {
-    await connectMongo();
-    
-    let profile = await UserProfile.findOne({ userId });
-    
-    if (!profile) {
-      // 自动创建档案
-      profile = await UserProfile.create({
-        userId,
-        plan: "free",
-        credits: {
-          balance: 60,
-          totalEarned: 60,
-          totalSpent: 0,
-          lastCreditGrant: {
-            date: new Date(),
-            amount: 60,
-            reason: "welcome_bonus"
-          }
-        },
-        subscriptionStatus: "inactive",
-        preferences: {
-          defaultStyle: "anime",
-          defaultFormat: "png",
-          autoSave: true,
-          emailNotifications: true,
-          theme: "light"
-        },
-        totalAvatarsCreated: 0,
-        lastLoginAt: new Date()
-      });
-    }
-    
-    return profile;
-  } catch (error) {
-    console.error("💥 Error getting user profile:", error);
-    throw error;
-  }
-}
-
-// 更新用户偏好
-export async function updateUserPreferences(userId: string, preferences: any) {
-  try {
-    await connectMongo();
-    
-    const profile = await UserProfile.findOneAndUpdate(
-      { userId },
-      { 
-        $set: { 
-          preferences: { ...preferences },
-          lastLoginAt: new Date() 
-        } 
-      },
-      { new: true, upsert: true }
-    );
-    
-    return profile;
-  } catch (error) {
-    console.error("💥 Error updating user preferences:", error);
-    throw error;
-  }
-}
-
-// 添加积分 - 支持通过用户ID或邮箱查找
-export async function grantCredits(
+/**
+ * Consume credits from user account
+ */
+export async function consumeCredits(
   userId: string, 
   amount: number, 
-  reason: string = "manual_grant",
-  email?: string,
-  planUpdate?: { plan?: string; subscriptionStatus?: string }
-) {
+  description: string
+): Promise<{ success: boolean; newBalance?: number; error?: string }> {
   try {
-    await connectMongo();
-    
-    let profile = await UserProfile.findOneAndUpdate(
-      { userId },
-      {
-        $inc: {
-          "credits.balance": amount,
-          "credits.totalEarned": amount,
-        },
-        $set: {
-          "credits.lastCreditGrant": {
-            date: new Date(),
-            amount,
-            reason,
-          },
-          lastLoginAt: new Date(),
-          ...(planUpdate && planUpdate.plan && { plan: planUpdate.plan }),
-          ...(planUpdate && planUpdate.subscriptionStatus && { subscriptionStatus: planUpdate.subscriptionStatus }),
-        },
+    return await prisma.$transaction(async (tx) => {
+      const profile = await tx.userProfile.findUnique({
+        where: { userId }
+      });
+
+      if (!profile) {
+        return { success: false, error: "User profile not found" };
+      }
+
+      if (profile.credits < amount) {
+        return { success: false, error: "Insufficient credits" };
+      }
+
+      // Update profile credits
+      const updatedProfile = await tx.userProfile.update({
+        where: { userId },
+        data: {
+          credits: profile.credits - amount,
+          totalCreditsSpent: profile.totalCreditsSpent + amount,
+          lastActiveAt: new Date()
+        }
+      });
+
+      // Record transaction
+      await tx.transaction.create({
+        data: {
+          userId,
+          type: "credit_spend",
+          amount: -amount, // Negative for spending
+          description,
+          status: "completed"
+        }
+      });
+
+      return { 
+        success: true, 
+        newBalance: updatedProfile.credits 
+      };
+    });
+  } catch (error) {
+    console.error("Error consuming credits:", error);
+    return { success: false, error: "Database error" };
+  }
+}
+
+/**
+ * Grant credits to user account
+ */
+export async function grantCredits(
+  userId: string,
+  amount: number,
+  description: string,
+  gateway?: string,
+  gatewayTxnId?: string
+): Promise<{ success: boolean; newBalance?: number; error?: string }> {
+  try {
+    return await prisma.$transaction(async (tx) => {
+      const profile = await tx.userProfile.findUnique({
+        where: { userId }
+      });
+
+      if (!profile) {
+        return { success: false, error: "User profile not found" };
+      }
+
+      // Update profile credits
+      const updatedProfile = await tx.userProfile.update({
+        where: { userId },
+        data: {
+          credits: profile.credits + amount,
+          totalCreditsEarned: profile.totalCreditsEarned + amount,
+          lastActiveAt: new Date()
+        }
+      });
+
+      // Record transaction
+      await tx.transaction.create({
+        data: {
+          userId,
+          type: "credit_purchase",
+          amount,
+          description,
+          gateway,
+          gatewayTxnId,
+          status: "completed"
+        }
+      });
+
+      return { 
+        success: true, 
+        newBalance: updatedProfile.credits 
+      };
+    });
+  } catch (error) {
+    console.error("Error granting credits:", error);
+    return { success: false, error: "Database error" };
+  }
+}
+
+/**
+ * Update user subscription
+ */
+export async function updateSubscription(
+  userId: string,
+  plan: string,
+  status: string,
+  customerId?: string,
+  priceId?: string,
+  subscriptionStart?: Date,
+  subscriptionEnd?: Date
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    await prisma.userProfile.upsert({
+      where: { userId },
+      update: {
+        plan,
+        subscriptionStatus: status,
+        ...(customerId && { stripeCustomerId: customerId }),
+        ...(priceId && { currentPriceId: priceId }),
+        ...(subscriptionStart && { subscriptionStart }),
+        ...(subscriptionEnd && { subscriptionEnd }),
+        lastActiveAt: new Date()
       },
-      { new: true, upsert: true }
-    );
-    
-    // 如果没有找到profile且提供了email，尝试通过其他方式查找用户
-    if (!profile && email) {
-      // 这种情况下创建新的profile
-      console.log(`Creating new UserProfile for email: ${email}`);
-      profile = await UserProfile.create({
+      create: {
         userId,
-        plan: planUpdate?.plan || "free",
-        credits: {
-          balance: amount,
-          totalEarned: amount,
-          totalSpent: 0,
-          lastCreditGrant: {
-            date: new Date(),
-            amount,
-            reason,
-          },
-        },
-        subscriptionStatus: planUpdate?.subscriptionStatus || "inactive",
+        plan,
+        subscriptionStatus: status,
+        credits: 60,
+        totalCreditsEarned: 60,
+        ...(customerId && { stripeCustomerId: customerId }),
+        ...(priceId && { currentPriceId: priceId }),
+        ...(subscriptionStart && { subscriptionStart }),
+        ...(subscriptionEnd && { subscriptionEnd }),
         preferences: {
           defaultStyle: "anime",
-          defaultFormat: "png",
-          autoSave: true,
           emailNotifications: true,
           theme: "light"
-        },
-        totalAvatarsCreated: 0,
-        lastLoginAt: new Date()
-      });
-    }
-    
-    if (!profile) {
-      throw new Error(`UserProfile not found for userId: ${userId}`);
-    }
-    
-    console.log(`✅ Granted ${amount} credits to user ${userId} (reason: ${reason})`);
-    return profile;
+        }
+      }
+    });
+
+    return { success: true };
   } catch (error) {
-    console.error("💥 Error granting credits:", error);
-    throw error;
+    console.error("Error updating subscription:", error);
+    return { success: false, error: "Database error" };
   }
 }
 
-// 消费积分
-export async function consumeCredits(userId: string, amount: number) {
+/**
+ * Increment avatar count
+ */
+export async function incrementAvatarCount(userId: string): Promise<void> {
   try {
-    await connectMongo();
-    
-    const profile = await UserProfile.findOne({ userId });
-    
-    if (!profile || profile.credits.balance < amount) {
-      throw new Error("Insufficient credits");
-    }
-    
-    profile.credits.balance -= amount;
-    profile.credits.totalSpent += amount;
-    profile.lastLoginAt = new Date();
-    
-    await profile.save();
-    
-    return profile;
+    await prisma.userProfile.update({
+      where: { userId },
+      data: {
+        avatarsCreated: { increment: 1 },
+        lastActiveAt: new Date()
+      }
+    });
   } catch (error) {
-    console.error("💥 Error consuming credits:", error);
-    throw error;
-  }
-}
-
-// 更新订阅状态
-export async function updateSubscriptionStatus(
-  userId: string, 
-  subscriptionStatus: string, 
-  plan?: string,
-  email?: string
-) {
-  try {
-    await connectMongo();
-    
-    let profile = await UserProfile.findOneAndUpdate(
-      { userId },
-      {
-        $set: {
-          subscriptionStatus,
-          ...(plan && { plan }),
-          lastLoginAt: new Date(),
-        },
-      },
-      { new: true, upsert: true }
-    );
-    
-    // 如果没有找到profile且提供了email，创建新的profile
-    if (!profile && email) {
-      console.log(`Creating new UserProfile for email: ${email}`);
-      profile = await UserProfile.create({
-        userId,
-        plan: plan || "free",
-        credits: {
-          balance: 60,
-          totalEarned: 60,
-          totalSpent: 0,
-          lastCreditGrant: {
-            date: new Date(),
-            amount: 60,
-            reason: "welcome_bonus"
-          },
-        },
-        subscriptionStatus,
-        preferences: {
-          defaultStyle: "anime",
-          defaultFormat: "png",
-          autoSave: true,
-          emailNotifications: true,
-          theme: "light"
-        },
-        totalAvatarsCreated: 0,
-        lastLoginAt: new Date()
-      });
-    }
-    
-    if (!profile) {
-      throw new Error(`UserProfile not found for userId: ${userId}`);
-    }
-    
-    console.log(`✅ Updated subscription status for user ${userId}: ${subscriptionStatus}`);
-    return profile;
-  } catch (error) {
-    console.error("💥 Error updating subscription status:", error);
-    throw error;
-  }
-}
-
-// 通过邮箱查找用户
-export async function findUserByEmail(email: string) {
-  try {
-    await connectMongo();
-    
-    // 首先从User模型中查找
-    const User = (await import("@/models/User")).default;
-    const user = await User.findOne({ email: email.toLowerCase() }).lean();
-    
-    if (!user) {
-      console.log(`User not found for email: ${email}`);
-      return null;
-    }
-    
-    return user;
-  } catch (error) {
-    console.error("💥 Error finding user by email:", error);
-    throw error;
+    console.error("Error incrementing avatar count:", error);
   }
 }
 
 export default {
-  getCurrentUser,
-  getUserProfile,
-  updateUserPreferences,
-  grantCredits,
+  getUserWithProfile,
   consumeCredits,
-  updateSubscriptionStatus,
-  findUserByEmail,
+  grantCredits,
+  updateSubscription,
+  incrementAvatarCount
 };

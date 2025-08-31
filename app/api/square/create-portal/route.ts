@@ -1,52 +1,58 @@
-import { NextResponse, NextRequest } from "next/server";
-import { getServerSession } from "next-auth/next";
+import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
 import { authOptions } from "@/libs/next-auth";
-import connectMongo from "@/libs/mongoose";
+import { prisma } from "@/libs/prisma";
 import { createSquarePortal } from "@/libs/square";
-import User from "@/models/User";
 
 export async function POST(req: NextRequest) {
-  const session = await getServerSession(authOptions);
+  try {
+    const session = await getServerSession(authOptions);
 
-  if (session) {
-    try {
-      await connectMongo();
-
-      const body = await req.json();
-
-      const { id } = session.user;
-
-      const user = await User.findById(id);
-
-      if (!user?.squareCustomerId) {
-        return NextResponse.json(
-          {
-            error:
-              "You don't have a Square billing account yet. Make a purchase first.",
-          },
-          { status: 400 }
-        );
-      } else if (!body.returnUrl) {
-        return NextResponse.json(
-          { error: "Return URL is required" },
-          { status: 400 }
-        );
-      }
-
-      const portalUrl = await createSquarePortal({
-        customerId: user.squareCustomerId,
-        returnUrl: body.returnUrl,
-      });
-
-      return NextResponse.json({
-        url: portalUrl,
-      });
-    } catch (e) {
-      console.error(e);
-      return NextResponse.json({ error: e?.message }, { status: 500 });
+    if (!session?.user?.id) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
     }
-  } else {
-    // Not Signed in
-    return NextResponse.json({ error: "Not signed in" }, { status: 401 });
+
+    const body = await req.json();
+    const { returnUrl } = body;
+
+    if (!returnUrl) {
+      return NextResponse.json(
+        { error: "Return URL is required" },
+        { status: 400 }
+      );
+    }
+
+    // Get user profile to find Square customer ID
+    const userProfile = await prisma.userProfile.findUnique({
+      where: { userId: session.user.id }
+    });
+
+    if (!userProfile?.squareCustomerId) {
+      return NextResponse.json(
+        { error: "You don't have a Square billing account yet. Make a purchase first." },
+        { status: 400 }
+      );
+    }
+
+    // Create Square customer portal session
+    const portalUrl = await createSquarePortal({
+      customerId: userProfile.squareCustomerId,
+      returnUrl,
+    });
+
+    return NextResponse.json({
+      url: portalUrl
+    });
+
+  } catch (error: any) {
+    console.error("Square portal error:", error);
+    
+    return NextResponse.json(
+      { error: error.message || "Failed to create Square customer portal session" },
+      { status: 500 }
+    );
   }
 }

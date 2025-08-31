@@ -290,93 +290,39 @@ export default function SettingsPage() {
         {/* Credits & Subscription */}
         <div className="card bg-base-200 shadow-lg">
           <div className="card-body">
-            <div className="flex justify-between items-start mb-4">
+            <div className="flex justify-between items-start mb-6">
               <h2 className="card-title">Credits & Subscription</h2>
               <div className={`badge ${userData?.user?.plan === 'pro' ? '!bg-[#06b6d4] !text-white' : 'badge-outline'}`}>
                 {userData?.user?.plan?.toUpperCase() || 'FREE'} Plan
               </div>
             </div>
             
-            <div className="grid md:grid-cols-3 gap-4 mb-6">
-              <div className="stats shadow">
+            {/* Simplified Credit Display */}
+            <div className="mb-6">
+              <div className="stats shadow w-full">
                 <div className="stat">
-                  <div className="stat-title">Credit Balance</div>
-                  <div className="stat-value text-lg text-[#06b6d4]">{userData?.credits?.balance || 0}</div>
+                  <div className="stat-title">Available Credits</div>
+                  <div className="stat-value text-3xl text-[#06b6d4]">{userData?.credits?.balance || 0}</div>
                   <div className="stat-desc">
                     ${((userData?.credits?.balance || 0) * 0.1).toFixed(2)} worth
                   </div>
                 </div>
               </div>
-              <div className="stats shadow">
-                <div className="stat">
-                  <div className="stat-title">Credits Spent</div>
-                  <div className="stat-value text-lg">{userData?.credits?.totalSpent || 0}</div>
-                  <div className="stat-desc">
-                    ${((userData?.credits?.totalSpent || 0) * 0.1).toFixed(2)} total
-                  </div>
-                </div>
-              </div>
-              <div className="stats shadow">
-                <div className="stat">
-                  <div className="stat-title">Monthly Allowance</div>
-                  <div className="stat-value text-lg">{userData?.planLimits?.creditsPerMonth || 0}</div>
-                  <div className="stat-desc">
-                    {userData?.user?.plan === 'pro' ? '260 credits/month' : '60 credits/month'}
-                  </div>
-                </div>
+            </div>
+
+            {/* Simple Plan Info */}
+            <div className="bg-base-300 rounded-lg p-4 mb-6">
+              <h3 className="font-semibold mb-3">Current Plan: {userData?.user?.plan === 'pro' ? 'Pro' : 'Free'}</h3>
+              <div className="text-sm text-base-content/70">
+                {userData?.user?.plan === 'pro' ? (
+                  <p>✅ Pro plan with 260 credits monthly</p>
+                ) : (
+                  <p>Free plan with 60 welcome credits</p>
+                )}
               </div>
             </div>
 
-            {/* Credit Usage Info */}
-            <div className="bg-base-300 rounded-lg p-4 mb-4">
-              <h3 className="font-semibold mb-2">Credit Costs</h3>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
-                <div>Avatar Generation: <span className="font-semibold">5 credits</span></div>
-                <div>Expression Pack: <span className="font-semibold">3 credits</span></div>
-                <div>Animation: <span className="font-semibold">2 credits</span></div>
-                <div>HD Export: <span className="font-semibold">1 credit</span></div>
-              </div>
-            </div>
-
-            {/* Plan Features */}
-            <div className="mb-4">
-              <h3 className="font-semibold mb-2">Plan Features</h3>
-              <div className="grid grid-cols-2 gap-2 text-sm">
-                <div className="flex items-center gap-2">
-                  {userData?.planLimits?.animationsAllowed ? (
-                    <span className="text-green-500">✓</span>
-                  ) : (
-                    <span className="text-red-500">✗</span>
-                  )}
-                  <span>Animations</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  {userData?.planLimits?.hdExportsAllowed ? (
-                    <span className="text-green-500">✓</span>
-                  ) : (
-                    <span className="text-red-500">✗</span>
-                  )}
-                  <span>HD Exports</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  {userData?.planLimits?.watermarkFree ? (
-                    <span className="text-green-500">✓</span>
-                  ) : (
-                    <span className="text-red-500">✗</span>
-                  )}
-                  <span>No Watermark</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  {userData?.planLimits?.commercialUse ? (
-                    <span className="text-green-500">✓</span>
-                  ) : (
-                    <span className="text-red-500">✗</span>
-                  )}
-                  <span>Commercial Use</span>
-                </div>
-              </div>
-            </div>
-
+            {/* Upgrade Button */}
             <div className="flex gap-2">
               <Link href="/pricing">
                 <button className="btn bg-[#06b6d4] hover:bg-[#06b6d4]/90 text-white border-none">

@@ -143,7 +143,7 @@ const features: {
           {[
             "Magic links setup",
             "Login with Google walkthrough",
-            "Save user data in MongoDB",
+            "Save user data in PostgreSQL",
             "Private/protected pages & API calls",
           ].map((item) => (
             <li key={item} className="flex items-center gap-3">
@@ -203,7 +203,7 @@ const features: {
     description: (
       <>
         <ul className="space-y-2">
-          {["Mongoose schema", "Mongoose plugins to make your life easier"].map(
+          {["Prisma schema", "Type-safe database operations"].map(
             (item) => (
               <li key={item} className="flex items-center gap-3">
                 <svg
