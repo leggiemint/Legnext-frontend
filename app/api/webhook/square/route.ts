@@ -8,7 +8,8 @@ import User from "@/models/User";
 import WebhookEvent from "@/models/WebhookEvent";
 import { processSquareEvent, SUPPORTED_SQUARE_EVENTS } from "@/libs/webhooks/square-event-handler";
 
-const relevantEvents = new Set(Object.values(SUPPORTED_SQUARE_EVENTS));
+// Widen to Set<string> to avoid TS literal-union mismatch when checking .has(eventType)
+const relevantEvents = new Set<string>(Object.values(SUPPORTED_SQUARE_EVENTS) as string[]);
 
 export async function POST(req: NextRequest) {
   let eventType: string | null = null;

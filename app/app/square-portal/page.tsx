@@ -1,9 +1,12 @@
 "use client";
 
 import { useSession } from "next-auth/react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+
+// 强制动态渲染，避免静态预渲染阶段对 useSearchParams 的限制
+export const dynamic = "force-dynamic";
 
 // 注意：这是一个简化的客户门户实现
 // 由于Square的订阅API复杂且我们使用支付链接方式，
@@ -20,7 +23,7 @@ interface SubscriptionData {
   credits: number;
 }
 
-export default function SquarePortalPage() {
+function PortalContent() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -85,8 +88,7 @@ export default function SquarePortalPage() {
       const response = await fetch('/api/user/update-subscription', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session?.accessToken || ''}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
           action: 'cancel',
@@ -292,5 +294,17 @@ export default function SquarePortalPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function SquarePortalPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-base-200 flex items-center justify-center">
+        <div className="loading loading-spinner loading-lg"></div>
+      </div>
+    }>
+      <PortalContent />
+    </Suspense>
   );
 }

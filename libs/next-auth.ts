@@ -1,5 +1,6 @@
 import NextAuth from "next-auth";
 import type { NextAuthOptions } from "next-auth";
+import type { Adapter } from "next-auth/adapters";
 import GoogleProvider from "next-auth/providers/google";
 import { MongoDBAdapter } from "@auth/mongodb-adapter";
 import config from "@/config";
@@ -37,8 +38,8 @@ if (typeof window === "undefined") {
 export const authOptions: NextAuthOptions = {
   secret: process.env.NEXTAUTH_SECRET,
   
-  // 使用MongoDB适配器 - 这是标准做法
-  adapter: MongoDBAdapter(mongoClientPromise),
+  // 使用MongoDB适配器（类型兼容 next-auth v4）
+  adapter: MongoDBAdapter(mongoClientPromise) as unknown as Adapter,
   
   providers: [
     GoogleProvider({

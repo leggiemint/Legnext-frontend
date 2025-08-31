@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import connectMongo from "@/libs/mongoose";
 import User from "@/models/User";
 import UserProfile from "@/models/UserProfile";
@@ -89,7 +89,7 @@ export async function GET() {
 }
 
 // POST - Run the migration
-export async function POST(_req: NextRequest) {
+export async function POST() {
   try {
     await connectMongo();
     

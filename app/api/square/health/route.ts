@@ -1,4 +1,4 @@
-import { NextResponse, NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 
 interface HealthCheckResult {
   status: 'healthy' | 'unhealthy' | 'degraded';
@@ -132,7 +132,7 @@ async function checkWebhookConfiguration(): Promise<{ status: 'pass' | 'fail'; m
   };
 }
 
-export async function GET(_req: NextRequest) {
+export async function GET() {
   const startTime = Date.now();
 
   try {

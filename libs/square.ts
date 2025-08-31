@@ -1,7 +1,7 @@
 // Square支付网关实现
 // 使用真实的 Square SDK
 
-import { Client, Environment } from 'square';
+import { SquareClient, SquareEnvironment } from 'square';
 import { getPaymentConfig } from "@/config";
 import crypto from 'crypto';
 
@@ -22,11 +22,11 @@ const getSquareClient = () => {
 
   console.log(`🔗 Initializing Square client for ${environment || 'sandbox'} environment`);
 
-  const client = new Client({
-    accessToken: token,
+  const client = new SquareClient({
+    token: token,
     environment: environment === 'production'
-      ? Environment.Production
-      : Environment.Sandbox
+      ? SquareEnvironment.Production
+      : SquareEnvironment.Sandbox
   });
 
   return client;
@@ -143,18 +143,18 @@ export const createSquareCheckout = async (params: SquareCheckoutParams): Promis
       idempotencyKey: createPaymentLinkRequest.idempotencyKey
     });
 
-    const { result: paymentLinkResult } = await client.checkoutApi.createPaymentLink(createPaymentLinkRequest);
+    const response = await client.checkout.paymentLinks.create(createPaymentLinkRequest);
 
-    if (paymentLinkResult.paymentLink?.url) {
+    if (response.paymentLink?.url) {
       const duration = Date.now() - startTime;
       console.log('✅ Square payment link created successfully:', {
-        url: paymentLinkResult.paymentLink.url,
-        paymentLinkId: paymentLinkResult.paymentLink.id,
+        url: response.paymentLink.url,
+        paymentLinkId: response.paymentLink.id,
         duration: `${duration}ms`
       });
-      return paymentLinkResult.paymentLink.url;
+      return response.paymentLink.url;
     } else {
-      console.error('❌ Square API returned no payment URL:', paymentLinkResult);
+      console.error('❌ Square API returned no payment URL:', response);
       throw new Error('Square payment link creation failed - no URL returned');
     }
 
@@ -243,7 +243,7 @@ export const createSquareSubscription = async (params: {
     try {
       console.log('🔍 Searching for existing Square customer...');
       // 尝试通过email查找现有客户
-      const { result: customersResult } = await client.customersApi.searchCustomers({
+      const customersResponse = await client.customers.search({
         query: {
           filter: {
             emailAddress: {
@@ -252,7 +252,7 @@ export const createSquareSubscription = async (params: {
           }
         }
       });
-      squareCustomer = customersResult.customers?.[0];
+      squareCustomer = customersResponse.customers?.[0];
 
       if (squareCustomer) {
         console.log('✅ Found existing Square customer:', squareCustomer.id);
@@ -266,12 +266,12 @@ export const createSquareSubscription = async (params: {
     // 如果没有找到客户，创建新客户
     if (!squareCustomer) {
       console.log('👤 Creating new Square customer...');
-      const { result: createCustomerResult } = await client.customersApi.createCustomer({
+      const customerResponse = await client.customers.create({
         givenName: 'Customer',
         emailAddress: params.email,
         idempotencyKey: crypto.randomUUID()
       });
-      squareCustomer = createCustomerResult.customer;
+      squareCustomer = customerResponse.customer;
       console.log('✅ Created new Square customer:', {
         id: squareCustomer.id,
         email: squareCustomer.emailAddress
@@ -288,7 +288,7 @@ export const createSquareSubscription = async (params: {
     console.log('⚠️ Square subscription creation - using payment link approach');
 
     // 创建支付链接而不是直接订阅（更稳定的方式）
-    const { result: paymentLinkResult2 } = await client.checkoutApi.createPaymentLink({
+    const paymentLinkResponse = await client.checkout.paymentLinks.create({
       idempotencyKey: crypto.randomUUID(),
       description: `${plan.name} Subscription - ${plan.credits} credits/month`,
       quickPay: {
@@ -309,8 +309,8 @@ export const createSquareSubscription = async (params: {
 
     const duration = Date.now() - startTime;
     const result = {
-      paymentLinkId: paymentLinkResult2.paymentLink?.id,
-      paymentUrl: paymentLinkResult2.paymentLink?.url,
+      paymentLinkId: paymentLinkResponse.paymentLink?.id,
+      paymentUrl: paymentLinkResponse.paymentLink?.url,
       customerId: squareCustomer.id,
       planName: plan.name,
       amount: plan.price,
@@ -415,7 +415,7 @@ export const getSquareSubscription = async (subscriptionId: string): Promise<any
       status: 'simulated_active', // 实际状态需要从数据库获取
       customerId: 'simulated_customer_id',
       startDate: new Date().toISOString(),
-      canceledDate: null,
+      canceledDate: null as string | null,
       phases: [{
         ordinal: 0,
         planName: 'Pro Plan',

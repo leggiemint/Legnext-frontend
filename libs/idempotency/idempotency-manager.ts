@@ -283,7 +283,7 @@ export class IdempotencyManager {
    * 获取Mongoose模型
    */
   private getIdempotencyModel() {
-    const mongoose = require('mongoose');
+    const mongoose = require('mongoose') as typeof import('mongoose');
 
     if (!mongoose.models.IdempotencyKey) {
       const schema = new mongoose.Schema<IdempotencyRecord>({
