@@ -34,8 +34,8 @@ const config = {
         ],
       },
       {
-        // Pro subscription plan
-        priceId: process.env.NEXT_PUBLIC_STRIPE_PRO_PRICE_ID,
+        // Pro subscription plan - Stripe 硬编码 Price ID
+        priceId: "price_1S1k2eKyeXh3bz3dL2jbl2VM",
         isFeatured: true,
         name: "Pro",
         description: "Best Value",
@@ -84,6 +84,63 @@ const config = {
     // REQUIRED — the path you want to redirect users after successfull login (i.e. /app, /private). This is normally a private page for users to manage their accounts. It's used in apiClient (/libs/api.js) upon 401 errors from our API & in ButtonSignin.js
     callbackUrl: "/app",
   },
+  square: {
+    // Square 独立配置
+    plans: [
+      {
+        // Free plan - 两个网关共享相同的免费计划逻辑
+        name: "Free",
+        description: "Get Started", 
+        price: 0,
+        credits: 60,
+        isFree: true,
+        features: [
+          { name: "60 free credits (one-time, $6 worth)" },
+          { name: "Avatar generation (5 credits each)" },
+          { name: "Expression packs (3 credits each)" },
+          { name: "Standard exports with watermark" },
+          { name: "Community support" },
+        ],
+      },
+      {
+        // Pro subscription plan - Square 专用价格标识
+        priceId: "pro-monthly-subscription", // Square 自定义标识
+        isFeatured: true,
+        name: "Pro", 
+        description: "Best Value",
+        price: 12,
+        credits: 260,
+        priceAnchor: 26,
+        features: [
+          { name: "260 credits monthly ($26 worth)" },
+          { name: "No watermark exports" },
+          { name: "HD exports (1 credit each)" },
+          { name: "Animations (2 credits each)" },
+          { name: "Commercial use license" },
+          { name: "Priority support" },
+        ],
+      },
+    ],
+  },
 } as ConfigProps;
+
+// 根据支付网关返回对应配置
+export function getPaymentConfig() {
+  const gateway = process.env.PAYMENT_GATEWAY?.toLowerCase();
+  
+  switch (gateway) {
+    case 'square':
+      return { 
+        gateway: 'square',
+        plans: config.square.plans 
+      };
+    case 'stripe':
+    default:
+      return { 
+        gateway: 'stripe',
+        plans: config.stripe.plans 
+      };
+  }
+}
 
 export default config;

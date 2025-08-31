@@ -1,4 +1,4 @@
-import config from "@/config";
+import { getPaymentConfig } from "@/config";
 import ButtonCheckout from "./ButtonCheckout";
 import { useSession } from "next-auth/react";
 import { useState, useEffect } from "react";
@@ -11,6 +11,9 @@ const Pricing = () => {
   const { data: session } = useSession();
   const [userPlan, setUserPlan] = useState<string | null>(null);
   const [subscriptionStatus, setSubscriptionStatus] = useState<any>(null);
+  
+  // 根据环境变量获取当前支付网关的配置
+  const paymentConfig = getPaymentConfig();
 
   useEffect(() => {
     if (session?.user?.id) {
@@ -51,7 +54,7 @@ const Pricing = () => {
         </div>
 
         <div className="relative flex justify-center flex-col lg:flex-row items-center lg:items-stretch gap-8">
-          {config.stripe.plans.map((plan) => (
+          {paymentConfig.plans.map((plan) => (
             <div key={plan.name} className="relative w-full max-w-lg">
               {plan.isFeatured && (
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20">

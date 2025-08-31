@@ -45,6 +45,21 @@ export interface ConfigProps {
       }[];
     }[];
   };
+  square: {
+    plans: {
+      isFeatured?: boolean;
+      isFree?: boolean;
+      priceId?: string; // Square custom price ID
+      name: string;
+      description?: string;
+      price: number;
+      credits?: number; // Credits included in plan
+      priceAnchor?: number | null;
+      features: {
+        name: string;
+      }[];
+    }[];
+  };
   aws?: {
     bucket?: string;
     bucketUrl?: string;

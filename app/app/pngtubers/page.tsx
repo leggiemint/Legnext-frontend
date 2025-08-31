@@ -261,7 +261,7 @@ export default function AvatarsPage() {
               >
                 Select
               </button>
-              <Link href="/app/create">
+              <Link href="/app/pngtuber-maker">
                 <button className="btn bg-[#06b6d4] hover:bg-[#06b6d4]/90 text-white border-none">
                   <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.5v15m7.5-7.5h-15" />
@@ -284,7 +284,7 @@ export default function AvatarsPage() {
           </div>
           <h3 className="text-xl font-semibold mb-2">No PngTubers yet</h3>
           <p className="text-base-content/60 mb-6">Create your first PNGTuber avatar to get started!</p>
-          <Link href="/app/create">
+          <Link href="/app/pngtuber-maker">
             <button className="btn bg-[#06b6d4] hover:bg-[#06b6d4]/90 text-white border-none">
               Create Your First PngTuber
             </button>

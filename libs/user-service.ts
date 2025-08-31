@@ -323,6 +323,27 @@ export async function updateSubscriptionStatus(
   }
 }
 
+// 通过邮箱查找用户
+export async function findUserByEmail(email: string) {
+  try {
+    await connectMongo();
+    
+    // 首先从User模型中查找
+    const User = (await import("@/models/User")).default;
+    const user = await User.findOne({ email: email.toLowerCase() }).lean();
+    
+    if (!user) {
+      console.log(`User not found for email: ${email}`);
+      return null;
+    }
+    
+    return user;
+  } catch (error) {
+    console.error("💥 Error finding user by email:", error);
+    throw error;
+  }
+}
+
 export default {
   getCurrentUser,
   getUserProfile,
@@ -330,4 +351,5 @@ export default {
   grantCredits,
   consumeCredits,
   updateSubscriptionStatus,
+  findUserByEmail,
 };
