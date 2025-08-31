@@ -1,17 +1,17 @@
 // Square支付网关实现
 // 使用真实的 Square SDK
 
-import { Client, Environment } from 'squareup';
+import { SquareClient, SquareEnvironment } from 'square';
 import { getPaymentConfig } from "@/config";
 import crypto from 'crypto';
 
 // 初始化 Square 客户端
 const getSquareClient = () => {
-  const client = new Client({
+  const client = new SquareClient({
     accessToken: process.env.SQUARE_ACCESS_TOKEN!,
     environment: process.env.SQUARE_ENVIRONMENT === 'production' 
-      ? Environment.Production 
-      : Environment.Sandbox
+      ? SquareEnvironment.Production 
+      : SquareEnvironment.Sandbox
   });
   return client;
 };
@@ -65,10 +65,9 @@ export const createSquareCheckout = async (params: SquareCheckoutParams): Promis
 
     // 初始化 Square 客户端
     const client = getSquareClient();
-    const { checkoutApi } = client;
     
     // 创建支付链接请求
-    const createPaymentLinkRequest: any = {
+    const createPaymentLinkRequest = {
       idempotencyKey: crypto.randomUUID(),
       description: `${plan.name} - ${plan.credits} credits`,
       quickPay: {
@@ -88,7 +87,7 @@ export const createSquareCheckout = async (params: SquareCheckoutParams): Promis
     
     // 如果用户已登录，预填充邮箱
     if (user?.email) {
-      createPaymentLinkRequest.prePopulatedData = {
+      (createPaymentLinkRequest as any).prePopulatedData = {
         buyerEmail: user.email
       };
     }
@@ -99,7 +98,7 @@ export const createSquareCheckout = async (params: SquareCheckoutParams): Promis
       locationId: process.env.SQUARE_LOCATION_ID
     });
     
-    const response = await checkoutApi.createPaymentLink(createPaymentLinkRequest);
+    const response = await client.checkout.createPaymentLink(createPaymentLinkRequest);
     
     if (response.result.paymentLink?.url) {
       console.log('✅ Square payment link created:', response.result.paymentLink.url);
