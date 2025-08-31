@@ -14,7 +14,7 @@ const sidebarItems = [
   },
   {
     name: "My PngTubers",
-    href: "/app/avatars",
+    href: "/app/pngtubers",
     icon: <PhotoIcon className="w-5 h-5" />,
   },
   {

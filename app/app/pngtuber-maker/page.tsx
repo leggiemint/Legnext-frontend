@@ -294,7 +294,7 @@ export default function CreatePage() {
                   ← Back
                 </button>
                 <div className="flex gap-2">
-                  <Link href="/app/avatars">
+                  <Link href="/app/pngtubers">
                     <button className="btn btn-outline">
                       View My PngTubers
                     </button>

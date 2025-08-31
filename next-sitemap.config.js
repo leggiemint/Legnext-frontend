@@ -12,7 +12,7 @@ module.exports = {
     "/app/settings*", // 只排除需要登录的设置页面
     "/app/ai-generator*", // 排除需要登录的AI生成器页面
     "/app/animations*", // 排除需要登录的动画页面
-    "/app/avatars*", // 排除需要登录的头像页面
+    "/app/pngtubers*", // 排除需要登录的头像页面
   ],
   // 手动添加重要的公开页面
   additionalPaths: async (config) => [
