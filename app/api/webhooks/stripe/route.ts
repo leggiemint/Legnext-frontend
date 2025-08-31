@@ -11,6 +11,56 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
 
+// 处理订阅激活的通用函数
+async function processSubscriptionActivation(userId: string, customerId: string, session: Stripe.Checkout.Session) {
+  console.log(`💳 Processing subscription activation for user ${userId}, customer ${customerId}`);
+
+  // Get the subscription to get the price ID
+  const subscriptionId = session.subscription as string;
+  const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+  const priceId = subscription.items.data[0]?.price.id;
+
+  console.log(`📋 Subscription details:`, {
+    subscriptionId,
+    priceId,
+    status: subscription.status,
+    currentPeriodStart: new Date(subscription.current_period_start * 1000),
+    currentPeriodEnd: new Date(subscription.current_period_end * 1000)
+  });
+
+  // Update subscription status and store Stripe customer ID
+  const updateResult = await updateSubscription(
+    userId,
+    "pro",
+    "active",
+    customerId,
+    priceId,
+    new Date(subscription.current_period_start * 1000),
+    new Date(subscription.current_period_end * 1000)
+  );
+
+  if (!updateResult.success) {
+    console.error(`❌ Failed to update subscription for user ${userId}:`, updateResult.error);
+    throw new Error(`Subscription update failed: ${updateResult.error}`);
+  }
+
+  // Grant initial Pro plan credits (200 credits)
+  const creditResult = await grantCredits(
+    userId,
+    200,
+    "Pro subscription initial credits",
+    "stripe",
+    session.id
+  );
+
+  if (!creditResult.success) {
+    console.error(`❌ Failed to grant credits to user ${userId}:`, creditResult.error);
+    throw new Error(`Credit grant failed: ${creditResult.error}`);
+  }
+
+  console.log(`✅ Pro subscription activated for user ${userId}, new credit balance: ${creditResult.newBalance}`);
+}
+
 export async function POST(req: NextRequest) {
   console.log("🔔 Stripe webhook received!");
   
@@ -57,53 +107,44 @@ export async function POST(req: NextRequest) {
       case "checkout.session.completed": {
         const session = event.data.object as Stripe.Checkout.Session;
         
+        console.log(`🎯 Processing checkout.session.completed:`, {
+          mode: session.mode,
+          customerId: session.customer,
+          clientReferenceId: session.client_reference_id,
+          customerEmail: session.customer_details?.email,
+          sessionId: session.id
+        });
+        
         if (session.mode === "subscription") {
           const customerId = session.customer as string;
           const userId = session.client_reference_id;
           
           if (!userId) {
-            console.error("No user ID in checkout session");
+            console.error("❌ No user ID in checkout session, trying to find user by email...");
+            
+            // 尝试通过邮箱找到用户
+            const customerEmail = session.customer_details?.email;
+            if (customerEmail) {
+              const user = await prisma.user.findUnique({
+                where: { email: customerEmail }
+              });
+              
+              if (user) {
+                console.log(`✅ Found user by email: ${user.id} (${customerEmail})`);
+                // 继续处理，使用找到的用户ID
+                await processSubscriptionActivation(user.id, customerId, session);
+                break;
+              } else {
+                console.error(`❌ No user found with email: ${customerEmail}`);
+              }
+            }
+            
+            console.error("❌ Cannot process subscription without user identification");
             break;
           }
 
-          console.log(`💳 Processing subscription checkout for user ${userId}, customer ${customerId}`);
-
-          // Get the subscription to get the price ID
-          const subscriptionId = session.subscription as string;
-          const subscription = await stripe.subscriptions.retrieve(subscriptionId);
-          const priceId = subscription.items.data[0]?.price.id;
-
-          // Update subscription status and store Stripe customer ID
-          const updateResult = await updateSubscription(
-            userId,
-            "pro",
-            "active",
-            customerId,
-            priceId,
-            new Date(subscription.current_period_start * 1000),
-            new Date(subscription.current_period_end * 1000)
-          );
-
-          if (!updateResult.success) {
-            console.error(`Failed to update subscription for user ${userId}:`, updateResult.error);
-            throw new Error(`Subscription update failed: ${updateResult.error}`);
-          }
-
-          // Grant initial Pro plan credits (200 credits)
-          const creditResult = await grantCredits(
-            userId,
-            200,
-            "Pro subscription initial credits",
-            "stripe",
-            session.id
-          );
-
-          if (!creditResult.success) {
-            console.error(`Failed to grant credits to user ${userId}:`, creditResult.error);
-            throw new Error(`Credit grant failed: ${creditResult.error}`);
-          }
-
-          console.log(`✅ Pro subscription activated for user ${userId}, new credit balance: ${creditResult.newBalance}`);
+          // 使用通用函数处理订阅激活
+          await processSubscriptionActivation(userId, customerId, session);
         }
         break;
       }
