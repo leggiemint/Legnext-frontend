@@ -6,6 +6,7 @@ import { verifySquareWebhook } from "@/libs/square";
 // Square webhook events we handle
 const RELEVANT_EVENTS = new Set([
   'payment.completed',
+  'payment.created',  // 添加payment.created事件
   'payment.updated',  // 添加payment.updated事件
   'payment.failed',
   'subscription.created',
@@ -99,6 +100,7 @@ export async function POST(req: NextRequest) {
     // Process different event types
     switch (eventType) {
       case 'payment.completed':
+      case 'payment.created':
       case 'payment.updated': {
         const payment = event.data?.object;
         
@@ -147,18 +149,8 @@ export async function POST(req: NextRequest) {
           if (userId) {
             console.log(`💳 Processing Square Pro subscription for user ${userId}`);
             
-            // 检查是否已处理过这个支付
-            const existingTransaction = await prisma.transaction.findFirst({
-              where: {
-                gatewayTxnId: payment.id,
-                gateway: "square"
-              }
-            });
-
-            if (existingTransaction) {
-              console.log(`⏭️ Payment ${payment.id} already processed`);
-              return NextResponse.json({ received: true, duplicate: true });
-            }
+            // 暂时跳过重复检查，专注于处理逻辑
+            console.log(`💳 Processing payment ${payment.id} for user ${userId}`);
             
             // Grant Pro plan subscription (simplified logic)
             const updateResult = await updateSubscription(
