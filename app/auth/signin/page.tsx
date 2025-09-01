@@ -34,8 +34,8 @@ const SigninContent = () => {
           </a>
           
           <div className="space-y-3">
-            <div className="inline-flex items-center px-3 py-1 rounded-full bg-[#06b6d4]/10 border border-[#06b6d4]/20">
-              <span className="text-sm font-medium text-[#06b6d4]">Join thousands of streamers</span>
+            <div className="inline-flex items-center px-3 py-1 rounded-full bg-[#4f46e5]/10 border border-[#4f46e5]/20">
+              <span className="text-sm font-medium text-[#4f46e5]">Join thousands of streamers</span>
             </div>
             
             <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 leading-tight">
@@ -53,7 +53,7 @@ const SigninContent = () => {
         <div className="bg-white backdrop-blur-sm border border-gray-200 rounded-2xl p-6 shadow-lg">
           <button
             onClick={() => signIn("google", { callbackUrl })}
-            className="w-full flex items-center justify-center px-4 py-3 border border-gray-300 rounded-lg bg-white text-gray-700 font-medium hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#06b6d4] focus:ring-offset-2"
+            className="w-full flex items-center justify-center px-4 py-3 border border-gray-300 rounded-lg bg-white text-gray-700 font-medium hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#4f46e5] focus:ring-offset-2"
           >
             <svg
               className="w-5 h-5 mr-3"
@@ -84,11 +84,11 @@ const SigninContent = () => {
         <div className="text-left mt-6">
           <p className="text-xs text-gray-500 leading-relaxed">
             New accounts are subject to our{" "}
-            <a href="/terms" className="text-gray-600 hover:text-[#06b6d4] underline-offset-2 hover:underline transition-colors">
+            <a href="/terms" className="text-gray-600 hover:text-[#4f46e5] underline-offset-2 hover:underline transition-colors">
               terms & conditions
             </a>{" "}
             and{" "}
-            <a href="/privacy" className="text-gray-600 hover:text-[#06b6d4] underline-offset-2 hover:underline transition-colors">
+            <a href="/privacy" className="text-gray-600 hover:text-[#4f46e5] underline-offset-2 hover:underline transition-colors">
               privacy policy
             </a>.
           </p>

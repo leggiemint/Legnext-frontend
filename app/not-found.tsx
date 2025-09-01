@@ -6,7 +6,7 @@ export default function Custom404() {
     <section className="relative bg-base-100 text-base-content min-h-screen w-full flex flex-col justify-center gap-8 items-center p-10">
       <div className="text-center space-y-6">
         <div className="space-y-2">
-          <h1 className="text-4xl md:text-6xl font-bold text-[#06b6d4]">404</h1>
+          <h1 className="text-4xl md:text-6xl font-bold text-[#4f46e5]">404</h1>
           <p className="text-lg md:text-xl font-semibold text-base-content">
             This page doesn&apos;t exist 😅
           </p>
@@ -16,7 +16,7 @@ export default function Custom404() {
         </div>
 
         <div className="flex flex-wrap gap-4 justify-center">
-          <Link href="/" className="btn bg-[#06b6d4] hover:bg-[#06b6d4]/90 text-white border-none">
+          <Link href="/" className="btn bg-[#4f46e5] hover:bg-[#4f46e5]/90 text-white border-none">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 20 20"
@@ -32,7 +32,7 @@ export default function Custom404() {
             Back to Home
           </Link>
 
-          <Link href="/contact" className="btn bg-[#06b6d4] hover:bg-[#06b6d4]/90 text-white border-none">
+          <Link href="/contact" className="btn bg-[#4f46e5] hover:bg-[#4f46e5]/90 text-white border-none">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 20 20"

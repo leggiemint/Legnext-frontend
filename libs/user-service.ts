@@ -9,7 +9,7 @@ export interface UserWithProfile {
     plan: string;
     credits: number;
     subscriptionStatus: string;
-    avatarsCreated: number;
+    imagesGenerated: number;
     preferences: any;
     totalCreditsEarned: number;
     totalCreditsSpent: number;
@@ -73,7 +73,7 @@ export async function getUserWithProfile(userId: string): Promise<UserWithProfil
         plan: user.profile.plan,
         credits: user.profile.credits as number,
         subscriptionStatus: user.profile.subscriptionStatus,
-        avatarsCreated: user.profile.avatarsCreated as number,
+        imagesGenerated: user.profile.imagesGenerated as number,
         preferences: user.profile.preferences,
         totalCreditsEarned: user.profile.totalCreditsEarned as number,
         totalCreditsSpent: user.profile.totalCreditsSpent as number
@@ -243,19 +243,19 @@ export async function updateSubscription(
 }
 
 /**
- * Increment avatar count
+ * Increment image generation count
  */
-export async function incrementAvatarCount(userId: string): Promise<void> {
+export async function incrementImageCount(userId: string): Promise<void> {
   try {
     await prisma.userProfile.update({
       where: { userId },
       data: {
-        avatarsCreated: { increment: 1 },
+        imagesGenerated: { increment: 1 },
         lastActiveAt: new Date()
       }
     });
   } catch (error) {
-    console.error("Error incrementing avatar count:", error);
+    console.error("Error incrementing image count:", error);
   }
 }
 
@@ -264,5 +264,5 @@ export default {
   consumeCredits,
   grantCredits,
   updateSubscription,
-  incrementAvatarCount
+  incrementImageCount
 };

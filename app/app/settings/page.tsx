@@ -155,7 +155,7 @@ export default function SettingsPage() {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <div className="loading loading-spinner loading-lg text-[#06b6d4]"></div>
+          <div className="loading loading-spinner loading-lg text-[#4f46e5]"></div>
           <p className="mt-4 text-gray-600">Loading your settings...</p>
         </div>
       </div>
@@ -254,7 +254,7 @@ export default function SettingsPage() {
                   {userData?.user?.image ? (
                     <Image src={userData.user.image} alt="Profile" width={64} height={64} />
                   ) : (
-                    <div className="w-16 h-16 bg-[#06b6d4] rounded-full flex items-center justify-center text-white font-semibold text-lg">
+                    <div className="w-16 h-16 bg-[#4f46e5] rounded-full flex items-center justify-center text-white font-semibold text-lg">
                       {userData?.user?.name?.[0]?.toUpperCase() || "U"}
                     </div>
                   )}
@@ -291,7 +291,7 @@ export default function SettingsPage() {
           <div className="card-body">
             <div className="flex justify-between items-start mb-6">
               <h2 className="card-title">Credits & Subscription</h2>
-              <div className={`badge ${userData?.user?.plan === 'pro' ? '!bg-[#06b6d4] !text-white' : 'badge-outline'}`}>
+              <div className={`badge ${userData?.user?.plan === 'pro' ? '!bg-[#4f46e5] !text-white' : 'badge-outline'}`}>
                 {userData?.user?.plan?.toUpperCase() || 'FREE'} Plan
               </div>
             </div>
@@ -301,7 +301,7 @@ export default function SettingsPage() {
               <div className="stats shadow w-full">
                 <div className="stat">
                   <div className="stat-title">Available Credits</div>
-                  <div className="stat-value text-3xl text-[#06b6d4]">{userData?.credits?.balance || 0}</div>
+                  <div className="stat-value text-3xl text-[#4f46e5]">{userData?.credits?.balance || 0}</div>
                   <div className="stat-desc">
                     ${((userData?.credits?.balance || 0) * 0.1).toFixed(2)} worth
                   </div>
@@ -324,7 +324,7 @@ export default function SettingsPage() {
             {/* Upgrade Button */}
             <div className="flex gap-2">
               <Link href="/pricing">
-                <button className="btn bg-[#06b6d4] hover:bg-[#06b6d4]/90 text-white border-none">
+                <button className="btn bg-[#4f46e5] hover:bg-[#4f46e5]/90 text-white border-none">
                   {userData?.user?.plan === 'pro' ? 'Manage Subscription' : 'Upgrade to Pro'}
                 </button>
               </Link>
@@ -341,7 +341,7 @@ export default function SettingsPage() {
                 <p className="text-sm text-base-content/60">Update your profile information</p>
               </div>
               <button 
-                className="btn bg-[#06b6d4] hover:bg-[#06b6d4]/90 text-white border-none"
+                className="btn bg-[#4f46e5] hover:bg-[#4f46e5]/90 text-white border-none"
                 onClick={handleSaveSettings}
                 disabled={isSaving}
               >

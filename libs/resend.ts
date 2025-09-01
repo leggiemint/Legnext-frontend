@@ -82,7 +82,7 @@ export const sendContactFormEmail = async ({
   // 发送给管理员的邮件
   const adminEmailHtml = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-      <h2 style="color: #06b6d4; border-bottom: 2px solid #06b6d4; padding-bottom: 10px;">
+      <h2 style="color: #4f46e5; border-bottom: 2px solid #4f46e5; padding-bottom: 10px;">
         New Contact Form Submission
       </h2>
       
@@ -98,7 +98,7 @@ export const sendContactFormEmail = async ({
         <p style="white-space: pre-wrap; line-height: 1.6;">${message}</p>
       </div>
       
-      <div style="margin-top: 20px; padding: 15px; background: #f0f9ff; border-left: 4px solid #06b6d4;">
+      <div style="margin-top: 20px; padding: 15px; background: #f0f9ff; border-left: 4px solid #4f46e5;">
         <p style="margin: 0; font-size: 14px; color: #0369a1;">
           <strong>Reply directly to this email to respond to ${fullName}</strong>
         </p>
@@ -110,7 +110,7 @@ export const sendContactFormEmail = async ({
   const userEmailHtml = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
       <div style="text-align: center; padding: 20px 0; border-bottom: 1px solid #e5e7eb;">
-        <h1 style="color: #06b6d4; margin: 0;">PNGTuberMaker</h1>
+        <h1 style="color: #4f46e5; margin: 0;">PNGTuberMaker</h1>
       </div>
       
       <div style="padding: 30px 0;">
@@ -130,7 +130,7 @@ export const sendContactFormEmail = async ({
           <p style="white-space: pre-wrap; line-height: 1.6; color: #6b7280;">${message}</p>
         </div>
         
-        <div style="background: #f0f9ff; padding: 20px; border-radius: 8px; border-left: 4px solid #06b6d4;">
+        <div style="background: #f0f9ff; padding: 20px; border-radius: 8px; border-left: 4px solid #4f46e5;">
           <h3 style="color: #0369a1; margin-top: 0;">Expected Response Times</h3>
           <ul style="color: #0369a1; margin: 10px 0;">
             <li>General Inquiries: 24-48 hours</li>
@@ -141,9 +141,9 @@ export const sendContactFormEmail = async ({
         
         <p style="color: #4b5563; line-height: 1.6;">
           In the meantime, you might find our 
-          <a href="https://www.pngtubermaker.com/docs" style="color: #06b6d4;">documentation</a> 
+          <a href="https://www.pngtubermaker.com/docs" style="color: #4f46e5;">documentation</a> 
           helpful, or join our 
-          <a href="https://discord.gg/zysPAnvP8f" style="color: #06b6d4;">Discord community</a> 
+          <a href="https://discord.gg/zysPAnvP8f" style="color: #4f46e5;">Discord community</a> 
           for quick help from other creators.
         </p>
         
@@ -156,7 +156,7 @@ export const sendContactFormEmail = async ({
       <div style="text-align: center; padding: 20px 0; border-top: 1px solid #e5e7eb; color: #9ca3af; font-size: 12px;">
         <p>
           PNGTuberMaker - Create Amazing PNGTuber Avatars<br>
-          <a href="https://www.pngtubermaker.com" style="color: #06b6d4;">www.pngtubermaker.com</a>
+          <a href="https://www.pngtubermaker.com" style="color: #4f46e5;">www.pngtubermaker.com</a>
         </p>
       </div>
     </div>

@@ -12,7 +12,7 @@ export default function AnimationsPage() {
               <p className="text-base-content/70">Add natural blinking effects to your PNGTuber.</p>
               <div className="card-actions justify-end">
                 <button className="btn btn-ghost btn-sm">Preview</button>
-                <button className="btn bg-[#06b6d4] hover:bg-[#06b6d4]/90 text-white border-none btn-sm">Apply</button>
+                <button className="btn bg-[#4f46e5] hover:bg-[#4f46e5]/90 text-white border-none btn-sm">Apply</button>
               </div>
             </div>
           </div>
@@ -23,7 +23,7 @@ export default function AnimationsPage() {
               <p className="text-base-content/70">Sync mouth movements with your voice.</p>
               <div className="card-actions justify-end">
                 <button className="btn btn-ghost btn-sm">Preview</button>
-                <button className="btn bg-[#06b6d4] hover:bg-[#06b6d4]/90 text-white border-none btn-sm">Apply</button>
+                <button className="btn bg-[#4f46e5] hover:bg-[#4f46e5]/90 text-white border-none btn-sm">Apply</button>
               </div>
             </div>
           </div>

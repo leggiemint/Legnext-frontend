@@ -11,86 +11,86 @@ export interface FAQItemProps {
 export const defaultFAQList: FAQItemProps[] = [
   {
     id: "1",
-    question: "What is PNGTuberMaker and how does it work?",
-    answer: "PNGTuberMaker is an AI-powered tool that lets you create custom PNG avatars for streaming. Just describe your character or upload a reference image, and our AI will generate multiple avatar options — complete with expressions and optional animations. No art skills needed."
+    question: "What is Legnext and how does it work?",
+    answer: "Legnext is the #1 Midjourney API Integration Platform that lets developers access Midjourney via API without needing a Midjourney account. Simply make API calls to generate high-quality AI images — reliable, fast, and developer-friendly. No complex setup needed."
   },
   {
     id: "2", 
-    question: "Do I need to know how to draw to use PNGTuberMaker?",
-    answer: "Not at all! PNGTuberMaker is designed for everyone — from complete beginners to experienced creators. You can simply write a short description (e.g. \"anime cat girl with blue hair\") or upload a reference picture, and the AI handles the rest."
+    question: "Do I need a Midjourney account to use Legnext?",
+    answer: "Not at all! Legnext is designed to eliminate the need for individual Midjourney accounts. You can access Midjourney's powerful AI image generation through our reliable API integration — just make API calls and get professional results instantly."
   },
   {
     id: "3",
-    question: "Can I upload my own sketches or reference images?",
-    answer: "Yes. You can upload sketches, character references, or screenshots. The AI will use them to match your style and keep your character consistent across expressions and animations."
+    question: "Can I integrate Legnext into my existing applications?",
+    answer: "Yes! Legnext is designed for seamless integration. Use our developer-friendly API to add Midjourney image generation to your apps, websites, or services. Complete with SDKs, documentation, and code examples for quick implementation."
   },
   {
     id: "4",
-    question: "What file formats do you export?",
-    answer: "We support transparent PNG for static avatars and GIF / MP4 / WebM for animations. Perfect for OBS, Discord, or Twitch overlays."
+    question: "What image formats does the API support?",
+    answer: "Our Midjourney API returns high-quality images in standard formats including PNG, JPG, and WebP. Perfect for web applications, mobile apps, and any professional use case requiring AI-generated images."
   },
   {
     id: "5",
-    question: "Are the avatars I generate unique and safe to use?",
-    answer: "Yes. All avatars are generated from your own inputs and are unique. You get a full license to use them for streaming, content creation, and commercial use."
+    question: "Are the images I generate unique and safe to use?",
+    answer: "Yes. All images are generated from your API requests and prompts, making them unique. You get full commercial usage rights for images generated through our Midjourney API integration platform."
   },
   {
     id: "6",
-    question: "Can I use the avatars commercially?",
-    answer: "Absolutely. The Pro plan comes with a full commercial license. You can use your avatars in streams, videos, thumbnails, merchandise, or even resell to clients."
+    question: "Can I use the generated images commercially?",
+    answer: "Absolutely. Our Professional Midjourney API service comes with full commercial usage rights. Use generated images in your apps, client projects, marketing materials, or any commercial application."
   },
   {
     id: "7",
-    question: "What's included in the free plan?",
-    answer: "The free plan lets you try PNGTuberMaker with 3 avatar generations per month (with watermark and low resolution). It's perfect for testing the tool before upgrading to Pro to unlock HD export, watermark-free assets, and unlimited expression packs."
+    question: "What's included in the free tier?",
+    answer: "The free tier lets you test our Midjourney API with limited requests per month. It's perfect for evaluating the service before upgrading to Pro for higher limits, priority processing, and advanced features like fast mode generation."
   },
   {
     id: "8",
-    question: "How long does it take to generate an avatar?",
-    answer: "Most avatars are generated in under 1 minute. Expression packs and short animations take 1–3 minutes depending on complexity. You can preview, pick your favorite, and refine instantly."
+    question: "How fast is the Midjourney API integration?",
+    answer: "Our Midjourney API integration typically processes requests in 30-90 seconds. Fast mode generations complete in 15-30 seconds. Response times depend on complexity and current API load, but we prioritize reliability and speed."
   }
 ];
 
-// PngTuber Maker specific FAQ content
-export const pngtuberFAQList: FAQItemProps[] = [
+// Midjourney API specific FAQ content
+export const midjourneyAPIFAQList: FAQItemProps[] = [
   {
     id: "1",
-    question: "What do I need to start creating a PNGTuber avatar?",
-    answer: "Nothing special — just describe your character idea in text, upload a reference image (optional), or combine both. Our AI will generate avatars instantly."
+    question: "What do I need to start using the Midjourney API?",
+    answer: "Just sign up for a Legnext account and get your API key. No Midjourney account needed — our platform handles all the integration complexity for you."
   },
   {
     id: "2",
-    question: "How many avatars do I get per generation?",
-    answer: "Each generation gives you 4 variations of a neutral avatar. You can pick your favorite and proceed to generate expressions."
+    question: "How many API requests do I get per plan?",
+    answer: "Plans vary from 100 requests/month on Free tier up to unlimited requests on Enterprise. Each request generates 4 high-quality image variations to choose from."
   },
   {
     id: "3",
-    question: "What expressions are included in the final download?",
-    answer: "You'll receive 6 PNGs total: Neutral, Happy, Angry, Sad, Surprised, and Wink. All with transparent backgrounds, ready for OBS, Twitch, YouTube, and Discord."
+    question: "What parameters can I control via the API?",
+    answer: "You can control prompts, aspect ratios, stylization levels, quality settings, and generation modes. Full parameter documentation available in our API docs."
   },
   {
     id: "4",
-    question: "Can I re-generate if I don't like the first results?",
-    answer: "Yes. You can regenerate as many times as your credits allow until you're satisfied with the neutral avatar."
+    question: "Can I retry generations if I don't like the results?",
+    answer: "Yes. You can make new API calls with modified prompts or parameters until you get the perfect result, subject to your plan limits."
   },
   {
     id: "5",
-    question: "In what formats can I download my PNGTuber?",
-    answer: "All avatars are delivered as high-resolution PNGs in a ZIP file. Optionally, you can upscale or generate simple GIF/MP4 animations in future updates."
+    question: "In what formats are the generated images returned?",
+    answer: "All images are returned as high-resolution URLs in standard formats (PNG/JPG). You can download and use them immediately in your applications."
   },
   {
     id: "6",
-    question: "Do I need drawing skills to use this tool?",
-    answer: "Not at all. Our AI takes care of the artwork. You only need an idea or reference image."
+    question: "Do I need AI expertise to use this API?",
+    answer: "Not at all. Our API abstracts away the complexity. You just send text prompts and receive professional AI-generated images — perfect for developers of all skill levels."
   },
   {
     id: "7",
-    question: "Can I use these PNGTubers commercially?",
-    answer: "Yes. Pro plans include a commercial license so you can use your avatars for streaming, content creation, and monetized platforms."
+    question: "Can I use this API for commercial applications?",
+    answer: "Yes. Professional plans include full commercial usage rights, making it perfect for client projects, SaaS applications, and business use cases."
   },
   {
     id: "8",
-    question: "How long does it take to generate my avatar?",
-    answer: "Usually under one minute for the neutral avatar, and a few extra seconds to create the expression pack."
+    question: "How fast does the API respond?",
+    answer: "Typical response times are 30-90 seconds per generation. Fast mode (available on Pro plans) reduces this to 15-30 seconds for priority processing."
   }
 ];

@@ -2,9 +2,9 @@ import MainLayout from "@/components/MainLayout";
 import { getSEOTags } from "@/libs/seo";
 
 export const metadata = getSEOTags({
-  title: "Privacy Policy | PNGTuberMaker - Data Protection & Privacy",
-  description: "PNGTuberMaker Privacy Policy - Learn how we collect, use, and protect your personal information when using our PNGTuber avatar creation platform. GDPR compliant data protection.",
-  keywords: "pngtubermaker privacy policy, pngtuber data protection, avatar creation privacy, streaming avatar gdpr, pngtuber maker privacy, vtuber privacy policy",
+  title: "Privacy Policy | Legnext - Midjourney API Privacy & Data Protection",
+  description: "Legnext Privacy Policy - Learn how we collect, use, and protect your personal information when using our Midjourney API integration platform. GDPR compliant data protection.",
+  keywords: "legnext privacy policy, midjourney api privacy, ai image generation privacy, api integration gdpr, midjourney api data protection",
   canonicalUrlRelative: "/privacy",
 });
 
@@ -16,7 +16,7 @@ const Privacy = () => {
           {/* Header */}
           <div className="text-center mb-16">
             <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
-              Privacy <span className="bg-gradient-to-r from-[#06b6d4] to-[#0891b2] bg-clip-text text-transparent">Policy</span>
+              Privacy <span className="bg-gradient-to-r from-[#4f46e5] to-[#0891b2] bg-clip-text text-transparent">Policy</span>
             </h1>
             <p className="text-lg text-gray-600 max-w-3xl mx-auto mb-4">
               We are committed to protecting your privacy and ensuring the security of your personal information.
@@ -35,7 +35,7 @@ const Privacy = () => {
                   <h2 className="text-2xl font-bold text-gray-900 mb-6">1. Introduction</h2>
                   <div className="text-gray-700 space-y-4">
                     <p>
-                      This Privacy Policy describes how Dark Enlightenment Limited, operating PNGTuberMaker (&quot;we,&quot; &quot;our,&quot; or &quot;us&quot;) collects, uses, and protects your information when you use our PNGTuber avatar creation platform (&quot;Service&quot;).
+                      This Privacy Policy describes how Dark Enlightenment Limited, operating Legnext (&quot;we,&quot; &quot;our,&quot; or &quot;us&quot;) collects, uses, and protects your information when you use our Midjourney API integration platform (&quot;Service&quot;).
                     </p>
                     <p>
                       By using our Service, you agree to the collection and use of information in accordance with this Privacy Policy.
@@ -73,12 +73,12 @@ const Privacy = () => {
                     <div>
                       <h3 className="text-xl font-semibold text-gray-900 mb-3">2.3 Content Data</h3>
                       <p>
-                        We may temporarily process content you submit through our Service for the purpose of providing avatar generation, including:
+                        We may temporarily process content you submit through our Service for the purpose of providing AI image generation via our Midjourney API integration, including:
                       </p>
                       <ul className="list-disc list-inside ml-4 space-y-2 mt-2">
-                        <li>Text descriptions and prompts</li>
-                        <li>Generated avatar images</li>
-                        <li>Uploaded reference files and images</li>
+                        <li>Text prompts and generation parameters</li>
+                        <li>Generated AI images</li>
+                        <li>API request metadata and responses</li>
                       </ul>
                     </div>
                   </div>
@@ -89,13 +89,13 @@ const Privacy = () => {
                   <div className="text-gray-700 space-y-4">
                     <p>We use the collected information for the following purposes:</p>
                     <ul className="list-disc list-inside ml-4 space-y-2">
-                      <li>Providing and maintaining our avatar creation Service</li>
-                      <li>Processing your requests and transactions</li>
+                      <li>Providing and maintaining our Midjourney API integration Service</li>
+                      <li>Processing your API requests and transactions</li>
                       <li>Monitoring usage and improving performance</li>
                       <li>Detecting and preventing abuse or fraud</li>
                       <li>Communicating with you about your account and updates</li>
                       <li>Complying with legal obligations</li>
-                      <li>Research and development to improve our services</li>
+                      <li>Research and development to improve our API platform</li>
                     </ul>
                   </div>
                 </section>
@@ -110,7 +110,7 @@ const Privacy = () => {
                         We may share your information with third-party providers who assist us in operating our Service, including:
                       </p>
                       <ul className="list-disc list-inside ml-4 space-y-2 mt-2">
-                        <li>AI model providers for avatar generation</li>
+                        <li>Midjourney for AI image generation services</li>
                         <li>Cloud infrastructure providers</li>
                         <li>Payment processors</li>
                         <li>Analytics and monitoring services</li>
@@ -194,7 +194,7 @@ const Privacy = () => {
                     </div>
 
                     <p className="mt-6">
-                      To exercise these rights, please contact us at <a href="mailto:privacy@pngtubermaker.com" className="text-[#06b6d4] hover:underline">privacy@pngtubermaker.com</a>.
+                      To exercise these rights, please contact us at <a href="mailto:privacy@legnext.ai" className="text-[#4f46e5] hover:underline">privacy@legnext.ai</a>.
                     </p>
                   </div>
                 </section>
@@ -266,12 +266,12 @@ const Privacy = () => {
                       <div className="grid md:grid-cols-2 gap-4">
                         <div>
                           <p><strong>Privacy Officer</strong></p>
-                          <p>Email: privacy@pngtubermaker.com</p>
+                          <p>Email: privacy@legnext.ai</p>
                           <p>Response time: Within 30 days</p>
                         </div>
                         <div>
                           <p><strong>General Contact</strong></p>
-                          <p>Email: support@pngtubermaker.com</p>
+                          <p>Email: support@legnext.ai</p>
                           <p><strong>Company:</strong> Dark Enlightenment Limited</p>
                           <p><strong>Address:</strong> 1111B S Governors Ave STE 26728<br />Dover, DE 19904 US</p>
                         </div>

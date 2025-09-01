@@ -29,7 +29,7 @@ const ButtonSignin = ({
     return (
       <Link
         href={config.auth.callbackUrl}
-        className="inline-flex items-center justify-center px-4 py-2 bg-[#06b6d4] text-white font-medium rounded-lg hover:bg-[#06b6d4]/90 transition-colors duration-200 shadow-sm"
+        className="inline-flex items-center justify-center px-4 py-2 bg-[#4f46e5] text-white font-medium rounded-lg hover:bg-[#4f46e5]/90 transition-colors duration-200 shadow-sm"
       >
         {session.user?.image ? (
           <img
@@ -52,7 +52,7 @@ const ButtonSignin = ({
 
   return (
     <button
-      className="inline-flex items-center justify-center px-4 py-2 bg-[#06b6d4] text-white font-medium rounded-lg hover:bg-[#06b6d4]/90 transition-colors duration-200 shadow-sm"
+      className="inline-flex items-center justify-center px-4 py-2 bg-[#4f46e5] text-white font-medium rounded-lg hover:bg-[#4f46e5]/90 transition-colors duration-200 shadow-sm"
       onClick={handleClick}
     >
       {text}

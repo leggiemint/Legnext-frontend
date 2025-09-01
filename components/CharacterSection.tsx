@@ -17,7 +17,7 @@ const CharacterSection = () => {
         {/* Success Statistics */}
         <div className="text-center mb-12">
           <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 leading-tight">
-            185,26 <span className="text-[#06b6d4]">pngtuber</span> already generated for <span className="text-[#22c55e]">1,065</span> happy customers.
+            185,26 <span className="text-[#4f46e5]">pngtuber</span> already generated for <span className="text-[#22c55e]">1,065</span> happy customers.
           </h2>
         </div>
 
@@ -25,7 +25,7 @@ const CharacterSection = () => {
         <div className="flex justify-center mb-16">
           <div className="w-full max-w-5xl">
             <div className="flex flex-col h-full">
-              <div className="w-full inline-flex tap-highlight-transparent flex-row items-center px-3 gap-3 group min-h-10 transition-all motion-reduce:transition-none duration-300 outline-none h-12 md:h-14 lg:h-16 pl-4 md:pl-8 pr-2 py-0 shadow-[0_4px_30px_rgba(110,207,224,0.25)] bg-white/70 backdrop-blur-xl backdrop-saturate-150 hover:bg-white/80 focus-within:bg-white/80 cursor-text rounded-full border-2 border-[#6ecfe0] focus-within:border-[#6ecfe0] relative hover:shadow-[0_8px_40px_rgba(110,207,224,0.35)]">
+              <div className="w-full inline-flex tap-highlight-transparent flex-row items-center px-3 gap-3 group min-h-10 transition-all motion-reduce:transition-none duration-300 outline-none h-12 md:h-14 lg:h-16 pl-4 md:pl-8 pr-2 py-0 shadow-[0_4px_30px_rgba(110,207,224,0.25)] bg-white/70 backdrop-blur-xl backdrop-saturate-150 hover:bg-white/80 focus-within:bg-white/80 cursor-text rounded-full border-2 border-[#6366f1] focus-within:border-[#6366f1] relative hover:shadow-[0_8px_40px_rgba(110,207,224,0.35)]">
                 <div className="inline-flex w-full items-center h-full box-border">
                   <input 
                     type="text" 
@@ -39,7 +39,7 @@ const CharacterSection = () => {
                   
                   {/* Mobile Button */}
                   <button 
-                    className="z-0 group box-border appearance-none select-none whitespace-nowrap font-normal subpixel-antialiased overflow-hidden tap-highlight-transparent outline-none text-small gap-2 rounded-full transition-transform-colors-opacity motion-reduce:transition-none bg-[#06b6d4] text-white hover:bg-[#06b6d4]/80 flex absolute right-0 justify-center items-center p-0 w-10 h-10 shadow-md sm:hidden min-w-10" 
+                    className="z-0 group box-border appearance-none select-none whitespace-nowrap font-normal subpixel-antialiased overflow-hidden tap-highlight-transparent outline-none text-small gap-2 rounded-full transition-transform-colors-opacity motion-reduce:transition-none bg-[#4f46e5] text-white hover:bg-[#4f46e5]/80 flex absolute right-0 justify-center items-center p-0 w-10 h-10 shadow-md sm:hidden min-w-10" 
                     type="button"
                     onClick={handleCreateCharacter}
                   >
@@ -50,7 +50,7 @@ const CharacterSection = () => {
                   
                   {/* Desktop Button */}
                   <button 
-                    className="z-0 group relative justify-center box-border appearance-none select-none whitespace-nowrap subpixel-antialiased overflow-hidden tap-highlight-transparent outline-none min-w-20 h-10 rounded-full transition-transform-colors-opacity motion-reduce:transition-none bg-[#06b6d4] text-white hover:bg-[#06b6d4]/80 hidden gap-2 items-center px-4 py-2 text-sm font-medium shadow-lg sm:flex md:px-6 md:py-3 md:text-base" 
+                    className="z-0 group relative justify-center box-border appearance-none select-none whitespace-nowrap subpixel-antialiased overflow-hidden tap-highlight-transparent outline-none min-w-20 h-10 rounded-full transition-transform-colors-opacity motion-reduce:transition-none bg-[#4f46e5] text-white hover:bg-[#4f46e5]/80 hidden gap-2 items-center px-4 py-2 text-sm font-medium shadow-lg sm:flex md:px-6 md:py-3 md:text-base" 
                     type="button"
                     onClick={handleCreateCharacter}
                   >

@@ -68,10 +68,10 @@ const Contact = () => {
           {/* Header */}
           <div className="text-center mb-16">
             <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
-              Contact <span className="bg-gradient-to-r from-[#06b6d4] to-[#0891b2] bg-clip-text text-transparent">Us</span>
+              Contact <span className="bg-gradient-to-r from-[#4f46e5] to-[#0891b2] bg-clip-text text-transparent">Us</span>
             </h1>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Have questions about PNGTuberMaker? We&apos;re here to help. Reach out to our team and we&apos;ll get back to you as soon as possible.
+              Have questions about Legnext - The #1 Midjourney API Integration Platform? We&apos;re here to help. Reach out to our team and we&apos;ll get back to you as soon as possible.
             </p>
           </div>
 
@@ -93,7 +93,7 @@ const Contact = () => {
                       name="firstName"
                       value={formData.firstName}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#06b6d4] focus:border-transparent transition-colors"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#4f46e5] focus:border-transparent transition-colors"
                       placeholder="Your first name"
                       required
                       disabled={isSubmitting}
@@ -109,7 +109,7 @@ const Contact = () => {
                       name="lastName"
                       value={formData.lastName}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#06b6d4] focus:border-transparent transition-colors"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#4f46e5] focus:border-transparent transition-colors"
                       placeholder="Your last name"
                       required
                       disabled={isSubmitting}
@@ -127,7 +127,7 @@ const Contact = () => {
                     name="email"
                     value={formData.email}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#06b6d4] focus:border-transparent transition-colors"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#4f46e5] focus:border-transparent transition-colors"
                     placeholder="your.email@example.com"
                     required
                     disabled={isSubmitting}
@@ -143,7 +143,7 @@ const Contact = () => {
                     name="subject"
                     value={formData.subject}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#06b6d4] focus:border-transparent transition-colors"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#4f46e5] focus:border-transparent transition-colors"
                     required
                     disabled={isSubmitting}
                   >
@@ -166,7 +166,7 @@ const Contact = () => {
                     value={formData.message}
                     onChange={handleInputChange}
                     rows={6}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#06b6d4] focus:border-transparent transition-colors resize-none"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#4f46e5] focus:border-transparent transition-colors resize-none"
                     placeholder="Tell us how we can help you..."
                     required
                     disabled={isSubmitting}
@@ -176,7 +176,7 @@ const Contact = () => {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full bg-[#06b6d4] hover:bg-[#06b6d4]/90 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 flex items-center justify-center"
+                  className="w-full bg-[#4f46e5] hover:bg-[#4f46e5]/90 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 flex items-center justify-center"
                 >
                   {isSubmitting ? (
                     <>
@@ -203,43 +203,43 @@ const Contact = () => {
                 <div className="space-y-6">
                   {/* Email */}
                   <div className="flex items-start space-x-4">
-                    <div className="flex-shrink-0 w-10 h-10 bg-[#06b6d4]/20 rounded-lg flex items-center justify-center">
-                      <svg className="w-5 h-5 text-[#06b6d4]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="flex-shrink-0 w-10 h-10 bg-[#4f46e5]/20 rounded-lg flex items-center justify-center">
+                      <svg className="w-5 h-5 text-[#4f46e5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
                       </svg>
                     </div>
                     <div>
                       <h3 className="text-lg font-semibold text-gray-900 mb-1">Email</h3>
-                      <p className="text-gray-700">support@pngtubermaker.com</p>
+                      <p className="text-gray-700">support@legnext.ai</p>
                       <p className="text-sm text-gray-500 mt-1">We typically respond within 24 hours</p>
                     </div>
                   </div>
 
                   {/* Documentation */}
                   <div className="flex items-start space-x-4">
-                    <div className="flex-shrink-0 w-10 h-10 bg-[#06b6d4]/20 rounded-lg flex items-center justify-center">
-                      <svg className="w-5 h-5 text-[#06b6d4]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="flex-shrink-0 w-10 h-10 bg-[#4f46e5]/20 rounded-lg flex items-center justify-center">
+                      <svg className="w-5 h-5 text-[#4f46e5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                       </svg>
                     </div>
                     <div>
                       <h3 className="text-lg font-semibold text-gray-900 mb-1">Documentation</h3>
                       <p className="text-gray-700">Check our comprehensive guides</p>
-                      <Link href="/docs" className="text-[#06b6d4] hover:underline text-sm">Visit Documentation →</Link>
+                      <Link href="/docs" className="text-[#4f46e5] hover:underline text-sm">Visit Documentation →</Link>
                     </div>
                   </div>
 
                   {/* Community */}
                   <div className="flex items-start space-x-4">
-                    <div className="flex-shrink-0 w-10 h-10 bg-[#06b6d4]/20 rounded-lg flex items-center justify-center">
-                      <svg className="w-5 h-5 text-[#06b6d4]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="flex-shrink-0 w-10 h-10 bg-[#4f46e5]/20 rounded-lg flex items-center justify-center">
+                      <svg className="w-5 h-5 text-[#4f46e5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z"/>
                       </svg>
                     </div>
                     <div>
                       <h3 className="text-lg font-semibold text-gray-900 mb-1">Community</h3>
                       <p className="text-gray-700">Join our creator community</p>
-                      <a href="https://discord.gg/zysPAnvP8f" target="_blank" rel="noopener noreferrer" className="text-[#06b6d4] hover:underline text-sm">Join Discord →</a>
+                      <a href="https://discord.gg/zysPAnvP8f" target="_blank" rel="noopener noreferrer" className="text-[#4f46e5] hover:underline text-sm">Join Discord →</a>
                     </div>
                   </div>
                 </div>
@@ -263,7 +263,7 @@ const Contact = () => {
                   </div>
                   <div>
                     <span className="text-gray-900 font-medium">Website:</span>
-                    <span className="text-gray-700 ml-2">pngtubermaker.com</span>
+                    <span className="text-gray-700 ml-2">legnext.ai</span>
                   </div>
                 </div>
               </div>
@@ -286,7 +286,7 @@ const Contact = () => {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-700">Enterprise</span>
-                    <span className="text-[#06b6d4] font-medium">Priority Support</span>
+                    <span className="text-[#4f46e5] font-medium">Priority Support</span>
                   </div>
                 </div>
               </div>

@@ -29,7 +29,7 @@ export async function GET() {
         image: user.image,
         plan: user.profile.plan,
         subscriptionStatus: user.profile.subscriptionStatus,
-        totalAvatarsCreated: user.profile.avatarsCreated,
+        totalAvatarsCreated: user.profile.imagesGenerated,
         preferences: user.profile.preferences,
       },
       credits: {

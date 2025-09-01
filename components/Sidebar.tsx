@@ -73,11 +73,11 @@ const Sidebar = () => {
                     href={item.href}
                     className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl text-sm transition-all duration-200 hover:scale-[1.02] ${
                       isActive
-                        ? "bg-[#06b6d4]/10 text-[#06b6d4] font-semibold shadow-sm"
+                        ? "bg-[#4f46e5]/10 text-[#4f46e5] font-semibold shadow-sm"
                         : "text-slate-600 hover:bg-base-300 hover:text-slate-800"
                     }`}
                   >
-                    <div className={`${isActive ? "text-[#06b6d4]" : "text-slate-500"} flex-shrink-0`}>
+                    <div className={`${isActive ? "text-[#4f46e5]" : "text-slate-500"} flex-shrink-0`}>
                       {item.icon}
                     </div>
                     <span className="truncate font-medium">{item.name}</span>
@@ -105,7 +105,7 @@ const Sidebar = () => {
                 <div className="flex items-center gap-2">
                   <div className={`px-2 py-1 rounded-full text-xs font-semibold uppercase tracking-wide ${
                     userData.user.plan === 'pro' 
-                      ? 'bg-[#06b6d4]/10 text-[#06b6d4]' 
+                      ? 'bg-[#4f46e5]/10 text-[#4f46e5]' 
                       : 'bg-gray-100 text-gray-600'
                   }`}>
                     {userData.user.plan}
@@ -128,7 +128,7 @@ const Sidebar = () => {
               {userData.user.plan === 'free' && (
                 <Link 
                   href="/pricing"
-                  className="w-full block text-center bg-gradient-to-r from-[#06b6d4] to-[#0891b2] text-white py-2 px-3 rounded-lg text-sm font-medium hover:from-[#0891b2] hover:to-[#0e7490] transition-all duration-200 hover:scale-[1.02] shadow-sm"
+                  className="w-full block text-center bg-gradient-to-r from-[#4f46e5] to-[#0891b2] text-white py-2 px-3 rounded-lg text-sm font-medium hover:from-[#0891b2] hover:to-[#0e7490] transition-all duration-200 hover:scale-[1.02] shadow-sm"
                 >
                   ⚡ Upgrade to Pro
                 </Link>

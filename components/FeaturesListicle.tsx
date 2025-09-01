@@ -451,8 +451,8 @@ const FeaturesListicle = () => {
           <div className="text-base-content/80 leading-relaxed mb-8 lg:text-lg">
             {/* 💡 COPY TIP: Explain how your product delivers what you promise in the headline. */}
             Login users, process payments and send emails at lightspeed. Spend
-            your time creating amazing content, not setting up tools. PNGTuberMaker
-            provides you with the AI-powered avatars you need to stream, FAST.
+            your time creating amazing content, not setting up tools. Legnext
+            provides you with the reliable Midjourney API integration you need to build, FAST.
           </div>
         </div>
       </div>

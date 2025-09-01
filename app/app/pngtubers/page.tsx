@@ -182,7 +182,7 @@ export default function AvatarsPage() {
           <h3 className="text-xl font-semibold mb-2">Please log in to view your PngTubers</h3>
           <p className="text-base-content/60 mb-6">You need to be logged in to see and manage your PngTubers.</p>
           <Link href="/auth/signin">
-            <button className="btn bg-[#06b6d4] hover:bg-[#06b6d4]/90 text-white border-none">
+            <button className="btn bg-[#4f46e5] hover:bg-[#4f46e5]/90 text-white border-none">
               Sign In
             </button>
           </Link>
@@ -204,7 +204,7 @@ export default function AvatarsPage() {
           <h3 className="text-xl font-semibold mb-2">Failed to load PngTubers</h3>
           <p className="text-base-content/60 mb-6">{error}</p>
           <button 
-            className="btn bg-[#06b6d4] hover:bg-[#06b6d4]/90 text-white border-none"
+            className="btn bg-[#4f46e5] hover:bg-[#4f46e5]/90 text-white border-none"
             onClick={() => window.location.reload()}
           >
             Try Again
@@ -263,7 +263,7 @@ export default function AvatarsPage() {
                 Select
               </button>
               <Link href="/app/pngtuber-maker">
-                <button className="btn bg-[#06b6d4] hover:bg-[#06b6d4]/90 text-white border-none">
+                <button className="btn bg-[#4f46e5] hover:bg-[#4f46e5]/90 text-white border-none">
                   <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.5v15m7.5-7.5h-15" />
                   </svg>
@@ -286,7 +286,7 @@ export default function AvatarsPage() {
           <h3 className="text-xl font-semibold mb-2">No PngTubers yet</h3>
           <p className="text-base-content/60 mb-6">Create your first PNGTuber avatar to get started!</p>
           <Link href="/app/pngtuber-maker">
-            <button className="btn bg-[#06b6d4] hover:bg-[#06b6d4]/90 text-white border-none">
+            <button className="btn bg-[#4f46e5] hover:bg-[#4f46e5]/90 text-white border-none">
               Create Your First PngTuber
             </button>
           </Link>
@@ -298,7 +298,7 @@ export default function AvatarsPage() {
             <div 
               key={avatar._id} 
               className={`card bg-base-200 shadow-lg transition-all hover:shadow-xl ${
-                selectedAvatars.includes(avatar._id) ? 'ring-2 ring-[#06b6d4]' : ''
+                selectedAvatars.includes(avatar._id) ? 'ring-2 ring-[#4f46e5]' : ''
               }`}
             >
               {/* Selection Checkbox */}
@@ -314,7 +314,7 @@ export default function AvatarsPage() {
               )}
 
               {/* PngTuber Preview */}
-              <div className="aspect-square bg-gradient-to-br from-[#06b6d4]/20 to-[#6ecfe0]/20 relative">
+              <div className="aspect-square bg-gradient-to-br from-[#4f46e5]/20 to-[#6366f1]/20 relative">
                 {avatar.images?.thumbnail?.url ? (
                   <Image 
                     src={avatar.images.thumbnail.url}
@@ -325,7 +325,7 @@ export default function AvatarsPage() {
                   />
                 ) : (
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="w-24 h-24 bg-[#06b6d4]/30 rounded-full"></div>
+                    <div className="w-24 h-24 bg-[#4f46e5]/30 rounded-full"></div>
                   </div>
                 )}
                 
@@ -441,7 +441,7 @@ export default function AvatarsPage() {
                       </li>
                     </ul>
                   </div>
-                  <button className="btn bg-[#06b6d4] hover:bg-[#06b6d4]/90 text-white border-none btn-sm">
+                  <button className="btn bg-[#4f46e5] hover:bg-[#4f46e5]/90 text-white border-none btn-sm">
                     <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
@@ -465,7 +465,7 @@ export default function AvatarsPage() {
           </h2>
           <div className="grid md:grid-cols-3 lg:grid-cols-4 gap-4">
             {avatars.filter(avatar => avatar.isFavorite).map((avatar) => (
-              <div key={avatar._id} className="aspect-square bg-gradient-to-br from-[#06b6d4]/20 to-[#6ecfe0]/20 rounded-lg p-4 flex items-center justify-center">
+              <div key={avatar._id} className="aspect-square bg-gradient-to-br from-[#4f46e5]/20 to-[#6366f1]/20 rounded-lg p-4 flex items-center justify-center">
                 <div className="text-center">
                   {avatar.images?.thumbnail?.url ? (
                     <Image 
@@ -476,7 +476,7 @@ export default function AvatarsPage() {
                       className="rounded-full mx-auto mb-2 object-cover"
                     />
                   ) : (
-                    <div className="w-16 h-16 bg-[#06b6d4]/30 rounded-full mx-auto mb-2"></div>
+                    <div className="w-16 h-16 bg-[#4f46e5]/30 rounded-full mx-auto mb-2"></div>
                   )}
                   <p className="text-sm font-medium">{avatar.name}</p>
                 </div>

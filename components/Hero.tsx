@@ -17,7 +17,7 @@ const Hero = () => {
               Create Anime Avatars for Streaming
             </p>
             <h1 className="text-gray-900 font-bold text-6xl md:text-7xl xl:text-8xl">
-              AI <span className="bg-gradient-to-r from-[#06b6d4] to-[#06b6d4] bg-clip-text text-transparent">PNGTuber</span> Maker
+              AI <span className="bg-gradient-to-r from-[#4f46e5] to-[#4f46e5] bg-clip-text text-transparent">PNGTuber</span> Maker
             </h1>
             <p className="mt-8 text-gray-600 text-lg md:text-xl">
               Transform your streaming presence with AI-powered PNGTuber avatars. Generate expressive characters in minutes, not days.
@@ -54,7 +54,7 @@ const Hero = () => {
             <div className="mt-16 flex justify-center">
               <button
                 onClick={() => window.location.href = '/app'}
-                className="relative flex h-11 items-center justify-center px-6 before:absolute before:inset-0 before:rounded-full before:bg-[#06b6d4] before:transition before:duration-300 hover:before:scale-105 active:duration-75 active:before:scale-95 cursor-pointer"
+                className="relative flex h-11 items-center justify-center px-6 before:absolute before:inset-0 before:rounded-full before:bg-[#4f46e5] before:transition before:duration-300 hover:before:scale-105 active:duration-75 active:before:scale-95 cursor-pointer"
               >
                 <svg className="relative w-5 h-5 mr-2" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="white"/>

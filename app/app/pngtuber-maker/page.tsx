@@ -5,7 +5,7 @@ import Link from "next/link";
 import StepsSection from "@/components/StepsSection";
 import OCMakerExamples from "@/components/OCMakerExamples";
 import FAQ from "@/components/FAQ";
-import { pngtuberFAQList } from "@/components/FAQData";
+import { defaultFAQList } from "@/components/FAQData";
 import FileUpload from "@/components/FileUpload";
 import { toast } from "react-hot-toast";
 
@@ -105,7 +105,7 @@ export default function CreatePage() {
       {/* Progress Bar */}
       <div className="w-full bg-base-300 rounded-full h-2">
         <div 
-          className="bg-[#06b6d4] h-2 rounded-full transition-all duration-300" 
+          className="bg-[#4f46e5] h-2 rounded-full transition-all duration-300" 
           style={{width: `${(currentStep / 3) * 100}%`}}
         ></div>
       </div>
@@ -121,7 +121,7 @@ export default function CreatePage() {
       {/* Step 1: Choose Input Method */}
       {currentStep === 1 && (
         <div className="space-y-6 max-w-7xl mx-auto">
-          <div className="card bg-white shadow-lg border-2 border-[#06b6d4]">
+          <div className="card bg-white shadow-lg border-2 border-[#4f46e5]">
             <div className="card-body">
               <h2 className="card-title mb-4">Step 1: Describe Your PngTuber</h2>
               
@@ -157,7 +157,7 @@ export default function CreatePage() {
 
               <div className="card-actions justify-end mt-6">
                 <button 
-                  className="btn bg-[#06b6d4] hover:bg-[#06b6d4]/90 text-white border-none"
+                  className="btn bg-[#4f46e5] hover:bg-[#4f46e5]/90 text-white border-none"
                   onClick={handleGenerate}
                   disabled={!textDescription.trim() || isGenerating}
                 >
@@ -179,7 +179,7 @@ export default function CreatePage() {
       {/* Step 2: Select Avatar */}
       {currentStep === 2 && (
         <div className="space-y-6 max-w-7xl mx-auto">
-          <div className="card bg-white shadow-lg border-2 border-[#06b6d4]">
+          <div className="card bg-white shadow-lg border-2 border-[#4f46e5]">
             <div className="card-body">
               <h2 className="card-title mb-4">Step 2: Choose Your Favorite</h2>
               
@@ -188,19 +188,19 @@ export default function CreatePage() {
                   <div 
                     key={index}
                     className={`aspect-square rounded-lg cursor-pointer transition-all hover:shadow-lg ${
-                      selectedAvatar === index ? "ring-4 ring-[#06b6d4]" : ""
+                      selectedAvatar === index ? "ring-4 ring-[#4f46e5]" : ""
                     }`}
                     onClick={() => setSelectedAvatar(index)}
                   >
-                    <div className="w-full h-full bg-gradient-to-br from-[#06b6d4]/20 to-[#6ecfe0]/20 rounded-lg flex items-center justify-center">
+                    <div className="w-full h-full bg-gradient-to-br from-[#4f46e5]/20 to-[#6366f1]/20 rounded-lg flex items-center justify-center">
                       <div className="text-center">
-                        <div className="w-16 h-16 bg-[#06b6d4]/30 rounded-full mx-auto mb-2"></div>
+                        <div className="w-16 h-16 bg-[#4f46e5]/30 rounded-full mx-auto mb-2"></div>
                         <p className="text-xs text-base-content/60">PngTuber {index + 1}</p>
                       </div>
                     </div>
                     {selectedAvatar === index && (
                       <div className="mt-2 text-center">
-                        <button className="btn btn-xs bg-[#06b6d4] hover:bg-[#06b6d4]/90 text-white border-none">
+                        <button className="btn btn-xs bg-[#4f46e5] hover:bg-[#4f46e5]/90 text-white border-none">
                           Expression
                         </button>
                       </div>
@@ -232,7 +232,7 @@ export default function CreatePage() {
                     Regenerate
                   </button>
                   <button 
-                    className="btn bg-[#06b6d4] hover:bg-[#06b6d4]/90 text-white border-none"
+                    className="btn bg-[#4f46e5] hover:bg-[#4f46e5]/90 text-white border-none"
                     onClick={handleNext}
                     disabled={selectedAvatar === null}
                   >
@@ -248,16 +248,16 @@ export default function CreatePage() {
       {/* Step 3: Download & Share */}
       {currentStep === 3 && (
         <div className="space-y-6 max-w-7xl mx-auto">
-          <div className="card bg-white shadow-lg border-2 border-[#06b6d4]">
+          <div className="card bg-white shadow-lg border-2 border-[#4f46e5]">
             <div className="card-body">
               <h2 className="card-title mb-4">Step 3: Your PngTuber is Ready!</h2>
               
               <div className="flex flex-col md:flex-row gap-6">
                 {/* Avatar Preview */}
                 <div className="flex-1">
-                  <div className="aspect-square bg-gradient-to-br from-[#06b6d4]/20 to-[#6ecfe0]/20 rounded-lg flex items-center justify-center">
+                  <div className="aspect-square bg-gradient-to-br from-[#4f46e5]/20 to-[#6366f1]/20 rounded-lg flex items-center justify-center">
                     <div className="text-center">
-                      <div className="w-32 h-32 bg-[#06b6d4]/30 rounded-full mx-auto mb-4"></div>
+                      <div className="w-32 h-32 bg-[#4f46e5]/30 rounded-full mx-auto mb-4"></div>
                       <p className="text-lg font-semibold">Your PngTuber</p>
                       <p className="text-sm text-base-content/60">High Quality • Ready to Use</p>
                     </div>
@@ -268,7 +268,7 @@ export default function CreatePage() {
                 <div className="flex-1">
                   <h3 className="font-semibold mb-4">Download Options</h3>
                   <div className="space-y-3">
-                    <button className="btn btn-block bg-[#06b6d4] hover:bg-[#06b6d4]/90 text-white border-none">
+                    <button className="btn btn-block bg-[#4f46e5] hover:bg-[#4f46e5]/90 text-white border-none">
                       <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                       </svg>
@@ -315,7 +315,7 @@ export default function CreatePage() {
                     </button>
                   </Link>
                   <Link href="/app/pngtuber-maker">
-                    <button className="btn bg-[#06b6d4] hover:bg-[#06b6d4]/90 text-white border-none">
+                    <button className="btn bg-[#4f46e5] hover:bg-[#4f46e5]/90 text-white border-none">
                       Create Another
                     </button>
                   </Link>
@@ -328,7 +328,7 @@ export default function CreatePage() {
 
       {/* What is PNGTuber Maker */}
       <div className="text-center py-12">
-        <h2 className="text-3xl md:text-4xl font-bold text-[#06b6d4] mb-4">
+        <h2 className="text-3xl md:text-4xl font-bold text-[#4f46e5] mb-4">
           What is PNGTuber Maker
         </h2>
         <p className="text-lg text-gray-700 max-w-4xl mx-auto px-6">
@@ -350,7 +350,7 @@ export default function CreatePage() {
       {/* FAQ Section */}
       <FAQ 
         title="Frequently Asked Questions" 
-        faqList={pngtuberFAQList} 
+        faqList={defaultFAQList} 
         variant="pngtuber"
       />
       </div>

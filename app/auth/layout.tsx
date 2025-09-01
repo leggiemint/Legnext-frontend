@@ -36,7 +36,7 @@ export const metadata = getSEOTags({
     ],
   },
   extraTags: {
-    "theme-color": "#06b6d4",
+    "theme-color": "#4f46e5",
     "author": "PNGTuberMaker",
     "robots": "noindex, nofollow",
   }

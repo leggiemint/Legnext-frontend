@@ -13,7 +13,7 @@ export default function AppPage() {
   return (
     <div className="flex items-center justify-center min-h-screen">
       <div className="text-center">
-        <div className="loading loading-spinner loading-lg text-[#06b6d4]"></div>
+        <div className="loading loading-spinner loading-lg text-[#4f46e5]"></div>
         <p className="mt-4 text-gray-600">Redirecting to PngTuber Maker...</p>
       </div>
     </div>

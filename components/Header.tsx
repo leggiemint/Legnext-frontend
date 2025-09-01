@@ -28,7 +28,7 @@ const links: {
 
 const cta = (
   <Link href="/app">
-    <button className="inline-flex items-center justify-center px-4 py-2 bg-[#06b6d4] text-white font-medium rounded-lg hover:bg-[#06b6d4]/90 transition-colors duration-200 shadow-sm">
+    <button className="inline-flex items-center justify-center px-4 py-2 bg-[#4f46e5] text-white font-medium rounded-lg hover:bg-[#4f46e5]/90 transition-colors duration-200 shadow-sm">
       Create Now
     </button>
   </Link>
@@ -117,7 +117,7 @@ const HeaderContent = () => {
       {/* Dashboard Button - Hidden on mobile */}
       <div className="hidden md:block">
         <Link href="/app">
-          <button className="inline-flex items-center justify-center px-4 py-2 bg-[#06b6d4] text-white font-medium rounded-lg hover:bg-[#06b6d4]/90 transition-colors duration-200 shadow-sm">
+          <button className="inline-flex items-center justify-center px-4 py-2 bg-[#4f46e5] text-white font-medium rounded-lg hover:bg-[#4f46e5]/90 transition-colors duration-200 shadow-sm">
             Dashboard
           </button>
         </Link>
@@ -127,7 +127,7 @@ const HeaderContent = () => {
       <div className="hidden md:block relative">
         <button
           onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
-          className="user-avatar-btn flex items-center justify-center w-10 h-10 rounded-full border-2 border-[#06b6d4] bg-white hover:bg-gray-50 transition-colors duration-200"
+          className="user-avatar-btn flex items-center justify-center w-10 h-10 rounded-full border-2 border-[#4f46e5] bg-white hover:bg-gray-50 transition-colors duration-200"
           aria-label="User menu"
         >
           {session?.user?.image ? (
@@ -140,7 +140,7 @@ const HeaderContent = () => {
             />
           ) : (
             <svg
-              className="w-6 h-6 text-[#06b6d4]"
+              className="w-6 h-6 text-[#4f46e5]"
               fill="currentColor"
               viewBox="0 0 20 20"
             >
@@ -237,7 +237,7 @@ const HeaderContent = () => {
               {/* Mobile CTA Display (Visible only on small screens) */}
               <div className="block sm:hidden">
                 <Link href="/app">
-                  <button className="inline-flex items-center justify-center px-4 py-2 bg-[#06b6d4] text-white font-medium rounded-lg hover:bg-[#06b6d4]/90 transition-colors duration-200 shadow-sm">
+                  <button className="inline-flex items-center justify-center px-4 py-2 bg-[#4f46e5] text-white font-medium rounded-lg hover:bg-[#4f46e5]/90 transition-colors duration-200 shadow-sm">
                     Create Now
                   </button>
                 </Link>
@@ -321,7 +321,7 @@ const HeaderContent = () => {
                     </p>
                   </div>
                   <Link href="/app" className="w-full">
-                    <button className="w-full inline-flex items-center justify-center px-4 py-2 bg-[#06b6d4] text-white font-medium rounded-lg hover:bg-[#06b6d4]/90 transition-colors duration-200 shadow-sm">
+                    <button className="w-full inline-flex items-center justify-center px-4 py-2 bg-[#4f46e5] text-white font-medium rounded-lg hover:bg-[#4f46e5]/90 transition-colors duration-200 shadow-sm">
                       Dashboard
                     </button>
                   </Link>
@@ -342,7 +342,7 @@ const HeaderContent = () => {
                 </div>
               ) : (
                 <Link href="/app" className="w-full">
-                  <button className="w-full inline-flex items-center justify-center px-4 py-2 bg-[#06b6d4] text-white font-medium rounded-lg hover:bg-[#06b6d4]/90 transition-colors duration-200 shadow-sm">
+                  <button className="w-full inline-flex items-center justify-center px-4 py-2 bg-[#4f46e5] text-white font-medium rounded-lg hover:bg-[#4f46e5]/90 transition-colors duration-200 shadow-sm">
                     Create Now
                   </button>
                 </Link>

@@ -4,8 +4,10 @@
 
 import * as Sentry from "@sentry/nextjs";
 
+// Completely disable Sentry
+if (false) {
 Sentry.init({
-  dsn: process.env.SENTRY_DSN,
+  dsn: process.env.NODE_ENV === "development" ? undefined : process.env.SENTRY_DSN,
 
   // Adjust this value in production, or use tracesSampler for greater control
   tracesSampleRate: process.env.NODE_ENV === "production" ? 0.05 : 1.0,
@@ -48,3 +50,4 @@ Sentry.init({
   // Uncomment the line below to enable Spotlight (https://spotlightjs.com)
   // spotlight: process.env.NODE_ENV === 'development',
 });
+}

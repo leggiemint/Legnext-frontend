@@ -117,7 +117,7 @@ const PricingSection = () => {
                             xmlns="http://www.w3.org/2000/svg"
                             viewBox="0 0 20 20"
                             fill="currentColor"
-                            className="w-[18px] h-[18px] text-[#06b6d4] shrink-0"
+                            className="w-[18px] h-[18px] text-[#4f46e5] shrink-0"
                           >
                             <path
                               fillRule="evenodd"

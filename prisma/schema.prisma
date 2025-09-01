@@ -51,55 +51,106 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
-// Main user table - simplified
+// Main user table - enhanced for Midjourney API
 model User {
   id            String    @id @default(cuid())
   email         String    @unique
   name          String?
-  image         String?
+  image         String?   // avatar_url from reference
   emailVerified DateTime?
+  isDelete      Boolean   @default(false) // from UserList interface
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
   // Relations
-  accounts      Account[]
-  sessions      Session[]
-  profile       UserProfile?
-  avatars       Avatar[]
-  transactions  Transaction[]
+  accounts           Account[]
+  sessions           Session[]
+  profile            UserProfile?
+  apiKeys            UserApiKey[]
+  images             MidjourneyImage[]
+  transactions       Transaction[]
+  customers          Customer?
+  rechargeHistories  CreditRechargeHistory[]
+  rechargeSetting    RechargeSetting?
+  subscriptions      Subscription[]
+  organizationMember OrganizationMember?
 
   @@index([email])
+  @@index([isDelete])
 }
 
 // ==========================================
-// BUSINESS DATA
+// API KEYS MANAGEMENT
 // ==========================================
 
-// User business profile - all subscription & usage data
+model UserApiKey {
+  id         String   @id @default(cuid())
+  userId     String
+  goApiKey   String   @unique // go_api_key from reference
+  name       String?  // Optional name for the API key
+  isActive   Boolean  @default(true)
+  lastUsedAt DateTime?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([goApiKey])
+  @@index([isActive])
+}
+
+// ==========================================
+// CUSTOMER & PAYMENT GATEWAY MANAGEMENT
+// ==========================================
+
+model Customer {
+  id                         String  @id @default(cuid())
+  userId                     String  @unique
+  paypalCustomerId           String? @unique
+  radomCustomerId            String? @unique
+  stripeCustomerId           String? @unique
+  goapiStripeV2CustomerId    String? @unique
+  goapiStripeV3CustomerId    String? @unique
+  piapiStripeCustomerId      String? @unique
+  piapiStripeV2CustomerId    String? @unique
+  goapiDodoCustomerId        String? @unique
+  qubicoStripeCustomerId     String? @unique
+  createdAt                  DateTime @default(now())
+  updatedAt                  DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([stripeCustomerId])
+  @@index([paypalCustomerId])
+}
+
+// ==========================================
+// USER PROFILE & SUBSCRIPTION
+// ==========================================
+
 model UserProfile {
   id                String   @id @default(cuid())
   userId            String   @unique
   
   // Subscription
-  plan              String   @default("free") // "free" | "pro"
+  plan              String   @default("free") // "free" | "pro" | "enterprise"
   subscriptionStatus String  @default("inactive") // "active" | "inactive" | "canceled" | "past_due"
   
-  // Credits system
-  credits           Int      @default(60) // Current credit balance
-  totalCreditsEarned Int     @default(60) // Total credits ever earned
-  totalCreditsSpent Int      @default(0)  // Total credits ever spent
+  // API Calls system (replacing credits)
+  apiCalls          Int      @default(100) // Current API calls balance
+  totalApiCallsUsed Int      @default(0)   // Total API calls ever used
+  totalApiCallsPurchased Int @default(100) // Total API calls ever purchased
   
-  // Payment gateway info
-  stripeCustomerId  String?
-  squareCustomerId  String?
-  currentPriceId    String? // Current subscription price ID
+  // Legacy credits field for backward compatibility
+  credits           Int      @default(100) // Alias for apiCalls for compatibility
+  totalCreditsEarned Int     @default(100) // Alias for totalApiCallsPurchased
+  totalCreditsSpent Int      @default(0)   // Alias for totalApiCallsUsed
   
-  // Subscription dates
-  subscriptionStart DateTime?
-  subscriptionEnd   DateTime?
-  
-  // Usage stats
-  avatarsCreated    Int      @default(0)
+  // Usage stats for Midjourney API
+  imagesGenerated   Int      @default(0)   // Total images generated
+  imagesUpscaled    Int      @default(0)   // Total images upscaled
+  variationsCreated Int      @default(0)   // Total variations created
   lastActiveAt      DateTime @default(now())
   
   // Settings
@@ -111,45 +162,66 @@ model UserProfile {
   user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([plan, subscriptionStatus])
-  @@index([stripeCustomerId])
-  @@index([squareCustomerId])
+  @@index([userId])
 }
 
 // ==========================================
-// AVATAR SYSTEM
+// MIDJOURNEY IMAGE GENERATION SYSTEM
 // ==========================================
 
-model Avatar {
-  id              String   @id @default(cuid())
-  userId          String
+model MidjourneyImage {
+  id                String   @id @default(cuid())
+  userId            String
   
-  // Basic info
-  name            String   @default("Untitled Avatar")
-  prompt          String?  // User's generation prompt
-  style           String?  // "anime" | "realistic" | "cartoon" | "chibi"
+  // Generation request info
+  prompt            String   @db.Text // User's generation prompt
+  model             String?  // "v5" | "v6" | "niji" etc.
+  aspectRatio       String?  // "--ar 16:9" etc.
+  stylize           Int?     // Stylize value
+  chaos             Int?     // Chaos value
+  quality           String?  // Quality setting
+  mode              String   @default("fast") // "fast" | "mixed" | "turbo"
   
   // Generation status
-  status          String   @default("generating") // "generating" | "completed" | "failed"
-  failureReason   String?
+  status            String   @default("pending") // "pending" | "generating" | "completed" | "failed" | "upscaling"
+  failureReason     String?
   
-  // File storage
-  images          Json?    // { original: { url, key }, expressions: {...} }
+  // Midjourney task info
+  taskId            String?  // Midjourney task ID
+  messageId         String?  // Discord message ID
+  progress          Int      @default(0) // 0-100
+  
+  // Generated images data
+  imageUrl          String?  // Original generated image URL
+  upscaledUrls      Json?    // Upscaled image URLs array
+  variationUrls     Json?    // Variation image URLs array
+  
+  // File storage (our CDN)
+  storedImages      Json?    // { original: { url, key }, upscaled: [...], variations: [...] }
+  
+  // References and parameters
+  styleReference    String?  // --sref URL
+  characterReference String? // --cref URL
+  imageReference    String?  // Image prompt URL
   
   // User interaction
-  isFavorite      Boolean  @default(false)
-  downloadCount   Int      @default(0)
+  isFavorite        Boolean  @default(false)
+  isPublic          Boolean  @default(false)
+  downloadCount     Int      @default(0)
   
-  // Generation metadata
-  generationData  Json?    // AI model, seed, etc.
+  // API usage tracking
+  apiCallsUsed      Int      @default(1) // How many API calls this generation used
   
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 
-  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, status])
   @@index([userId, isFavorite])
   @@index([status])
+  @@index([taskId])
+  @@index([createdAt])
 }
 
 // ==========================================
@@ -161,12 +233,12 @@ model Transaction {
   userId          String
   
   // Transaction basics
-  type            String   // "credit_purchase" | "credit_spend" | "subscription" | "refund"
-  amount          Int      // Credits amount (positive for earn, negative for spend)
+  type            String   // "api_call_purchase" | "api_call_spend" | "subscription" | "refund"
+  amount          Int      // API calls amount (positive for purchase, negative for spend)
   description     String   // Human readable description
   
   // Payment gateway
-  gateway         String?  // "stripe" | "square" | null for internal
+  gateway         String?  // "stripe" | "paypal" | "square" | null for internal
   gatewayTxnId    String?  // External transaction ID
   
   // Subscription context
@@ -188,6 +260,139 @@ model Transaction {
   @@index([createdAt])
 }
 
+// Enhanced Credit Recharge History based on reference
+model CreditRechargeHistory {
+  id            String    @id @default(cuid())
+  userId        String
+  customerId    String    // Reference to customer
+  amount        Int       // API calls purchased
+  isAuto        Boolean   @default(false) // is_auto from reference
+  paymentType   String    // payment_type from reference
+  paymentId     String?   // payment_id from reference
+  invoiceUrl    String?   // invoice_url from reference
+  expiredAt     DateTime? // expired_at from reference
+  creditPackId  String?   // credit_pack_id from reference
+  isPlan        Boolean   @default(false) // is_plan from reference
+  isRedeem      Boolean   @default(false) // is_redeem from reference
+  isPaypal      Boolean   @default(false) // is_paypal from reference
+  isDodo        Boolean   @default(false) // is_dodo from reference
+  createdAt     DateTime  @default(now())
+
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([customerId])
+  @@index([createdAt])
+}
+
+// Auto-recharge settings based on reference
+model RechargeSetting {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  autoRecharge    Boolean  @default(false) // auto_recharge from reference
+  thresholdCredit Int      @default(10)    // threshold_credit from reference
+  targetCredit    Int      @default(100)   // target_credit from reference
+  rechargeStatus  String   @default("success") // recharge_status from reference
+  failureReason   String?  // failure_reason from reference
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([autoRecharge])
+}
+
+// Enhanced Subscriptions based on reference
+model Subscription {
+  id                  String    @id @default(cuid())
+  userId              String
+  subscriptionId      String?   @unique // subscription_id from reference
+  name                String?   // name from reference
+  prices              Json?     // prices JSON from reference
+  platform            String?   // platform from reference
+  customerId          String?   // customer_id from reference
+  status              Boolean   @default(true) // status from reference
+  cancelAtPeriodEnd   Boolean   @default(false) // cancel_at_period_end from reference
+  invoiceUrl          String?   // invoice_url from reference
+  createdAt           DateTime  @default(now()) // created_at from reference
+  expiresAt           DateTime? // expires_at from reference
+  updatedAt           DateTime  @updatedAt
+
+  user                User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([subscriptionId])
+  @@index([platform])
+  @@index([status])
+}
+
+// Subscription update errors tracking based on reference
+model SubscriptionUpdateError {
+  id             String   @id @default(cuid())
+  customerId     String   // customer_id from reference
+  email          String   // email from reference
+  subscriptionId String   // subscription_id from reference
+  platform       String   // platform from reference
+  oldPlan        String   // old_plan from reference
+  oldQuantity    Int      // old_quantity from reference
+  oldPrice       String   // old_price from reference
+  isDelete       Boolean  @default(false) // is_delete from reference
+  createdAt      DateTime @default(now()) // createdAt from reference
+  updatedAt      DateTime @updatedAt // updatedAt from reference
+
+  @@index([customerId])
+  @@index([subscriptionId])
+  @@index([platform])
+  @@index([isDelete])
+}
+
+// ==========================================
+// ORGANIZATION SYSTEM
+// ==========================================
+
+// Organizations based on reference
+model Organization {
+  id        Int      @id @default(autoincrement()) // id from reference
+  name      String   // name from reference
+  createdBy String   // created_by from reference
+  isActive  Boolean  @default(true) // is_active from reference
+  createdAt DateTime @default(now()) // created_at from reference
+  updatedAt DateTime @updatedAt // updated_at from reference
+
+  members   OrganizationMember[]
+
+  @@index([createdBy])
+  @@index([isActive])
+}
+
+// Organization members based on reference
+model OrganizationMember {
+  id               Int          @id @default(autoincrement()) // id from reference
+  name             String       // name from reference
+  organizationId   Int          // organization_id from reference
+  userId           String       @unique // user_id from reference
+  email            String       // email from reference
+  role             String       @default("member") // role from reference: "admin" | "member"
+  joinedAt         DateTime?    // joined_at from reference
+  invitedBy        String?      // invited_by from reference
+  invitedAt        DateTime?    // invited_at from reference
+  isActive         Boolean      @default(true) // is_active from reference
+  status           String       @default("pending") // status from reference: "pending" | "accepted" | "revoked"
+  invitationToken  String?      // invitation_token from reference
+  createdAt        DateTime     @default(now()) // created_at from reference
+  updatedAt        DateTime     @updatedAt // updated_at from reference
+
+  user             User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization     Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([userId])
+  @@index([email])
+  @@index([status])
+  @@index([isActive])
+}
+
 // ==========================================
 // SYSTEM TABLES
 // ==========================================
@@ -195,7 +400,7 @@ model Transaction {
 // Webhook event tracking for idempotency
 model WebhookEvent {
   id          String   @id @default(cuid())
-  provider    String   // "stripe" | "square"
+  provider    String   // "stripe" | "paypal" | "square"
   eventId     String   // External event ID
   eventType   String   // Event type
   processed   Boolean  @default(false)

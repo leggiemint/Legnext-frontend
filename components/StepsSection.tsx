@@ -16,7 +16,7 @@ const StepsSection = ({ title, steps, className = "" }: StepsSectionProps) => {
       <div className="max-w-7xl mx-auto px-8">
         {/* Section Title */}
         <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold text-[#06b6d4]">
+          <h2 className="text-3xl md:text-4xl font-bold text-[#4f46e5]">
             {title}
           </h2>
         </div>
@@ -24,9 +24,9 @@ const StepsSection = ({ title, steps, className = "" }: StepsSectionProps) => {
         {/* Steps Grid */}
         <div className="grid grid-cols-1 gap-6 md:gap-8 md:px-4 sm:grid-cols-2 lg:grid-cols-3">
           {steps.map((step, index) => (
-            <div key={index} className="flex flex-col p-4 md:p-6 h-full bg-white rounded-xl border border-gray-200 shadow-md hover:shadow-lg transition-all duration-300 hover:border-[#06b6d4] hover:translate-y-[-5px]">
+            <div key={index} className="flex flex-col p-4 md:p-6 h-full bg-white rounded-xl border border-gray-200 shadow-md hover:shadow-lg transition-all duration-300 hover:border-[#4f46e5] hover:translate-y-[-5px]">
               {/* Number Badge */}
-              <div className="flex justify-center items-center mb-4 w-8 h-8 text-xl font-bold text-white bg-gradient-to-r from-[#06b6d4] to-[#6ecfe0] rounded-full md:w-14 md:h-14 md:text-2xl">
+              <div className="flex justify-center items-center mb-4 w-8 h-8 text-xl font-bold text-white bg-gradient-to-r from-[#4f46e5] to-[#6366f1] rounded-full md:w-14 md:h-14 md:text-2xl">
                 {step.number}
               </div>
               

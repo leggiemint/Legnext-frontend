@@ -21,7 +21,7 @@ const AppHeader = () => {
               {/* Logo from logo.svg */}
               <Image
                 src={logo}
-                alt="PNGTuberMaker Logo"
+                alt="Legnext Logo"
                 className="w-[120px] sm:w-[160px] md:w-[200px] h-auto"
                 priority={true}
                 width={200}

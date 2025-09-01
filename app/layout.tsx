@@ -24,12 +24,12 @@ export const viewport: Viewport = {
 // This adds default SEO tags to all pages in our app.
 // You can override them in each page passing params to getSOTags() function.
 export const metadata = getSEOTags({
-  title: "The #1 AI PNGTuber Maker for Streamers",
-  description: "The #1 AI PNGTuber Maker for Streamers. Create custom PNGTuber avatars with AI — complete with multiple expressions and simple animations. Perfect for Twitch, YouTube, and Discord.",
-  keywords: ["pngtuber maker", "ai pngtuber", "vtuber avatar generator", "pngtuber for twitch", "anime avatar for streaming"],
+  title: "Legnext - The #1 Midjourney API Integration Platform",
+  description: "The #1 way to access Midjourney via API. Integrate Midjourney into your apps — no Midjourney account required. Reliable, fast, and developer-friendly.",
+  keywords: ["midjourney api", "ai image generation api", "midjourney integration", "api access", "ai art generation", "midjourney bot", "midjourney api pricing", "professional midjourney api"],
   openGraph: {
-    title: "The #1 AI PNGTuber Maker for Streamers",
-    description: "The #1 AI PNGTuber Maker for Streamers. Create custom PNGTuber avatars with AI — complete with multiple expressions and simple animations. Perfect for Twitch, YouTube, and Discord.",
+    title: "Legnext - The #1 Midjourney API Integration Platform",
+    description: "The #1 way to access Midjourney via API. Integrate Midjourney into your apps — no Midjourney account required. Reliable, fast, and developer-friendly.",
     images: [
       {
         url: "/og-image.png",
@@ -39,8 +39,8 @@ export const metadata = getSEOTags({
     ],
   },
   extraTags: {
-    "theme-color": "#06b6d4",
-    "author": "PNGTuberMaker",
+    "theme-color": "#4f46e5",
+    "author": "Legnext",
     "robots": "index, follow",
   }
 });

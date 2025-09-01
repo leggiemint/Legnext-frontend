@@ -93,7 +93,7 @@ const FAQ = ({
   const getTitleStyles = () => {
     switch (variant) {
       case "pngtuber":
-        return "text-center text-3xl md:text-4xl font-bold text-[#06b6d4] mb-16";
+        return "text-center text-3xl md:text-4xl font-bold text-[#4f46e5] mb-16";
       default:
         return "text-center text-3xl font-bold text-gray-900 mb-16";
     }

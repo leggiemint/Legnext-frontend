@@ -2,9 +2,9 @@ import MainLayout from "@/components/MainLayout";
 import { getSEOTags } from "@/libs/seo";
 
 export const metadata = getSEOTags({
-  title: "Terms of Service | PNGTuberMaker - Avatar Creation Platform",
-  description: "PNGTuberMaker Terms of Service - Learn about our service terms, usage policies, and user responsibilities for the PNGTuber avatar creation platform. Clear guidelines for streamers and content creators.",
-  keywords: "pngtubermaker terms of service, pngtuber legal terms, avatar creation terms, streaming avatar policy, vtuber maker terms, pngtuber usage policy",
+  title: "Terms of Service | Legnext - Midjourney API Integration Platform",
+  description: "Legnext Terms of Service - Learn about our service terms, usage policies, and user responsibilities for the Midjourney API integration platform. Clear guidelines for developers and businesses.",
+  keywords: "legnext terms of service, midjourney api legal terms, api integration terms, ai image generation policy, midjourney api usage policy",
   canonicalUrlRelative: "/terms",
 });
 
@@ -16,10 +16,10 @@ const Terms = () => {
         {/* Header */}
         <div className="text-center mb-16">
           <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
-            Terms of <span className="bg-gradient-to-r from-[#06b6d4] to-[#0891b2] bg-clip-text text-transparent">Service</span>
+            Terms of <span className="bg-gradient-to-r from-[#4f46e5] to-[#0891b2] bg-clip-text text-transparent">Service</span>
           </h1>
           <p className="text-lg text-gray-600 max-w-3xl mx-auto mb-4">
-            Please read these Terms of Service carefully before using PNGTuberMaker&apos;s services.
+            Please read these Terms of Service carefully before using Legnext&apos;s services.
           </p>
           <p className="text-sm text-gray-500">
             Last updated: January 2025
@@ -35,7 +35,7 @@ const Terms = () => {
                 <h2 className="text-2xl font-bold text-gray-900 mb-6">1. Acceptance of Terms</h2>
                 <div className="text-gray-700 space-y-4">
                   <p>
-                    By accessing or using PNGTuberMaker&apos;s services (&quot;Service&quot;), operated by Dark Enlightenment Limited, you agree to be bound by these Terms of Service (&quot;Terms&quot;). If you disagree with any part of these terms, then you may not access the Service.
+                    By accessing or using Legnext&apos;s services (&quot;Service&quot;), operated by Dark Enlightenment Limited, you agree to be bound by these Terms of Service (&quot;Terms&quot;). If you disagree with any part of these terms, then you may not access the Service.
                   </p>
                   <p>
                     These Terms apply to all visitors, users, and others who access or use the Service.
@@ -47,13 +47,13 @@ const Terms = () => {
                 <h2 className="text-2xl font-bold text-gray-900 mb-6">2. Description of Service</h2>
                 <div className="text-gray-700 space-y-4">
                   <p>
-                    PNGTuberMaker, operated by Dark Enlightenment Limited, provides an AI-powered platform that enables users to create custom PNGTuber avatars, including but not limited to:
+                    Legnext, operated by Dark Enlightenment Limited, provides a professional API integration platform that enables developers to access Midjourney&apos;s AI image generation capabilities, including but not limited to:
                   </p>
                   <ul className="list-disc list-inside ml-4 space-y-2">
-                    <li>AI-generated avatar creation from text descriptions</li>
-                    <li>Expression pack generation</li>
-                    <li>Animation creation from static images</li>
-                    <li>Image upscaling and variations</li>
+                    <li>AI-powered image generation via API requests</li>
+                    <li>Professional Midjourney integration services</li>
+                    <li>High-quality image generation and variations</li>
+                    <li>Developer-friendly API documentation and SDKs</li>
                   </ul>
                   <p>
                     The Service is provided on an &quot;as-is&quot; and &quot;as-available&quot; basis.
@@ -93,10 +93,10 @@ const Terms = () => {
               </section>
 
               <section className="mb-12">
-                <h2 className="text-2xl font-bold text-gray-900 mb-6">5. Avatar Generation and Usage Limits</h2>
+                <h2 className="text-2xl font-bold text-gray-900 mb-6">5. API Usage and Rate Limits</h2>
                 <div className="text-gray-700 space-y-4">
                   <p>
-                    Your use of the avatar generation service is subject to usage quotas based on your subscription plan. We reserve the right to:
+                    Your use of the Midjourney API integration service is subject to usage quotas and rate limits based on your subscription plan. We reserve the right to:
                   </p>
                   <ul className="list-disc list-inside ml-4 space-y-2">
                     <li>Modify usage limits and quotas with reasonable notice</li>
@@ -125,10 +125,10 @@ const Terms = () => {
                 <h2 className="text-2xl font-bold text-gray-900 mb-6">7. Intellectual Property</h2>
                 <div className="text-gray-700 space-y-4">
                   <p>
-                    The Service and its original content, features, and functionality are owned by PNGTuberMaker and are protected by international copyright, trademark, and other intellectual property laws.
+                    The Service and its original content, features, and functionality are owned by Legnext and are protected by international copyright, trademark, and other intellectual property laws.
                   </p>
                   <p>
-                    Avatars generated through the Service are subject to the terms and conditions of your subscription plan and may be used according to the license granted.
+                    Images generated through the Service are subject to the terms and conditions of your subscription plan and may be used according to the license granted.
                   </p>
                 </div>
               </section>
@@ -140,7 +140,7 @@ const Terms = () => {
                     Your privacy is important to us. Please review our Privacy Policy, which also governs your use of the Service, to understand our practices.
                   </p>
                   <p>
-                    We may collect and use technical information about your use of the Service to improve and optimize our avatar generation capabilities.
+                    We may collect and use technical information about your use of the Service to improve and optimize our Midjourney API integration capabilities.
                   </p>
                 </div>
               </section>
@@ -153,7 +153,7 @@ const Terms = () => {
                   </p>
                   <ul className="list-disc list-inside ml-4 space-y-2">
                     <li>Scheduled maintenance</li>
-                    <li>Technical issues with AI model providers</li>
+                    <li>Technical issues with Midjourney or other AI providers</li>
                     <li>Network or infrastructure problems</li>
                     <li>Force majeure events</li>
                   </ul>
@@ -164,7 +164,7 @@ const Terms = () => {
                 <h2 className="text-2xl font-bold text-gray-900 mb-6">10. Limitation of Liability</h2>
                 <div className="text-gray-700 space-y-4">
                   <p>
-                    To the maximum extent permitted by law, PNGTuberMaker shall not be liable for any indirect, incidental, special, consequential, or punitive damages resulting from your use of the Service.
+                    To the maximum extent permitted by law, Legnext shall not be liable for any indirect, incidental, special, consequential, or punitive damages resulting from your use of the Service.
                   </p>
                   <p>
                     Our total liability for any claims shall not exceed the amount paid by you for the Service during the 12 months preceding the claim.
@@ -201,7 +201,7 @@ const Terms = () => {
                   </p>
                   <div className="bg-gray-50 rounded-lg p-4 mt-4">
                     <p><strong>Company:</strong> Dark Enlightenment Limited</p>
-                    <p><strong>Email:</strong> legal@pngtubermaker.com</p>
+                    <p><strong>Email:</strong> legal@legnext.ai</p>
                     <p><strong>Address:</strong> 1111B S Governors Ave STE 26728<br />Dover, DE 19904 US</p>
                   </div>
                 </div>

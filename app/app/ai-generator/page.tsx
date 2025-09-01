@@ -20,7 +20,7 @@ export default function AIGeneratorPage() {
                 ></textarea>
               </div>
               <div className="card-actions justify-end">
-                <button className="btn bg-[#06b6d4] hover:bg-[#06b6d4]/90 text-white border-none">Generate Avatar</button>
+                <button className="btn bg-[#4f46e5] hover:bg-[#4f46e5]/90 text-white border-none">Generate Avatar</button>
               </div>
             </div>
           </div>

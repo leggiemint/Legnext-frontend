@@ -29,32 +29,32 @@ const ComparisonSection = () => {
             <span className="text-sm font-medium text-gray-600">4.5 stars from happy creators</span>
           </div>
           
-          <h2 className="max-w-2xl mx-auto mt-3 text-2xl font-bold tracking-tight text-[#06b6d4] sm:text-3xl lg:text-[42px] lg:leading-[48px]">
-            How Your Ideas Become Professional PNGTubers
+          <h2 className="max-w-2xl mx-auto mt-3 text-2xl font-bold tracking-tight text-[#4f46e5] sm:text-3xl lg:text-[42px] lg:leading-[48px]">
+            How Your Apps Get Professional AI Image Generation
           </h2>
           
           <p className="mt-3 text-base font-medium text-gray-600 sm:text-lg md:mx-auto md:max-w-2xl lg:text-xl">
-            Save hundreds of dollars and weeks of waiting by using AI to generate your perfect streaming avatar in minutes.
+            Save thousands on development costs and integrate Midjourney's powerful AI into your applications in minutes, not months.
           </p>
         </div>
 
         {/* Comparison Cards */}
         <div className="mt-8 gap-6 sm:mt-12 md:flex md:justify-center">
-          {/* With PNGTuberMaker Card */}
-          <div className="w-full rounded-lg border border-[#06b6d4]/15 bg-white p-6 md:p-8 shadow-[0px_0px_75px_0px_rgba(0,0,0,0.07)] lg:max-w-lg">
+          {/* With Legnext Card */}
+          <div className="w-full rounded-lg border border-[#4f46e5]/15 bg-white p-6 md:p-8 shadow-[0px_0px_75px_0px_rgba(0,0,0,0.07)] lg:max-w-lg">
             <Image 
               src="/images/comparison_left.jpg" 
-              alt="PNGTuberMaker AI generation process - Get professional avatars in minutes with just text descriptions" 
+              alt="Legnext Midjourney API integration - Get professional AI images via API with simple requests" 
               width={400}
               height={300}
               className="w-full rounded-lg ring-1 ring-gray-200"
             />
             
             <div className="mt-6 flex items-center gap-2">
-              <p className="text-xl font-bold text-[#06b6d4]">With</p>
+              <p className="text-xl font-bold text-[#4f46e5]">With</p>
               <Image 
                 src="/images/logo.svg" 
-                alt="PNGTuberMaker logo - Professional AI avatar generator" 
+                alt="Legnext logo - Professional Midjourney API integration platform" 
                 width={96}
                 height={24}
                 className="-mb-0.5 h-6 w-auto"
@@ -63,52 +63,52 @@ const ComparisonSection = () => {
             
             <ul className="mt-6 space-y-4 md:space-y-6">
               <li className="flex items-start gap-2 md:gap-4">
-                <div className="hidden sm:flex size-8 shrink-0 items-center justify-center rounded-full bg-[#06b6d4]/10">
-                  <svg className="w-4 h-4 text-[#06b6d4]" fill="currentColor" viewBox="0 0 20 20">
+                <div className="hidden sm:flex size-8 shrink-0 items-center justify-center rounded-full bg-[#4f46e5]/10">
+                  <svg className="w-4 h-4 text-[#4f46e5]" fill="currentColor" viewBox="0 0 20 20">
                     <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/>
                   </svg>
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-lg font-bold leading-none tracking-tight text-[#06b6d4]">
-                    1. Describe your avatar idea
+                  <p className="text-lg font-bold leading-none tracking-tight text-[#4f46e5]">
+                    1. Make an API request
                     <span className="font-normal text-gray-500 hidden md:inline-flex">(1 minute)</span>
                   </p>
                   <p className="mt-1 text-base font-normal text-gray-600">
-                    Type your style or upload a sketch. AI understands your vision perfectly.
+                    Send your prompt via our API. No Midjourney account needed - we handle everything.
                   </p>
                 </div>
               </li>
               
               <li className="flex items-start gap-2 md:gap-4">
-                <div className="hidden sm:flex size-8 shrink-0 items-center justify-center rounded-full bg-[#06b6d4]/10">
-                  <svg className="w-4 h-4 text-[#06b6d4]" fill="currentColor" viewBox="0 0 20 20">
+                <div className="hidden sm:flex size-8 shrink-0 items-center justify-center rounded-full bg-[#4f46e5]/10">
+                  <svg className="w-4 h-4 text-[#4f46e5]" fill="currentColor" viewBox="0 0 20 20">
                     <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z"/>
                   </svg>
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-lg font-bold leading-none tracking-tight text-[#06b6d4]">
-                    2. AI generates multiple expressions
-                    <span className="font-normal text-gray-500 hidden md:inline-flex">(1-2 minutes)</span>
+                  <p className="text-lg font-bold leading-none tracking-tight text-[#4f46e5]">
+                    2. AI generates professional images
+                    <span className="font-normal text-gray-500 hidden md:inline-flex">(30-90 seconds)</span>
                   </p>
                   <p className="mt-1 text-base font-normal text-gray-600">
-                    Smiling, angry, surprised, sad — all auto-generated with consistent style.
+                    High-quality results delivered via our reliable API with consistent uptime.
                   </p>
                 </div>
               </li>
               
               <li className="flex items-start gap-2 md:gap-4">
-                <div className="hidden sm:flex size-8 shrink-0 items-center justify-center rounded-full bg-[#06b6d4]/10">
-                  <svg className="w-4 h-4 text-[#06b6d4]" fill="currentColor" viewBox="0 0 20 20">
+                <div className="hidden sm:flex size-8 shrink-0 items-center justify-center rounded-full bg-[#4f46e5]/10">
+                  <svg className="w-4 h-4 text-[#4f46e5]" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd"/>
                   </svg>
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-lg font-bold leading-none tracking-tight text-[#06b6d4]">
-                    3. Download and go live
+                  <p className="text-lg font-bold leading-none tracking-tight text-[#4f46e5]">
+                    3. Integrate into your app
                     <span className="font-normal text-gray-500 hidden md:inline-flex">(instant)</span>
                   </p>
                   <p className="mt-1 text-base font-normal text-gray-600">
-                    Use your PNG avatar with OBS, Twitch, Discord right away.
+                    Use generated images in your applications, websites, or services immediately.
                   </p>
                 </div>
               </li>
@@ -122,18 +122,18 @@ const ComparisonSection = () => {
             </span>
           </div>
 
-          {/* Traditional Commission Card */}
+          {/* Traditional Development Card */}
           <div className="mt-4 w-full rounded-lg border border-gray-200/50 bg-white p-6 md:p-8 shadow-[0px_0px_75px_0px_rgba(0,0,0,0.07)] md:mt-0 lg:max-w-lg">
             <Image 
               src="/images/comparison_right.jpg" 
-              alt="Traditional art commission process - Takes weeks with multiple back-and-forth steps" 
+              alt="Traditional AI integration process - Takes months with complex setup and maintenance" 
               width={400}
               height={300}
               className="w-full rounded-lg ring-1 ring-gray-200"
             />
             
             <p className="mt-6 text-xl font-bold text-gray-700">
-              Traditional Commission
+              Traditional AI Integration
             </p>
             
             <ul className="mt-4 space-y-2 md:space-y-3 text-base font-normal text-gray-600">
@@ -141,49 +141,49 @@ const ComparisonSection = () => {
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="-mb-0.5 size-5 shrink-0 text-red-400">
                   <path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z"></path>
                 </svg>
-                Find and hire an artist on Fiverr/DeviantArt
+                Build your own AI integration from scratch
               </li>
               
               <li className="flex items-center gap-2.5">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="-mb-0.5 size-5 shrink-0 text-red-400">
                   <path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z"></path>
                 </svg>
-                Wait for their response and negotiate price
+                Manage complex authentication and rate limits
               </li>
               
               <li className="flex items-center gap-2.5">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="-mb-0.5 size-5 shrink-0 text-red-400">
                   <path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z"></path>
                 </svg>
-                Pay $50–$200+ for one set of PNGs
+                Invest $10,000+ in development and infrastructure
               </li>
               
               <li className="flex items-center gap-2.5">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="-mb-0.5 size-5 shrink-0 text-red-400">
                   <path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z"></path>
                 </svg>
-                Wait 1–3 weeks for delivery
+                Wait 3-6 months for production-ready system
               </li>
               
               <li className="flex items-center gap-2.5">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="-mb-0.5 size-5 shrink-0 text-red-400">
                   <path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z"></path>
                 </svg>
-                Risk inconsistent quality or revisions
+                Deal with API downtime and reliability issues
               </li>
               
               <li className="flex items-center gap-2.5">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="-mb-0.5 size-5 shrink-0 text-red-400">
                   <path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z"></path>
                 </svg>
-                Repeat for new expressions or styles
+                Ongoing maintenance and scaling challenges
               </li>
             </ul>
             
             {/* Tags */}
             <div className="mt-6 flex flex-wrap gap-2">
               <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-50 text-red-700 border border-red-200">
-                Expensive & Slow
+                Complex & Costly
               </span>
             </div>
           </div>
@@ -191,9 +191,9 @@ const ComparisonSection = () => {
 
         {/* CTA Section */}
         <div className="relative mt-8 text-center sm:mt-12">
-          <button className="inline-flex h-12 w-full items-center justify-center gap-1.5 rounded-lg border border-[#06b6d4] bg-[#06b6d4] px-6 pb-3.5 pt-2.5 text-lg font-bold leading-6 text-white shadow-[0_0px_24px_0px_rgba(6,182,212,0.25)] transition-all duration-150 hover:bg-[#06b6d4]/90 disabled:bg-opacity-20 sm:w-auto">
-            <span className="hidden md:inline-flex">Create Your PNGTuber Avatar in Minutes</span>
-            <span className="md:hidden">Create Your Avatar</span>
+          <button className="inline-flex h-12 w-full items-center justify-center gap-1.5 rounded-lg border border-[#4f46e5] bg-[#4f46e5] px-6 pb-3.5 pt-2.5 text-lg font-bold leading-6 text-white shadow-[0_0px_24px_0px_rgba(6,182,212,0.25)] transition-all duration-150 hover:bg-[#4f46e5]/90 disabled:bg-opacity-20 sm:w-auto">
+            <span className="hidden md:inline-flex">Start Using Midjourney API in Minutes</span>
+            <span className="md:hidden">Start Building</span>
           </button>
           
           {/* Trust Badge */}
@@ -229,11 +229,11 @@ const ComparisonSection = () => {
                 </div>
                 
                 <p className="text-sm font-bold leading-5 text-[15px] tracking-tight text-gray-900">
-                  Perfect for streaming
+                  Perfect for developers
                 </p>
                 
                 <p className="text-[13px] font-normal tracking-tight text-gray-600" style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                  Generated my avatar in 3 minutes and my viewers love it! Way better than spending weeks waiting for commissioned art.
+                  Integrated Midjourney into our app in 3 minutes and users love the results! Way better than building our own AI infrastructure.
                 </p>
                 
                 <p className="text-[12px] text-gray-500">

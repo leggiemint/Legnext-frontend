@@ -18,8 +18,8 @@ const AIToolsSection = () => {
           <path d="M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9c2.12 0 4.04.74 5.57 1.97"/>
         </svg>
       ),
-      color: "text-[#06b6d4]",
-      bgColor: "bg-[#06b6d4]/10"
+      color: "text-[#4f46e5]",
+      bgColor: "bg-[#4f46e5]/10"
     },
     {
       id: "expression_pack",
@@ -110,7 +110,7 @@ const AIToolsSection = () => {
       <div className="w-full max-w-7xl mx-auto px-8">
         {/* Header Section */}
         <div className="text-center mb-8 md:mb-12">
-          <p className="text-xs md:text-sm font-semibold uppercase text-[#06b6d4] mb-2">
+          <p className="text-xs md:text-sm font-semibold uppercase text-[#4f46e5] mb-2">
             AI Tools for Streamers
           </p>
           <h2 className="text-black font-sans mb-4 md:mb-5 text-2xl md:text-3xl lg:text-4xl font-bold leading-tight">
@@ -133,7 +133,7 @@ const AIToolsSection = () => {
                       key={tab.id}
                       className={`nav-tab-mobile flex items-center space-x-2 px-3 py-2 rounded-full text-xs font-medium transition-all duration-200 whitespace-nowrap ${
                         activeTab === tab.id 
-                          ? 'bg-[#06b6d4] text-white shadow-md' 
+                          ? 'bg-[#4f46e5] text-white shadow-md' 
                           : 'bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-800'
                       }`}
                       onClick={() => handleTabClick(tab.id)}
@@ -154,7 +154,7 @@ const AIToolsSection = () => {
                     key={tab.id}
                     className={`nav-tab-desktop flex items-center space-x-2 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 whitespace-nowrap ${
                       activeTab === tab.id 
-                        ? 'bg-[#06b6d4] text-white shadow-lg' 
+                        ? 'bg-[#4f46e5] text-white shadow-lg' 
                         : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
                     }`}
                     onClick={() => handleTabClick(tab.id)}
@@ -180,7 +180,7 @@ const AIToolsSection = () => {
               <div className="block bg-white rounded-lg md:rounded-xl shadow-sm hover:shadow-md transition-shadow duration-300 border border-gray-100">
                 <div className="block md:grid md:grid-cols-2 md:gap-0">
                   {/* Image */}
-                  <div className="relative bg-gradient-to-br from-[#06b6d4]/10 to-purple-50 w-full h-48 sm:h-56 md:h-64 lg:h-80 xl:h-96 flex items-center justify-center overflow-hidden md:p-6 lg:p-8">
+                  <div className="relative bg-gradient-to-br from-[#4f46e5]/10 to-purple-50 w-full h-48 sm:h-56 md:h-64 lg:h-80 xl:h-96 flex items-center justify-center overflow-hidden md:p-6 lg:p-8">
                     <Image 
                       src="/images/AITools/input_1.jpg" 
                       alt="AI Avatar Generation - From text or reference image" 
@@ -206,7 +206,7 @@ const AIToolsSection = () => {
                     {/* Feature Grid */}
                     <div className="grid grid-cols-2 gap-2 md:grid-cols-2 md:gap-3 mb-4 md:mb-6">
                       <div className="flex items-center space-x-2 md:space-x-3 p-2 md:p-3 bg-gray-50 rounded-lg">
-                        <div className="text-[#06b6d4] flex-shrink-0">
+                        <div className="text-[#4f46e5] flex-shrink-0">
                           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
                             <polyline points="14,2 14,8 20,8"/>
@@ -219,7 +219,7 @@ const AIToolsSection = () => {
                       </div>
                       
                       <div className="flex items-center space-x-2 md:space-x-3 p-2 md:p-3 bg-gray-50 rounded-lg">
-                        <div className="text-[#06b6d4] flex-shrink-0">
+                        <div className="text-[#4f46e5] flex-shrink-0">
                           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                             <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
                             <circle cx="9" cy="9" r="2"/>
@@ -230,7 +230,7 @@ const AIToolsSection = () => {
                       </div>
                       
                       <div className="flex items-center space-x-2 md:space-x-3 p-2 md:p-3 bg-gray-50 rounded-lg">
-                        <div className="text-[#06b6d4] flex-shrink-0">
+                        <div className="text-[#4f46e5] flex-shrink-0">
                           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                             <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
                             <rect x="8" y="2" width="8" height="4" rx="1" ry="1"/>
@@ -240,7 +240,7 @@ const AIToolsSection = () => {
                       </div>
                       
                       <div className="flex items-center space-x-2 md:space-x-3 p-2 md:p-3 bg-gray-50 rounded-lg">
-                        <div className="text-[#06b6d4] flex-shrink-0">
+                        <div className="text-[#4f46e5] flex-shrink-0">
                           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                             <path d="M5 12l5 5l10 -10"/>
                           </svg>
@@ -250,7 +250,7 @@ const AIToolsSection = () => {
                     </div>
 
                     <div className="flex flex-wrap gap-3">
-                      <span className="inline-flex items-center text-[#06b6d4] font-medium text-sm md:text-base">
+                      <span className="inline-flex items-center text-[#4f46e5] font-medium text-sm md:text-base">
                         ✅ No artist needed, minutes to your unique character
                       </span>
                     </div>

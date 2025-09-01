@@ -13,14 +13,14 @@ const Footer = () => {
               <div className="flex items-center justify-center lg:justify-start mb-4">
                 <Image 
                   src="/images/logo.svg" 
-                  alt="PNGTuberMaker Logo" 
+                  alt="Legnext Logo" 
                   width={208}
                   height={52}
                   className="w-52 h-auto" 
                 />
               </div>
               <p className="text-gray-600 text-sm max-w-md mx-auto lg:mx-0">
-                Create custom PNGTuber avatars with multiple expressions and simple animations. Perfect for Twitch, YouTube, and Discord.
+                The #1 way to access Midjourney via API. Integrate Midjourney-powered image generation into your applications without complexity.
               </p>
             </div>
 
