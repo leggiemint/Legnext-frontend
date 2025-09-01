@@ -1,4 +1,4 @@
-# Legnext - The #1 Midjourney API Integration Platform
+# Legnext
 
 The #1 way to access Midjourney via API
 
