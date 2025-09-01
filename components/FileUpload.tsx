@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import { toast } from 'react-hot-toast';
 import { useSession, signIn } from 'next-auth/react';
 
 interface FileUploadProps {
-  onFileUploaded: (fileData: {
+  onFileUploaded: (_data: {
     url: string;
     fileKey: string;
     fileName: string;
@@ -23,7 +23,7 @@ export default function FileUpload({
   accept = 'image/*',
   className = ''
 }: FileUploadProps) {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -103,12 +103,39 @@ export default function FileUpload({
 
     const file = files[0];
     
-    // 模拟文件选择事件
-    const mockEvent = {
-      target: { files: [file] }
-    } as React.ChangeEvent<HTMLInputElement>;
-    
-    await handleFileSelect(mockEvent);
+    // 直接处理文件，避免类型转换问题
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('type', type);
+
+    try {
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Upload failed');
+      }
+
+      if (result.success) {
+        const fileData = {
+          url: result.url,
+          fileKey: result.fileKey,
+          fileName: result.fileName,
+        };
+
+        onFileUploaded(fileData);
+        toast.success('File uploaded successfully!');
+      } else {
+        throw new Error(result.error || 'Upload failed');
+      }
+    } catch (error) {
+      console.error('Upload error:', error);
+      toast.error(error instanceof Error ? error.message : 'Upload failed');
+    }
   };
 
   const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
@@ -125,11 +152,7 @@ export default function FileUpload({
     fileInputRef.current?.click();
   };
 
-  const clearFileInput = () => {
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-  };
+
 
   return (
     <div className={`w-full ${className}`}>

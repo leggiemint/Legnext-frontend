@@ -16,7 +16,7 @@ export default function CreatePage() {
   const [textDescription, setTextDescription] = useState("");
   const [selectedAvatar, setSelectedAvatar] = useState<number | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [uploadedReference, setUploadedReference] = useState<{
+  const [, setUploadedReference] = useState<{
     url: string;
     fileKey: string;
     fileName: string;
