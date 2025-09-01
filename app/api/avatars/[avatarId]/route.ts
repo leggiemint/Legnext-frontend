@@ -56,7 +56,7 @@ export async function PATCH(
     }
 
     const body = await req.json();
-    const { prompt, status } = body;
+    const { prompt, status, isFavorite } = body;
 
     const image = await prisma.midjourneyImage.findFirst({
       where: {
@@ -76,7 +76,8 @@ export async function PATCH(
       where: { id: params.avatarId },
       data: {
         ...(prompt !== undefined && { prompt }),
-        ...(status !== undefined && { status })
+        ...(status !== undefined && { status }),
+        ...(isFavorite !== undefined && { isFavorite })
       }
     });
 

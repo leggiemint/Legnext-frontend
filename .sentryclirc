@@ -3,4 +3,4 @@ token=your-auth-token-here
 
 [defaults]
 org=tritonix
-project=pngtubermaker-frontend
+project=legnext-frontend

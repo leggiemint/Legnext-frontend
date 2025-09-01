@@ -1,11 +1,10 @@
 import MainLayout from "@/components/MainLayout";
 import { getSEOTags } from "@/libs/seo";
-import Link from "next/link";
 
 export const metadata = getSEOTags({
-  title: "Refund Policy | Legnext - Fair and Transparent Refund Terms",
-  description: "Legnext's refund policy ensures customer satisfaction. Learn about our refund terms, conditions, and how to request refunds for our Midjourney API integration services.",
-  keywords: "legnext refund policy, midjourney api refund terms, money back guarantee, customer satisfaction, api service refund",
+  title: "Refund Policy | Legnext - Service Terms and Conditions",
+  description: "Legnext refund policy and service terms. Learn about our no-refund policy and service conditions for our AI API integration platform.",
+  keywords: "legnext refund policy, no refund policy, service terms, api service conditions",
   canonicalUrlRelative: "/refund-policy",
 });
 
@@ -28,7 +27,7 @@ const RefundPolicy = () => {
               </h1>
               
               <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-                We&apos;re committed to your satisfaction. Here&apos;s our transparent refund policy for Legnext Midjourney API integration services.
+                Please review our refund policy and service terms before making a purchase.
               </p>
             </div>
           </div>
@@ -36,177 +35,70 @@ const RefundPolicy = () => {
           {/* Content */}
           <div className="prose prose-lg max-w-none">
             <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-8 mb-8">
-              <p className="text-gray-600 mb-8"><strong>Last updated:</strong> December 2024</p>
+              <p className="text-gray-600 mb-8"><strong>Last updated:</strong> January 2025</p>
 
               <div className="space-y-8">
-                {/* Company Information */}
+                {/* No Refund Policy */}
                 <section>
-                  <h2 className="text-2xl font-bold text-gray-900 mb-4">Company Information</h2>
-                  <div className="bg-blue-50 rounded-lg p-6 mb-6">
-                    <p className="text-blue-900 font-medium mb-2">Service Provider</p>
-                    <p className="text-blue-700">
-                      Legnext is operated by <strong>Dark Enlightenment Limited</strong>, a limited liability company committed to providing transparent and fair business practices.
+                  <h2 className="text-2xl font-bold text-gray-900 mb-4">No Refund Policy</h2>
+                  <div className="bg-red-50 border border-red-200 rounded-lg p-6 mb-6">
+                    <p className="text-red-800 font-medium">
+                      <strong>All sales are final.</strong> We do not offer refunds, exchanges, or credits for any purchases made through our platform.
                     </p>
                   </div>
-                </section>
-
-                {/* Overview */}
-                <section>
-                  <h2 className="text-2xl font-bold text-gray-900 mb-4">Overview</h2>
                   <p className="text-gray-700 leading-relaxed">
-                    Dark Enlightenment Limited, operating Legnext, strives to provide high-quality Midjourney API integration services. We understand that sometimes our service may not meet your expectations, and we&apos;re committed to resolving any issues fairly and transparently.
+                    By purchasing our services, you acknowledge and agree that all transactions are final. This policy applies to all services, subscriptions, credits, and digital products offered by Legnext.
                   </p>
                 </section>
 
-                {/* Refund Eligibility */}
+                {/* Service Terms */}
                 <section>
-                  <h2 className="text-2xl font-bold text-gray-900 mb-4">Refund Eligibility</h2>
-                  <p className="text-gray-700 leading-relaxed mb-4">You may be eligible for a refund in the following circumstances:</p>
-                  
-                  <div className="bg-gray-50 rounded-lg p-6 mb-4">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-3">✅ Valid Refund Reasons:</h3>
-                    <ul className="space-y-2 text-gray-700">
-                      <li className="flex items-start">
-                        <span className="text-[#4f46e5] mr-2">•</span>
-                        <span><strong>Technical Issues:</strong> Service fails to generate images via API due to technical problems on our end</span>
-                      </li>
-                      <li className="flex items-start">
-                        <span className="text-[#4f46e5] mr-2">•</span>
-                        <span><strong>Payment Errors:</strong> Duplicate charges or billing errors</span>
-                      </li>
-                      <li className="flex items-start">
-                        <span className="text-[#4f46e5] mr-2">•</span>
-                        <span><strong>Service Unavailable:</strong> Purchased service becomes permanently unavailable</span>
-                      </li>
-                      <li className="flex items-start">
-                        <span className="text-[#4f46e5] mr-2">•</span>
-                        <span><strong>Quality Issues:</strong> Generated images significantly deviate from service description (within 7 days)</span>
-                      </li>
-                    </ul>
-                  </div>
-
-                  <div className="bg-red-50 rounded-lg p-6">
-                    <h3 className="text-lg font-semibold text-red-900 mb-3">❌ Non-Refundable Situations:</h3>
-                    <ul className="space-y-2 text-red-700">
-                      <li className="flex items-start">
-                        <span className="text-red-500 mr-2">•</span>
-                        <span>Change of mind after successful image generation</span>
-                      </li>
-                      <li className="flex items-start">
-                        <span className="text-red-500 mr-2">•</span>
-                        <span>Minor variations in image style or appearance</span>
-                      </li>
-                      <li className="flex items-start">
-                        <span className="text-red-500 mr-2">•</span>
-                        <span>Downloaded images or completed API requests after 30 days</span>
-                      </li>
-                      <li className="flex items-start">
-                        <span className="text-red-500 mr-2">•</span>
-                        <span>Violation of our Terms of Service</span>
-                      </li>
+                  <h2 className="text-2xl font-bold text-gray-900 mb-4">Service Terms</h2>
+                  <div className="text-gray-700 space-y-4">
+                    <p>Our services are provided as-is. We strive to maintain high service quality, but we do not guarantee specific outcomes or results.</p>
+                    <ul className="list-disc list-inside ml-4 space-y-2">
+                      <li>Services are delivered immediately upon purchase</li>
+                      <li>API credits and subscriptions are non-transferable</li>
+                      <li>Service availability may vary based on third-party providers</li>
+                      <li>We reserve the right to modify or discontinue services</li>
                     </ul>
                   </div>
                 </section>
 
-                {/* Refund Timeline */}
+                {/* Billing Errors */}
                 <section>
-                  <h2 className="text-2xl font-bold text-gray-900 mb-4">Refund Timeline</h2>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="bg-blue-50 rounded-lg p-6">
-                      <h3 className="text-lg font-semibold text-blue-900 mb-2">Request Window</h3>
-                      <p className="text-blue-700">Refund requests must be submitted within <strong>30 days</strong> of purchase for most issues, or within <strong>7 days</strong> for quality-related concerns.</p>
-                    </div>
-                    <div className="bg-green-50 rounded-lg p-6">
-                      <h3 className="text-lg font-semibold text-green-900 mb-2">Processing Time</h3>
-                      <p className="text-green-700">Approved refunds are processed within <strong>5-10 business days</strong> and will appear in your original payment method.</p>
-                    </div>
+                  <h2 className="text-2xl font-bold text-gray-900 mb-4">Billing Errors</h2>
+                  <div className="text-gray-700 space-y-4">
+                    <p>If you believe there has been a billing error, please contact us immediately at <a href="mailto:support@legnext.ai" className="text-[#4f46e5] hover:underline">support@legnext.ai</a>.</p>
+                    <p>We will investigate legitimate billing errors and correct them if verified. This is the only exception to our no-refund policy.</p>
                   </div>
                 </section>
 
-                {/* How to Request */}
+                {/* Service Issues */}
                 <section>
-                  <h2 className="text-2xl font-bold text-gray-900 mb-4">How to Request a Refund</h2>
-                  <div className="space-y-4">
-                    <div className="border-l-4 border-[#4f46e5] pl-6">
-                      <h3 className="text-lg font-semibold text-gray-900 mb-2">Step 1: Contact Support</h3>
-                      <p className="text-gray-700">Email us at <a href="mailto:support@legnext.ai" className="text-[#4f46e5] hover:text-[#0891b2] underline">support@legnext.ai</a> with your refund request.</p>
-                    </div>
-                    
-                    <div className="border-l-4 border-[#4f46e5] pl-6">
-                      <h3 className="text-lg font-semibold text-gray-900 mb-2">Step 2: Provide Information</h3>
-                      <p className="text-gray-700">Include your order number, purchase date, and detailed reason for the refund request.</p>
-                    </div>
-                    
-                    <div className="border-l-4 border-[#4f46e5] pl-6">
-                      <h3 className="text-lg font-semibold text-gray-900 mb-2">Step 3: Review Process</h3>
-                      <p className="text-gray-700">Our team will review your request within 2-3 business days and respond with a decision.</p>
-                    </div>
+                  <h2 className="text-2xl font-bold text-gray-900 mb-4">Service Issues</h2>
+                  <div className="text-gray-700 space-y-4">
+                    <p>If you experience technical issues with our services, please contact our support team. We will work to resolve any legitimate service problems, but this does not entitle you to a refund.</p>
+                    <p>We may provide service credits or extensions at our sole discretion for verified technical issues.</p>
                   </div>
                 </section>
 
-                {/* Partial Refunds */}
+                {/* Contact */}
                 <section>
-                  <h2 className="text-2xl font-bold text-gray-900 mb-4">Partial Refunds</h2>
-                  <p className="text-gray-700 leading-relaxed mb-4">
-                    In some cases, we may offer partial refunds based on service usage:
-                  </p>
-                  <ul className="space-y-2 text-gray-700 ml-6">
-                    <li className="list-disc">Subscription services will be prorated based on unused time</li>
-                    <li className="list-disc">Bundle packages may receive partial refunds for unused credits</li>
-                    <li className="list-disc">Custom work may be partially refundable depending on completion stage</li>
-                  </ul>
-                </section>
-
-                {/* Chargebacks */}
-                <section>
-                  <h2 className="text-2xl font-bold text-gray-900 mb-4">Chargebacks and Disputes</h2>
-                  <div className="bg-yellow-50 rounded-lg p-6">
-                    <p className="text-yellow-800">
-                      <strong>Please contact us first!</strong> Before initiating a chargeback with your bank or credit card company, please reach out to our support team. We&apos;re committed to resolving issues directly and chargebacks can result in additional fees and account restrictions.
-                    </p>
-                  </div>
-                </section>
-
-                {/* Contact Information */}
-                <section>
-                  <h2 className="text-2xl font-bold text-gray-900 mb-4">Contact Information</h2>
-                  <div className="bg-gray-50 rounded-lg p-6 mb-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-3">Legal Entity</h3>
-                    <div className="space-y-2 text-gray-700 mb-4">
-                      <p><strong>Company:</strong> Dark Enlightenment Limited</p>
-                      <p><strong>Service Brand:</strong> Legnext</p>
-                      <p><strong>Business Type:</strong> Limited Liability Company</p>
-                    </div>
-                    
-                    <h3 className="text-lg font-semibold text-gray-900 mb-3">Customer Support</h3>
-                    <div className="space-y-2 text-gray-700">
-                      <p><strong>Email:</strong> <a href="mailto:support@legnext.ai" className="text-[#4f46e5] hover:text-[#0891b2] underline">support@legnext.ai</a></p>
-                      <p><strong>Response Time:</strong> Within 24 hours (business days)</p>
-                      <p><strong>Business Hours:</strong> Monday - Friday, 9 AM - 6 PM EST</p>
-                    </div>
+                  <h2 className="text-2xl font-bold text-gray-900 mb-4">Contact</h2>
+                  <div className="text-gray-700 space-y-4">
+                    <p>For questions about this policy or our services, please contact us at <a href="mailto:support@legnext.ai" className="text-[#4f46e5] hover:underline">support@legnext.ai</a>.</p>
                   </div>
                 </section>
 
                 {/* Policy Changes */}
                 <section>
                   <h2 className="text-2xl font-bold text-gray-900 mb-4">Policy Updates</h2>
-                  <p className="text-gray-700 leading-relaxed">
-                    We may update this refund policy from time to time. Any changes will be posted on this page with an updated &quot;Last modified&quot; date. Continued use of our services after policy changes constitutes acceptance of the new terms.
-                  </p>
+                  <div className="text-gray-700 space-y-4">
+                    <p>We may update this policy from time to time. Changes will be posted on this page with an updated date. Continued use of our services constitutes acceptance of any changes.</p>
+                  </div>
                 </section>
               </div>
-            </div>
-
-            {/* CTA Section */}
-            <div className="text-center bg-gradient-to-r from-[#4f46e5] to-[#0891b2] rounded-2xl p-8 text-white">
-              <h2 className="text-2xl font-bold mb-4">Have Questions About Our Refund Policy?</h2>
-              <p className="text-lg opacity-90 mb-6">Our support team is here to help clarify any concerns.</p>
-              <Link href="/contact" className="inline-flex items-center gap-2 bg-white text-[#4f46e5] hover:bg-gray-50 font-semibold px-8 py-3 rounded-lg transition-colors">
-                Contact Support
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
-                </svg>
-              </Link>
             </div>
           </div>
         </div>

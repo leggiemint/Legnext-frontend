@@ -30,7 +30,7 @@ export const sendEmail = async ({
 }) => {
   try {
     // 使用 resend.dev 作为测试发送域名，或者你已验证的域名
-    const fromAddress = from || `PNGTuberMaker <noreply@resend.dev>`;
+    const fromAddress = from || `Legnext <noreply@resend.dev>`;
     
     console.log('Sending email with params:', {
       from: fromAddress,
@@ -110,7 +110,7 @@ export const sendContactFormEmail = async ({
   const userEmailHtml = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
       <div style="text-align: center; padding: 20px 0; border-bottom: 1px solid #e5e7eb;">
-        <h1 style="color: #4f46e5; margin: 0;">PNGTuberMaker</h1>
+        <h1 style="color: #4f46e5; margin: 0;">Legnext</h1>
       </div>
       
       <div style="padding: 30px 0;">
@@ -141,7 +141,7 @@ export const sendContactFormEmail = async ({
         
         <p style="color: #4b5563; line-height: 1.6;">
           In the meantime, you might find our 
-          <a href="https://www.pngtubermaker.com/docs" style="color: #4f46e5;">documentation</a> 
+          <a href="https://www.legnext.com/docs" style="color: #4f46e5;">documentation</a> 
           helpful, or join our 
           <a href="https://discord.gg/zysPAnvP8f" style="color: #4f46e5;">Discord community</a> 
           for quick help from other creators.
@@ -149,21 +149,21 @@ export const sendContactFormEmail = async ({
         
         <p style="color: #4b5563; line-height: 1.6;">
           Best regards,<br>
-          The PNGTuberMaker Team
+          The Legnext Team
         </p>
       </div>
       
       <div style="text-align: center; padding: 20px 0; border-top: 1px solid #e5e7eb; color: #9ca3af; font-size: 12px;">
         <p>
-          PNGTuberMaker - Create Amazing PNGTuber Avatars<br>
-          <a href="https://www.pngtubermaker.com" style="color: #4f46e5;">www.pngtubermaker.com</a>
+          Legnext - Midjourney API Integration Platform<br>
+          <a href="https://www.legnext.com" style="color: #4f46e5;">www.legnext.com</a>
         </p>
       </div>
     </div>
   `;
 
   // 在测试模式下，将管理员邮件也发送给用户（因为Resend限制只能发送给已验证的邮箱）
-  const adminEmail = process.env.NODE_ENV === 'production' ? 'support@pngtubermaker.com' : email;
+  const adminEmail = process.env.NODE_ENV === 'production' ? 'support@legnext.com' : email;
   
   console.log(`Sending admin notification to: ${adminEmail} (${process.env.NODE_ENV === 'production' ? 'production' : 'development'} mode)`);
   
@@ -179,7 +179,7 @@ export const sendContactFormEmail = async ({
     // 发送给用户
     sendEmail({
       to: email,
-      subject: 'Thank you for contacting PNGTuberMaker',
+      subject: 'Thank you for contacting Legnext',
       html: userEmailHtml,
     }),
   ]);

@@ -1,6 +1,6 @@
 module.exports = {
-  // REQUIRED: add your own domain name here (e.g. https://pngtubermaker.com),
-  siteUrl: process.env.SITE_URL || "https://www.pngtubermaker.com",
+  // REQUIRED: add your own domain name here (e.g. https://legnext.com),
+  siteUrl: process.env.SITE_URL || "https://www.legnext.com",
   generateRobotsTxt: true,
   // use this to exclude routes from the sitemap (i.e. a user dashboard). By default, NextJS app router metadata files are excluded (https://nextjs.org/docs/app/api-reference/file-conventions/metadata)
   exclude: [
@@ -12,7 +12,7 @@ module.exports = {
     "/app/settings*", // 只排除需要登录的设置页面
     "/app/ai-generator*", // 排除需要登录的AI生成器页面
     "/app/animations*", // 排除需要登录的动画页面
-    "/app/pngtubers*", // 排除需要登录的头像页面
+    "/app/images*", // 排除需要登录的头像页面
   ],
   // 手动添加重要的公开页面
   additionalPaths: async (config) => [
@@ -20,7 +20,7 @@ module.exports = {
     await config.transform(config, '/pricing'),
     await config.transform(config, '/privacy'),
     await config.transform(config, '/tos'),
-    await config.transform(config, '/app/pngtuber-maker'),
+    await config.transform(config, '/app/midjourney'),
     await config.transform(config, '/blog'),
   ]
 };

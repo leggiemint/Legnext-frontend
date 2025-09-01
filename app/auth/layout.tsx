@@ -21,12 +21,12 @@ export const viewport: Viewport = {
 };
 
 export const metadata = getSEOTags({
-  title: "Sign In - PNGTuberMaker | Create Your Streaming Avatar",
-  description: "Sign in to PNGTuberMaker and start creating your custom PNGTuber avatar. Join thousands of streamers using AI to generate unique streaming characters.",
-  keywords: ["pngtuber maker login", "pngtuber sign in", "streaming avatar creator", "ai pngtuber account", "vtuber maker login"],
+  title: "Sign In - Legnext | Midjourney API Integration Platform",
+  description: "Sign in to Legnext and start accessing Midjourney's powerful image generation API. Join thousands of developers integrating AI image generation.",
+  keywords: ["midjourney api login", "legnext sign in", "ai image generation api", "midjourney integration", "api access platform"],
   openGraph: {
-    title: "Sign In - PNGTuberMaker | Create Your Streaming Avatar",
-    description: "Sign in to PNGTuberMaker and start creating your custom PNGTuber avatar. Join thousands of streamers using AI to generate unique streaming characters.",
+    title: "Sign In - Legnext | Midjourney API Integration Platform",
+    description: "Sign in to Legnext and start accessing Midjourney's powerful image generation API. Join thousands of developers integrating AI image generation.",
     images: [
       {
         url: "/og-image.png",
@@ -37,7 +37,7 @@ export const metadata = getSEOTags({
   },
   extraTags: {
     "theme-color": "#4f46e5",
-    "author": "PNGTuberMaker",
+    "author": "Legnext",
     "robots": "noindex, nofollow",
   }
 });

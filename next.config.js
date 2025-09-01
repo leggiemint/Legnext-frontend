@@ -18,7 +18,7 @@ const sentryWebpackPluginOptions = {
   // Suppress logs from the Sentry webpack plugin
   silent: process.env.NODE_ENV === "production",
   org: "tritonix",
-  project: "pngtubermaker-frontend",
+  project: "legnext-frontend",
   authToken: process.env.SENTRY_AUTH_TOKEN,
   
   // Upload source maps for better error debugging

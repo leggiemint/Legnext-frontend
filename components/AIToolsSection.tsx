@@ -4,63 +4,57 @@ import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 
 const AIToolsSection = () => {
-  const [activeTab, setActiveTab] = useState("avatar_generation");
+  const [activeTab, setActiveTab] = useState("image_generation");
   const sectionsRef = useRef<{ [key: string]: HTMLElement | null }>({});
 
   const tabs = [
     {
-      id: "avatar_generation",
+      id: "image_generation",
       label: "Generate",
-      desktopLabel: "AI Avatar Generation",
+      desktopLabel: "Image Generation",
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M9 12l2 2 4-4"/>
-          <path d="M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9c2.12 0 4.04.74 5.57 1.97"/>
+          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+          <circle cx="9" cy="9" r="2"/>
+          <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>
         </svg>
       ),
-      color: "text-[#4f46e5]",
-      bgColor: "bg-[#4f46e5]/10"
+      color: "text-[#8b5cf6]",
+      bgColor: "bg-[#8b5cf6]/10"
     },
     {
-      id: "expression_pack",
-      label: "Expressions",
-      desktopLabel: "Expression Pack Auto-Creation",
+      id: "updating_image",
+      label: "Update",
+      desktopLabel: "Updating Image",
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="12" cy="12" r="1"/>
-          <circle cx="19" cy="12" r="1"/>
-          <circle cx="5" cy="12" r="1"/>
+          <path d="M12 20h9"/>
+          <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
         </svg>
       ),
       color: "text-purple-600",
       bgColor: "bg-purple-100"
     },
     {
-      id: "animation_stills",
-      label: "Animate",
-      desktopLabel: "Animation from Stills",
+      id: "enhance_image",
+      label: "Enhance",
+      desktopLabel: "Enhance Image",
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="m9 9 5 12 1.8-5.2L21 14Z"/>
-          <path d="M7.2 2.2 8 5.1"/>
-          <path d="m5.1 8-2.9-.8"/>
-          <path d="M14 4.1 12 6"/>
-          <path d="m6 12-1.9 2"/>
+          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
         </svg>
       ),
       color: "text-green-600",
       bgColor: "bg-green-100"
     },
     {
-      id: "smart_upscale",
-      label: "Upscale",
-      desktopLabel: "Smart Upscale & Variations",
+      id: "video_generation",
+      label: "Video",
+      desktopLabel: "Video Generation",
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
-          <polyline points="7.5,4.21 12,6.81 16.5,4.21"/>
-          <polyline points="7.5,19.79 7.5,14.6 3,12"/>
-          <polyline points="21,12 16.5,14.6 16.5,19.79"/>
+          <polygon points="23 7 16 12 23 17 23 7"/>
+          <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
         </svg>
       ),
       color: "text-indigo-600",
@@ -94,36 +88,40 @@ const AIToolsSection = () => {
       });
     }, observerOptions);
 
-    Object.values(sectionsRef.current).forEach(section => {
-      if (section) {
-        sectionObserver.observe(section);
-      }
-    });
+    // Use a timeout to ensure refs are set
+    const timeoutId = setTimeout(() => {
+      Object.values(sectionsRef.current).forEach(section => {
+        if (section) {
+          sectionObserver.observe(section);
+        }
+      });
+    }, 100);
 
     return () => {
+      clearTimeout(timeoutId);
       sectionObserver.disconnect();
     };
   }, []);
 
   return (
-    <section className="py-20 md:py-24 bg-gray-50" id="ai-tools">
+    <section className="py-20 md:py-24 bg-white" id="ai-tools">
       <div className="w-full max-w-7xl mx-auto px-8">
         {/* Header Section */}
         <div className="text-center mb-8 md:mb-12">
-          <p className="text-xs md:text-sm font-semibold uppercase text-[#4f46e5] mb-2">
-            AI Tools for Streamers
+          <p className="text-xs md:text-sm font-semibold uppercase text-[#8b5cf6] mb-2">
+            Midjourney API Features
           </p>
           <h2 className="text-black font-sans mb-4 md:mb-5 text-2xl md:text-3xl lg:text-4xl font-bold leading-tight">
-            Create Your PNGTuber Avatar in Minutes — Not Weeks
+            Create AI Images & Videos in Minutes — Not Discord Account
           </h2>
           <p className="text-black font-medium mb-6 md:mb-8 text-base md:text-xl leading-relaxed text-gray-600 max-w-3xl mx-auto">
-            Generate avatars, expressions, and animations instantly with AI. No commissions. No waiting. Just stream-ready results.
+            Generate high-quality images, videos, and creative content instantly with Midjourney API. No complex setup. No waiting. Just production-ready results.
           </p>
         </div>
 
         {/* Navigation Tabs */}
         <div className="mb-6 md:mb-8">
-          <div className="sticky top-0 z-10 backdrop-blur-sm md:border-b border-gray-200 mb-8 md:mb-12 bg-gray-50/95">
+          <div className="sticky top-0 z-10 backdrop-blur-sm md:border-b border-gray-200 mb-8 md:mb-12 bg-white/95">
             <div className="px-3 py-3 md:px-4 md:py-4">
               {/* Mobile Tabs */}
               <div className="md:hidden">
@@ -133,7 +131,7 @@ const AIToolsSection = () => {
                       key={tab.id}
                       className={`nav-tab-mobile flex items-center space-x-2 px-3 py-2 rounded-full text-xs font-medium transition-all duration-200 whitespace-nowrap ${
                         activeTab === tab.id 
-                          ? 'bg-[#4f46e5] text-white shadow-md' 
+                          ? 'bg-[#8b5cf6] text-white shadow-md' 
                           : 'bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-800'
                       }`}
                       onClick={() => handleTabClick(tab.id)}
@@ -154,14 +152,14 @@ const AIToolsSection = () => {
                     key={tab.id}
                     className={`nav-tab-desktop flex items-center space-x-2 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 whitespace-nowrap ${
                       activeTab === tab.id 
-                        ? 'bg-[#4f46e5] text-white shadow-lg' 
+                        ? 'bg-[#8b5cf6] text-white shadow-lg' 
                         : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
                     }`}
                     onClick={() => handleTabClick(tab.id)}
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      {tab.icon.props.children}
-                    </svg>
+                    <span className="text-xl">
+                      {tab.icon}
+                    </span>
                     <span>{tab.desktopLabel}</span>
                   </button>
                 ))}
@@ -171,18 +169,18 @@ const AIToolsSection = () => {
 
           {/* Feature Content Sections */}
           <div className="space-y-8 md:space-y-14">
-            {/* AI Avatar Generation */}
+            {/* AI Image Generation */}
             <section 
-              id="avatar_generation" 
+              id="image_generation" 
               className="scroll-mt-32 md:scroll-mt-40"
-              ref={(el) => { sectionsRef.current.avatar_generation = el; }}
+              ref={(el) => { if (el) sectionsRef.current.image_generation = el; }}
             >
               <div className="block bg-white rounded-lg md:rounded-xl shadow-sm hover:shadow-md transition-shadow duration-300 border border-gray-100">
                 <div className="block md:grid md:grid-cols-2 md:gap-0">
                   {/* Image */}
                   <div className="relative bg-gradient-to-br from-[#4f46e5]/10 to-purple-50 w-full h-48 sm:h-56 md:h-64 lg:h-80 xl:h-96 flex items-center justify-center overflow-hidden md:p-6 lg:p-8">
                     <Image 
-                      src="/images/AITools/input_1.jpg" 
+                      src="/images/example/0_640_n(1).WEBP" 
                       alt="AI Avatar Generation - From text or reference image" 
                       width={400}
                       height={400}
@@ -196,62 +194,35 @@ const AIToolsSection = () => {
                       <div className={`w-6 h-6 md:w-8 md:h-8 ${tabs[0].bgColor} rounded-lg flex items-center justify-center ${tabs[0].color} flex-shrink-0`}>
                         {tabs[0].icon}
                       </div>
-                      <h3 className="text-lg md:text-2xl font-bold text-gray-900 leading-tight">AI Avatar Generation</h3>
+                      <h3 className="text-lg md:text-2xl font-bold text-gray-900 leading-tight">Image Generation</h3>
                     </div>
                     
                     <p className="text-sm md:text-base text-gray-600 mb-4 md:mb-6 leading-relaxed">
-                      Turn text or sketches into a professional avatar. Upload a description or reference, get 4 unique characters with transparent backgrounds, ready for OBS/Discord.
+                    Familiar /imagine workflow, powered by Midjourney’s style. Use prompts, reference images, and parameters to bring your ideas to life.
                     </p>
 
                     {/* Feature Grid */}
                     <div className="grid grid-cols-2 gap-2 md:grid-cols-2 md:gap-3 mb-4 md:mb-6">
-                      <div className="flex items-center space-x-2 md:space-x-3 p-2 md:p-3 bg-gray-50 rounded-lg">
-                        <div className="text-[#4f46e5] flex-shrink-0">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                            <polyline points="14,2 14,8 20,8"/>
-                            <line x1="16" y1="13" x2="8" y2="13"/>
-                            <line x1="16" y1="17" x2="8" y2="17"/>
-                            <polyline points="10,9 9,9 8,9"/>
-                          </svg>
-                        </div>
-                        <span className="text-gray-700 text-xs md:text-sm font-medium">Text descriptions</span>
+                      <div className="flex items-center p-2 md:p-3 bg-gray-50 rounded-lg">
+                        <span className="text-gray-700 text-xs md:text-sm font-medium">/imagine</span>
                       </div>
                       
-                      <div className="flex items-center space-x-2 md:space-x-3 p-2 md:p-3 bg-gray-50 rounded-lg">
-                        <div className="text-[#4f46e5] flex-shrink-0">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-                            <circle cx="9" cy="9" r="2"/>
-                            <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>
-                          </svg>
-                        </div>
-                        <span className="text-gray-700 text-xs md:text-sm font-medium">Reference images</span>
+                      <div className="flex items-center p-2 md:p-3 bg-gray-50 rounded-lg">
+                        <span className="text-gray-700 text-xs md:text-sm font-medium">/reroll</span>
                       </div>
                       
-                      <div className="flex items-center space-x-2 md:space-x-3 p-2 md:p-3 bg-gray-50 rounded-lg">
-                        <div className="text-[#4f46e5] flex-shrink-0">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
-                            <rect x="8" y="2" width="8" height="4" rx="1" ry="1"/>
-                          </svg>
-                        </div>
-                        <span className="text-gray-700 text-xs md:text-sm font-medium">4 candidates generated</span>
+                      <div className="flex items-center p-2 md:p-3 bg-gray-50 rounded-lg">
+                        <span className="text-gray-700 text-xs md:text-sm font-medium">/blend</span>
                       </div>
                       
-                      <div className="flex items-center space-x-2 md:space-x-3 p-2 md:p-3 bg-gray-50 rounded-lg">
-                        <div className="text-[#4f46e5] flex-shrink-0">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M5 12l5 5l10 -10"/>
-                          </svg>
-                        </div>
-                        <span className="text-gray-700 text-xs md:text-sm font-medium">Transparent background</span>
+                      <div className="flex items-center p-2 md:p-3 bg-gray-50 rounded-lg">
+                        <span className="text-gray-700 text-xs md:text-sm font-medium">/faceswap</span>
                       </div>
                     </div>
 
                     <div className="flex flex-wrap gap-3">
-                      <span className="inline-flex items-center text-[#4f46e5] font-medium text-sm md:text-base">
-                        ✅ No artist needed, minutes to your unique character
+                      <span className="inline-flex items-center text-[#8b5cf6] font-medium text-sm md:text-base">
+                        ✅ A seamless Midjourney experience
                       </span>
                     </div>
                   </div>
@@ -259,18 +230,18 @@ const AIToolsSection = () => {
               </div>
             </section>
 
-            {/* Expression Pack Auto-Creation */}
+            {/* Updating Image */}
             <section 
-              id="expression_pack" 
+              id="updating_image" 
               className="scroll-mt-32 md:scroll-mt-40"
-              ref={(el) => { sectionsRef.current.expression_pack = el; }}
+              ref={(el) => { if (el) sectionsRef.current.updating_image = el; }}
             >
               <div className="block bg-white rounded-lg md:rounded-xl shadow-sm hover:shadow-md transition-shadow duration-300 border border-gray-100">
                 <div className="block md:grid md:grid-cols-2 md:gap-0">
                   {/* Image */}
                   <div className="relative bg-gradient-to-br from-purple-50 to-pink-50 w-full h-48 sm:h-56 md:h-64 lg:h-80 xl:h-96 flex items-center justify-center overflow-hidden md:p-6 lg:p-8 md:order-2">
                     <Image 
-                      src="/images/AITools/input_2.png" 
+                      src="/images/example/0_640_n(4).WEBP" 
                       alt="Expression Pack Auto-Creation - Multiple emotions in one click" 
                       width={400}
                       height={400}
@@ -284,58 +255,35 @@ const AIToolsSection = () => {
                       <div className={`w-6 h-6 md:w-8 md:h-8 ${tabs[1].bgColor} rounded-lg flex items-center justify-center ${tabs[1].color} flex-shrink-0`}>
                         {tabs[1].icon}
                       </div>
-                      <h3 className="text-lg md:text-2xl font-bold text-gray-900 leading-tight">Expression Pack Auto-Creation</h3>
+                      <h3 className="text-lg md:text-2xl font-bold text-gray-900 leading-tight">Updating Image</h3>
                     </div>
                     
                     <p className="text-sm md:text-base text-gray-600 mb-4 md:mb-6 leading-relaxed">
-                      All emotions, one click. Happy, angry, sad, surprised — AI generates consistent expressions for your avatar without hiring an artist.
+                    Modify and enhance your generated images using — upscale, create variations, inpaint, outpaint, or pan
                     </p>
 
                     {/* Feature Grid */}
                     <div className="grid grid-cols-2 gap-2 md:grid-cols-2 md:gap-3 mb-4 md:mb-6">
-                      <div className="flex items-center space-x-2 md:space-x-3 p-2 md:p-3 bg-gray-50 rounded-lg">
-                        <div className="text-purple-600 flex-shrink-0">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
-                            <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
-                          </svg>
-                        </div>
-                        <span className="text-gray-700 text-xs md:text-sm font-medium">Auto-generate emotions</span>
+                      <div className="flex items-center p-2 md:p-3 bg-gray-50 rounded-lg">
+                        <span className="text-gray-700 text-xs md:text-sm font-medium">/upscale</span>
                       </div>
                       
-                      <div className="flex items-center space-x-2 md:space-x-3 p-2 md:p-3 bg-gray-50 rounded-lg">
-                        <div className="text-purple-600 flex-shrink-0">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M12 2v20M2 12h20"/>
-                          </svg>
-                        </div>
-                        <span className="text-gray-700 text-xs md:text-sm font-medium">Character consistency</span>
+                      <div className="flex items-center p-2 md:p-3 bg-gray-50 rounded-lg">
+                        <span className="text-gray-700 text-xs md:text-sm font-medium">/variations</span>
                       </div>
                       
-                      <div className="flex items-center space-x-2 md:space-x-3 p-2 md:p-3 bg-gray-50 rounded-lg">
-                        <div className="text-purple-600 flex-shrink-0">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M9 12l2 2 4-4"/>
-                            <path d="M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9c2.12 0 4.04.74 5.57 1.97"/>
-                          </svg>
-                        </div>
-                        <span className="text-gray-700 text-xs md:text-sm font-medium">Manual selection</span>
+                      <div className="flex items-center p-2 md:p-3 bg-gray-50 rounded-lg">
+                        <span className="text-gray-700 text-xs md:text-sm font-medium">/inpaint</span>
                       </div>
                       
-                      <div className="flex items-center space-x-2 md:space-x-3 p-2 md:p-3 bg-gray-50 rounded-lg">
-                        <div className="text-purple-600 flex-shrink-0">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
-                            <rect x="8" y="2" width="8" height="4" rx="1" ry="1"/>
-                          </svg>
-                        </div>
-                        <span className="text-gray-700 text-xs md:text-sm font-medium">Variation options</span>
+                      <div className="flex items-center p-2 md:p-3 bg-gray-50 rounded-lg">
+                        <span className="text-gray-700 text-xs md:text-sm font-medium">/outpaint</span>
                       </div>
                     </div>
 
                     <div className="flex flex-wrap gap-3">
                       <span className="inline-flex items-center text-purple-600 font-medium text-sm md:text-base">
-                        ✅ Skip commissioning multiple expressions, save time & cost
+                        ✅ All while preserving the original composition and style
                       </span>
                     </div>
                   </div>
@@ -343,22 +291,21 @@ const AIToolsSection = () => {
               </div>
             </section>
 
-            {/* Animation from Stills */}
+            {/* Enhance Image */}
             <section 
-              id="animation_stills" 
+              id="enhance_image" 
               className="scroll-mt-32 md:scroll-mt-40"
-              ref={(el) => { sectionsRef.current.animation_stills = el; }}
+              ref={(el) => { if (el) sectionsRef.current.enhance_image = el; }}
             >
               <div className="block bg-white rounded-lg md:rounded-xl shadow-sm hover:shadow-md transition-shadow duration-300 border border-gray-100">
                 <div className="block md:grid md:grid-cols-2 md:gap-0">
-                  {/* Video */}
+                  {/* Image */}
                   <div className="relative bg-gradient-to-br from-green-50 to-teal-50 w-full h-48 sm:h-56 md:h-64 lg:h-80 xl:h-96 flex items-center justify-center overflow-hidden md:p-6 lg:p-8">
-                    <video 
-                      src="/images/AITools/input_3.webm" 
-                      autoPlay 
-                      loop 
-                      muted 
-                      playsInline 
+                    <Image 
+                      src="/images/example/0_640_n(13).WEBP" 
+                      alt="AI Image Enhancement - Improve and refine your images" 
+                      width={400}
+                      height={400}
                       className="w-full h-full rounded-lg object-cover object-center"
                     />
                   </div>
@@ -369,63 +316,35 @@ const AIToolsSection = () => {
                       <div className={`w-6 h-6 md:w-8 md:h-8 ${tabs[2].bgColor} rounded-lg flex items-center justify-center ${tabs[2].color} flex-shrink-0`}>
                         {tabs[2].icon}
                       </div>
-                      <h3 className="text-lg md:text-2xl font-bold text-gray-900 leading-tight">Animation from Stills</h3>
+                      <h3 className="text-lg md:text-2xl font-bold text-gray-900 leading-tight">Enhance Image</h3>
                     </div>
                     
                     <p className="text-sm md:text-base text-gray-600 mb-4 md:mb-6 leading-relaxed">
-                      Bring your avatar to life. AI adds blinking, mouth movements, and emotional transitions. Export as MP4/GIF/WebM for instant streaming use.
+                      Improve and refine your images with AI-powered enhancement tools. Boost quality, adjust lighting, remove imperfections, and optimize for any use case.
                     </p>
 
                     {/* Feature Grid */}
                     <div className="grid grid-cols-2 gap-2 md:grid-cols-2 md:gap-3 mb-4 md:mb-6">
-                      <div className="flex items-center space-x-2 md:space-x-3 p-2 md:p-3 bg-gray-50 rounded-lg">
-                        <div className="text-green-600 flex-shrink-0">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                            <circle cx="12" cy="12" r="3"/>
-                          </svg>
-                        </div>
-                        <span className="text-gray-700 text-xs md:text-sm font-medium">Blinking animations</span>
+                      <div className="flex items-center p-2 md:p-3 bg-gray-50 rounded-lg">
+                        <span className="text-gray-700 text-xs md:text-sm font-medium">/remove-background</span>
                       </div>
                       
-                      <div className="flex items-center space-x-2 md:space-x-3 p-2 md:p-3 bg-gray-50 rounded-lg">
-                        <div className="text-green-600 flex-shrink-0">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/>
-                            <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
-                            <line x1="12" y1="19" x2="12" y2="23"/>
-                            <line x1="8" y1="23" x2="16" y2="23"/>
-                          </svg>
-                        </div>
-                        <span className="text-gray-700 text-xs md:text-sm font-medium">Mouth movements</span>
+                      <div className="flex items-center p-2 md:p-3 bg-gray-50 rounded-lg">
+                        <span className="text-gray-700 text-xs md:text-sm font-medium">/retexture</span>
                       </div>
                       
-                      <div className="flex items-center space-x-2 md:space-x-3 p-2 md:p-3 bg-gray-50 rounded-lg">
-                        <div className="text-green-600 flex-shrink-0">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10z"/>
-                            <path d="M8 9h8"/>
-                            <path d="M8 13h6"/>
-                          </svg>
-                        </div>
-                        <span className="text-gray-700 text-xs md:text-sm font-medium">Emotion transitions</span>
+                      <div className="flex items-center p-2 md:p-3 bg-gray-50 rounded-lg">
+                        <span className="text-gray-700 text-xs md:text-sm font-medium">/enhance</span>
                       </div>
                       
-                      <div className="flex items-center space-x-2 md:space-x-3 p-2 md:p-3 bg-gray-50 rounded-lg">
-                        <div className="text-green-600 flex-shrink-0">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/>
-                            <path d="M7 11l5-5 5 5"/>
-                            <path d="M12 6v10"/>
-                          </svg>
-                        </div>
-                        <span className="text-gray-700 text-xs md:text-sm font-medium">Multiple export formats</span>
+                      <div className="flex items-center p-2 md:p-3 bg-gray-50 rounded-lg">
+                        <span className="text-gray-700 text-xs md:text-sm font-medium">/remix</span>
                       </div>
                     </div>
 
                     <div className="flex flex-wrap gap-3">
                       <span className="inline-flex items-center text-green-600 font-medium text-sm md:text-base">
-                        ✅ Instant broadcast-ready content for Twitch/YouTube
+                        ✅ Transform any image into professional quality
                       </span>
                     </div>
                   </div>
@@ -433,18 +352,18 @@ const AIToolsSection = () => {
               </div>
             </section>
 
-            {/* Smart Upscale & Variations */}
+            {/* Video Generation */}
             <section 
-              id="smart_upscale" 
+              id="video_generation" 
               className="scroll-mt-32 md:scroll-mt-40"
-              ref={(el) => { sectionsRef.current.smart_upscale = el; }}
+              ref={(el) => { if (el) sectionsRef.current.video_generation = el; }}
             >
               <div className="block bg-white rounded-lg md:rounded-xl shadow-sm hover:shadow-md transition-shadow duration-300 border border-gray-100">
                 <div className="block md:grid md:grid-cols-2 md:gap-0">
                   {/* Video */}
                   <div className="relative bg-gradient-to-br from-indigo-50 to-blue-50 w-full h-48 sm:h-56 md:h-64 lg:h-80 xl:h-96 flex items-center justify-center overflow-hidden md:p-6 lg:p-8 md:order-2">
                     <video 
-                      src="/images/AITools/input_4.webm" 
+                      src="/images/example/Explore.webm" 
                       autoPlay 
                       loop 
                       muted 
@@ -459,58 +378,35 @@ const AIToolsSection = () => {
                       <div className={`w-6 h-6 md:w-8 md:h-8 ${tabs[3].bgColor} rounded-lg flex items-center justify-center ${tabs[3].color} flex-shrink-0`}>
                         {tabs[3].icon}
                       </div>
-                      <h3 className="text-lg md:text-2xl font-bold text-gray-900 leading-tight">Smart Upscale & Variations</h3>
+                      <h3 className="text-lg md:text-2xl font-bold text-gray-900 leading-tight">Video Generation</h3>
                     </div>
                     
                     <p className="text-sm md:text-base text-gray-600 mb-4 md:mb-6 leading-relaxed">
-                      Polish until perfect. Upscale for HD quality, explore endless variations, and refine until you find your unique streaming persona.
+                      Create stunning AI videos from text prompts or images. Generate motion graphics, animations, and dynamic content with Midjourney&apos;s latest video models.
                     </p>
 
                     {/* Feature Grid */}
                     <div className="grid grid-cols-2 gap-2 md:grid-cols-2 md:gap-3 mb-4 md:mb-6">
-                      <div className="flex items-center space-x-2 md:space-x-3 p-2 md:p-3 bg-gray-50 rounded-lg">
-                        <div className="text-indigo-600 flex-shrink-0">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M3 7v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2z"/>
-                            <line x1="8" y1="7" x2="8" y2="3"/>
-                            <line x1="16" y1="7" x2="16" y2="3"/>
-                          </svg>
-                        </div>
-                        <span className="text-gray-700 text-xs md:text-sm font-medium">High-resolution upscale</span>
+                      <div className="flex items-center p-2 md:p-3 bg-gray-50 rounded-lg">
+                        <span className="text-gray-700 text-xs md:text-sm font-medium">/video-diffusion</span>
                       </div>
                       
-                      <div className="flex items-center space-x-2 md:space-x-3 p-2 md:p-3 bg-gray-50 rounded-lg">
-                        <div className="text-indigo-600 flex-shrink-0">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
-                            <rect x="8" y="2" width="8" height="4" rx="1" ry="1"/>
-                          </svg>
-                        </div>
-                        <span className="text-gray-700 text-xs md:text-sm font-medium">Quality preservation</span>
+                      <div className="flex items-center p-2 md:p-3 bg-gray-50 rounded-lg">
+                        <span className="text-gray-700 text-xs md:text-sm font-medium">/extend-video</span>
                       </div>
                       
-                      <div className="flex items-center space-x-2 md:space-x-3 p-2 md:p-3 bg-gray-50 rounded-lg">
-                        <div className="text-indigo-600 flex-shrink-0">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
-                          </svg>
-                        </div>
-                        <span className="text-gray-700 text-xs md:text-sm font-medium">Generate variations</span>
+                      <div className="flex items-center p-2 md:p-3 bg-gray-50 rounded-lg">
+                        <span className="text-gray-700 text-xs md:text-sm font-medium">/video-upscale</span>
                       </div>
                       
-                      <div className="flex items-center space-x-2 md:space-x-3 p-2 md:p-3 bg-gray-50 rounded-lg">
-                        <div className="text-indigo-600 flex-shrink-0">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M20 6L9 17l-5-5"/>
-                          </svg>
-                        </div>
-                        <span className="text-gray-700 text-xs md:text-sm font-medium">Iterative refinement</span>
+                      <div className="flex items-center p-2 md:p-3 bg-gray-50 rounded-lg">
+                        <span className="text-gray-700 text-xs md:text-sm font-medium">Video Model V1</span>
                       </div>
                     </div>
 
                     <div className="flex flex-wrap gap-3">
                       <span className="inline-flex items-center text-indigo-600 font-medium text-sm md:text-base">
-                        ✅ Perfect your unique character through continuous refinement
+                        ✅ Create dynamic videos with AI-powered generation
                       </span>
                     </div>
                   </div>

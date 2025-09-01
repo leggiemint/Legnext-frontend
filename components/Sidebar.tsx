@@ -4,17 +4,18 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
-import { PaintBrushIcon, PhotoIcon, Cog6ToothIcon } from "@heroicons/react/24/outline";
+import { PhotoIcon, Cog6ToothIcon } from "@heroicons/react/24/outline";
+import Image from "next/image";
 
 const sidebarItems = [
   {
-    name: "Create",
-    href: "/app/pngtuber-maker",
-    icon: <PaintBrushIcon className="w-5 h-5" />,
+    name: "Midjourney",
+    href: "/app/midjourney",
+    icon: <Image src="/images/Midjourney_logo.png" alt="Midjourney" width={20} height={20} className="w-5 h-5" />,
   },
   {
-    name: "My PngTubers",
-    href: "/app/pngtubers",
+    name: "Images",
+    href: "/app/images",
     icon: <PhotoIcon className="w-5 h-5" />,
   },
   {
@@ -59,7 +60,7 @@ const Sidebar = () => {
   }, [session?.user?.id]);
 
   return (
-    <div className="bg-white w-64 fixed left-0 top-16 h-[calc(100vh-4rem)] flex flex-col z-40">
+    <div className="bg-white w-64 fixed left-0 top-16 h-[calc(100vh-4rem)] flex flex-col z-40 border-r border-gray-200">
       {/* Scrollable content area */}
       <div className="overflow-y-auto flex-grow pt-8 pr-0">
         {/* Navigation */}
@@ -90,7 +91,10 @@ const Sidebar = () => {
 
       </div>
 
-             {/* Plan Section */}
+      {/* Separator Line */}
+      <div className="border-t border-gray-200"></div>
+
+      {/* Plan Section */}
        {session && (
          <div className="p-4 border-t border-gray-200 bg-white">
           {loading ? (

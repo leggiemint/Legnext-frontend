@@ -29,6 +29,7 @@ export async function GET() {
         progress: true,
         imageUrl: true,
         storedImages: true,
+        isFavorite: true,
         createdAt: true
       }
     });

@@ -35,7 +35,7 @@ export default function FileUpload({
     // 检查用户登录状态
     if (status === 'unauthenticated') {
       toast.error('Please login to upload files');
-      signIn(undefined, { callbackUrl: '/app/pngtuber-maker' });
+      signIn(undefined, { callbackUrl: '/app/midjourney' });
       return;
     }
 
@@ -95,7 +95,7 @@ export default function FileUpload({
     // 检查用户登录状态
     if (status === 'unauthenticated') {
       toast.error('Please login to upload files');
-      signIn(undefined, { callbackUrl: '/app/pngtuber-maker' });
+      signIn(undefined, { callbackUrl: '/app/midjourney' });
       return;
     }
     
@@ -147,7 +147,7 @@ export default function FileUpload({
     // 检查用户登录状态
     if (status === 'unauthenticated') {
       toast.error('Please login to upload files');
-      signIn(undefined, { callbackUrl: '/app/pngtuber-maker' });
+      signIn(undefined, { callbackUrl: '/app/midjourney' });
       return;
     }
     fileInputRef.current?.click();

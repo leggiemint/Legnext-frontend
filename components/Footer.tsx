@@ -20,6 +20,7 @@ const footerLinks = {
     links: [
       { label: "Fast Mode", href: "/modes/fast" },
       { label: "Turbo Mode", href: "/modes/turbo" },
+      { label: "Draft Mode", href: "/modes/draft" },
     ]
   },
   resources: {
@@ -27,13 +28,12 @@ const footerLinks = {
     links: [
       { label: "Documentation", href: "https://docs.legnext.ai/", target: "_blank", rel: "noopener noreferrer" },
       { label: "Pricing", href: "/pricing" },
-      { label: "API Examples", href: "/examples" },
     ]
   },
   about: {
     title: "About",
     links: [
-      { label: "Contact Us", href: "/contact" },
+      { label: "Refund Policy", href: "/refund-policy" },
       { label: "Terms of Service", href: "/terms-of-service" },
       { label: "Privacy Policy", href: "/privacy-policy" },
     ]

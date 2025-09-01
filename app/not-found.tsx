@@ -32,7 +32,7 @@ export default function Custom404() {
             Back to Home
           </Link>
 
-          <Link href="/contact" className="btn bg-[#4f46e5] hover:bg-[#4f46e5]/90 text-white border-none">
+          <a href="mailto:support@legnext.ai" className="btn bg-[#4f46e5] hover:bg-[#4f46e5]/90 text-white border-none">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 20 20"
@@ -46,7 +46,7 @@ export default function Custom404() {
               />
             </svg>
             Support
-          </Link>
+          </a>
         </div>
       </div>
     </section>

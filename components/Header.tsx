@@ -13,21 +13,21 @@ const links: {
   label: string;
 }[] = [
   {
-    href: "/app/pngtuber-maker",
-    label: "PngTuber Maker",
+    href: "/app/midjourney",
+    label: "Midjourney API",
+  },
+  {
+    href: "https://docs.legnext.ai/",
+    label: "Docs",
   },
   {
     href: "/pricing",
     label: "Pricing",
   },
-  {
-    href: "/contact",
-    label: "Contact",
-  },
 ];
 
 const cta = (
-  <Link href="/app">
+  <Link href="/app/midjourney">
     <button className="inline-flex items-center justify-center px-4 py-2 bg-[#4f46e5] text-white font-medium rounded-lg hover:bg-[#4f46e5]/90 transition-colors duration-200 shadow-sm">
       Create Now
     </button>
@@ -116,7 +116,7 @@ const HeaderContent = () => {
     <div className="flex items-center space-x-3">
       {/* Dashboard Button - Hidden on mobile */}
       <div className="hidden md:block">
-        <Link href="/app">
+        <Link href="/app/midjourney">
           <button className="inline-flex items-center justify-center px-4 py-2 bg-[#4f46e5] text-white font-medium rounded-lg hover:bg-[#4f46e5]/90 transition-colors duration-200 shadow-sm">
             Dashboard
           </button>
@@ -210,16 +210,33 @@ const HeaderContent = () => {
         
         {/* Center: Navigation Links (Hidden on mobile) */}
         <div className="hidden md:flex items-center gap-4 overflow-x-auto absolute left-1/2 transform -translate-x-1/2">
-          {links.map((link) => (
-            <Link
-              href={link.href}
-              key={link.href}
-              className="flex items-center text-sm lg:text-[1rem] font-medium transition-colors text-gray-600 hover:text-gray-900 whitespace-nowrap flex-shrink-0"
-              title={link.label}
-            >
-              {link.label}
-            </Link>
-          ))}
+          {links.map((link) => {
+            const isExternal = link.href.startsWith('http');
+            return isExternal ? (
+              <a
+                href={link.href}
+                key={link.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center text-sm lg:text-[1rem] font-medium transition-colors text-gray-600 hover:text-gray-900 whitespace-nowrap flex-shrink-0"
+                title={`${link.label} (opens in new tab)`}
+              >
+                {link.label}
+                <svg className="w-3 h-3 ml-1 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                </svg>
+              </a>
+            ) : (
+              <Link
+                href={link.href}
+                key={link.href}
+                className="flex items-center text-sm lg:text-[1rem] font-medium transition-colors text-gray-600 hover:text-gray-900 whitespace-nowrap flex-shrink-0"
+                title={link.label}
+              >
+                {link.label}
+              </Link>
+            );
+          })}
         </div>
 
         {/* Right Side Actions */}
@@ -236,7 +253,7 @@ const HeaderContent = () => {
               
               {/* Mobile CTA Display (Visible only on small screens) */}
               <div className="block sm:hidden">
-                <Link href="/app">
+                <Link href="/app/midjourney">
                   <button className="inline-flex items-center justify-center px-4 py-2 bg-[#4f46e5] text-white font-medium rounded-lg hover:bg-[#4f46e5]/90 transition-colors duration-200 shadow-sm">
                     Create Now
                   </button>
@@ -281,31 +298,49 @@ const HeaderContent = () => {
           </div>
           
           <nav className="grid grid-flow-row auto-rows-max text-sm">
-            {links.map((link) => (
-              <Link
-                href={link.href}
-                key={link.href}
-                className="flex items-center p-2 w-full text-sm font-medium rounded-md hover:bg-gray-100 transition-colors mobile-menu-link"
-                title={link.label}
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                {link.label}
-              </Link>
-            ))}
+            {links.map((link) => {
+              const isExternal = link.href.startsWith('http');
+              return isExternal ? (
+                <a
+                  href={link.href}
+                  key={link.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center p-2 w-full text-sm font-medium rounded-md hover:bg-gray-100 transition-colors mobile-menu-link"
+                  title={`${link.label} (opens in new tab)`}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  {link.label}
+                  <svg className="w-3 h-3 ml-1 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                  </svg>
+                </a>
+              ) : (
+                <Link
+                  href={link.href}
+                  key={link.href}
+                  className="flex items-center p-2 w-full text-sm font-medium rounded-md hover:bg-gray-100 transition-colors mobile-menu-link"
+                  title={link.label}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  {link.label}
+                </Link>
+              );
+            })}
             
-            {/* Discord Link in Mobile Menu */}
+            {/* Telegram Link in Mobile Menu */}
             <Link
-              href="https://discord.gg/zysPAnvP8f"
+              href="https://t.me/+PsZ-Qun0hKViNjZl"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center p-2 w-full text-sm font-medium rounded-md hover:bg-gray-100 transition-colors mobile-menu-link"
-              title="Join Discord"
+              title="Join Telegram"
               onClick={() => setIsMobileMenuOpen(false)}
             >
-              <svg className="w-4 h-4 mr-2" fill="#5865F2" viewBox="0 0 24 24">
-                <path d="M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8852 1.515.0699.0699 0 00-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0785.0095c.1202.099.246.1981.3728.2924a.077.077 0 01-.0066.1276 12.2986 12.2986 0 01-1.873.8914.0766.0766 0 00-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 00.0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419-.019 1.3332-.9555 2.4189-2.1569 2.4189zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.9555 2.4189-2.1568 2.4189Z"/>
+              <svg className="w-4 h-4 mr-2" fill="#0088cc" viewBox="0 0 24 24">
+                <path d="M20.665 3.717l-17.73 6.837c-1.21.486-1.203 1.161-.222 1.462l4.552 1.42 10.532-6.645c.498-.303.953-.14.579.192l-8.533 7.701h-.002l.002.001-.314 4.692c.46 0 .663-.211.921-.46l2.211-2.15 4.599 3.397c.848.467 1.457.227 1.668-.787L21.815 4.922c.314-1.272-.472-1.849-1.15-1.205z"/>
               </svg>
-              Join Discord
+              Join Telegram
             </Link>
             
             {/* Mobile CTA/Auth Section */}
@@ -320,7 +355,7 @@ const HeaderContent = () => {
                       {session.user?.email}
                     </p>
                   </div>
-                  <Link href="/app" className="w-full">
+                  <Link href="/app/midjourney" className="w-full">
                     <button className="w-full inline-flex items-center justify-center px-4 py-2 bg-[#4f46e5] text-white font-medium rounded-lg hover:bg-[#4f46e5]/90 transition-colors duration-200 shadow-sm">
                       Dashboard
                     </button>
@@ -341,7 +376,7 @@ const HeaderContent = () => {
                   </button>
                 </div>
               ) : (
-                <Link href="/app" className="w-full">
+                <Link href="/app/midjourney" className="w-full">
                   <button className="w-full inline-flex items-center justify-center px-4 py-2 bg-[#4f46e5] text-white font-medium rounded-lg hover:bg-[#4f46e5]/90 transition-colors duration-200 shadow-sm">
                     Create Now
                   </button>

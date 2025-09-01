@@ -42,16 +42,16 @@ const PricingSection = () => {
   }, [session?.user?.id]);
 
   return (
-    <section className="py-20 md:py-24 bg-gray-50" id="pricing">
+    <section className="py-20 md:py-24 bg-white" id="pricing">
       <div className="max-w-7xl mx-auto px-8">
         
         {/* Header */}
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
-            Choose Your PNGTuber Plan
+            Choose Your Midjourney API Plan
           </h2>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-8">
-            Start creating professional PNGTuber avatars today. Choose the plan that fits your streaming needs.
+            Start creating stunning AI images and videos today. Choose the plan that fits your creative needs.
           </p>
         </div>
         
@@ -209,7 +209,7 @@ const PricingSection = () => {
             Have questions about our pricing?
           </p>
           <a 
-            href="/contact" 
+            href="mailto:support@legnext.ai" 
             className="font-medium hover:underline"
             style={{ color: config.colors.main }}
           >

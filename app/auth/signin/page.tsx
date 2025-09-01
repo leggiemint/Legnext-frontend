@@ -35,16 +35,16 @@ const SigninContent = () => {
           
           <div className="space-y-3">
             <div className="inline-flex items-center px-3 py-1 rounded-full bg-[#4f46e5]/10 border border-[#4f46e5]/20">
-              <span className="text-sm font-medium text-[#4f46e5]">Join thousands of streamers</span>
+              <span className="text-sm font-medium text-[#4f46e5]">Join thousands of developers</span>
             </div>
             
             <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 leading-tight">
-              Create Your PNGTuber Avatar in Minutes,
-              <span className="block text-gray-600">no art skills required.</span>
+              Access Midjourney API Power,
+              <span className="block text-gray-600">no personal account needed.</span>
             </h1>
             
             <p className="text-sm text-gray-600 leading-relaxed">
-              Create an account or log in with an existing one to start creating your streaming avatar.
+              Create an account or log in with an existing one to start generating images with our Midjourney API.
             </p>
           </div>
         </div>

@@ -10,11 +10,11 @@ import { useState } from "react";
 // Default FAQ (original style):
 // <FAQ faqList={defaultFAQList} />
 //
-// PngTuber specific FAQ:
+// Midjourney API specific FAQ:
 // <FAQ 
 //   title="Frequently Asked Questions" 
-//   faqList={pngtuberFAQList} 
-//   variant="pngtuber" 
+//   faqList={midjourneyFAQList} 
+//   variant="midjourney" 
 // />
 //
 // Custom FAQ with custom styling:
@@ -35,7 +35,7 @@ interface FAQItemProps {
 interface FAQProps {
   title?: string;
   faqList: FAQItemProps[];
-  variant?: "default" | "pngtuber" | "custom";
+  variant?: "default" | "midjourney" | "custom";
   className?: string;
   maxWidth?: string;
 }
@@ -81,8 +81,8 @@ const FAQ = ({
 }: FAQProps) => {
   const getVariantStyles = () => {
     switch (variant) {
-      case "pngtuber":
-        return ""; // No background for pngtuber variant, inherit from parent
+      case "midjourney":
+        return ""; // No background for midjourney variant, inherit from parent
       case "custom":
         return className;
       default:
@@ -92,7 +92,7 @@ const FAQ = ({
 
   const getTitleStyles = () => {
     switch (variant) {
-      case "pngtuber":
+      case "midjourney":
         return "text-center text-3xl md:text-4xl font-bold text-[#4f46e5] mb-16";
       default:
         return "text-center text-3xl font-bold text-gray-900 mb-16";

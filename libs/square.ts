@@ -124,7 +124,7 @@ export const createSquareCheckout = async (params: SquareCheckoutParams): Promis
       checkoutOptions: {
         redirectUrl: successUrl,
         askForShippingAddress: false,
-        merchantSupportEmail: process.env.SQUARE_SUPPORT_EMAIL || 'support@pngtubermaker.com'
+        merchantSupportEmail: process.env.SQUARE_SUPPORT_EMAIL || 'support@legnext.com'
       },
       // 添加用户ID作为reference，这样webhook就能识别用户
       ...(params.clientReferenceId && {
@@ -309,7 +309,7 @@ export const createSquareSubscription = async (params: {
       checkoutOptions: {
         redirectUrl: `${process.env.NEXTAUTH_URL}/api/square/webhook/subscription-created`,
         askForShippingAddress: false,
-        merchantSupportEmail: process.env.SQUARE_SUPPORT_EMAIL || 'support@pngtubermaker.com'
+        merchantSupportEmail: process.env.SQUARE_SUPPORT_EMAIL || 'support@legnext.com'
       },
       paymentNote: `Subscription for ${plan.name} - ${params.email}`
     });
@@ -483,7 +483,7 @@ export const verifySquareWebhook = (payload: string, signature: string, secret: 
     // 签名格式：HMAC-SHA256(webhook_url + request_body, signature_key)
     
     // 获取当前请求的URL（从环境变量或请求中获取）
-    const webhookUrl = process.env.SQUARE_WEBHOOK_NOTIFICATION_URL || 'https://pngtubermaker.com/api/webhooks/square';
+    const webhookUrl = process.env.SQUARE_WEBHOOK_NOTIFICATION_URL || 'https://legnext.com/api/webhooks/square';
     
     // 构建签名字符串：webhook_url + request_body
     const stringToSign = webhookUrl + payload;

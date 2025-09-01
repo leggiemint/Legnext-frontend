@@ -20,6 +20,8 @@ module.exports = {
         wiggle: "wiggle 1.5s ease-in-out infinite",
         popup: "popup 0.25s ease-in-out",
         shimmer: "shimmer 3s ease-out infinite alternate",
+        'scroll-left': 'scroll-left 30s linear infinite',
+        'scroll-right': 'scroll-right 30s linear infinite',
       },
       keyframes: {
         opacity: {
@@ -57,6 +59,14 @@ module.exports = {
           "50%": { backgroundPosition: "100% 50%" },
           "100%": { backgroundPosition: "0% 50%" },
         },
+        'scroll-left': {
+          "0%": { transform: "translateX(0)" },
+          "100%": { transform: "translateX(-50%)" },
+        },
+        'scroll-right': {
+          "0%": { transform: "translateX(-50%)" },
+          "100%": { transform: "translateX(0)" },
+        },
       },
     },
   },
@@ -70,7 +80,7 @@ module.exports = {
       "light", 
       "dark",
       {
-        pngtubermaker: {
+        legnext: {
           "primary": "#4f46e5",
           "primary-focus": "#4338ca",
           "primary-content": "#ffffff",

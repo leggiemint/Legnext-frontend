@@ -23,7 +23,7 @@ export const getSEOTags = ({
     // up to 160 characters (how does your app help the user?)
     description: description || config.appDescription,
     // some keywords separated by commas. by default it will be your app name
-    keywords: keywords || ["pngtuber maker", "ai pngtuber", "vtuber avatar generator", "pngtuber for twitch", "anime avatar for streaming"],
+    keywords: keywords || ["midjourney api", "ai image generation", "midjourney integration", "api platform", "image generation service"],
     applicationName: config.appName,
     // set a base URL prefix for other fields that require a fully qualified URL (.e.g og:image: og:image: 'https://yourdomain.com/share.png' => '/share.png')
     metadataBase: new URL(
@@ -84,25 +84,25 @@ export const renderSchemaTags = () => {
           __html: JSON.stringify({
             "@context": "https://schema.org",
             "@type": "Organization",
-            "name": "PNGTuberMaker",
+            "name": "Legnext",
             "url": `https://${config.domainName}`,
             "logo": `https://${config.domainName}/logo.svg`,
-            "description": "AI-powered PNGTuber avatar creation platform for streamers",
+            "description": "Midjourney API integration platform for developers",
             "foundingDate": "2024",
             "sameAs": [
-              "https://twitter.com/pngtubermaker",
-              "https://linkedin.com/company/pngtubermaker"
+              "https://twitter.com/legnext",
+              "https://linkedin.com/company/legnext"
             ],
             "contactPoint": {
               "@type": "ContactPoint",
-              "telephone": "+1-800-PNGTUBER",
+              "telephone": "+1-800-LEGNEXT",
               "contactType": "Customer Service",
-              "email": "support@pngtubermaker.com"
+              "email": "support@legnext.com"
             },
             "offers": {
               "@type": "Offer",
-              "category": "Avatar Creation",
-              "description": "AI PNGTuber Avatar Generation Services"
+              "category": "API Integration",
+              "description": "Midjourney API Integration Services"
             }
           }),
         }}
@@ -113,9 +113,9 @@ export const renderSchemaTags = () => {
           __html: JSON.stringify({
             "@context": "https://schema.org",
             "@type": "WebSite",
-            "name": "PNGTuberMaker",
+            "name": "Legnext",
             "url": `https://${config.domainName}`,
-            "description": "AI-powered PNGTuber avatar creation platform for streamers",
+            "description": "Midjourney API integration platform for developers",
             "potentialAction": {
               "@type": "SearchAction",
               "target": `https://${config.domainName}/search?q={search_term_string}`,
