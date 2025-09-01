@@ -141,7 +141,7 @@ export const sendContactFormEmail = async ({
         
         <p style="color: #4b5563; line-height: 1.6;">
           In the meantime, you might find our 
-          <a href="https://www.legnext.com/docs" style="color: #4f46e5;">documentation</a> 
+          <a href="https://www.legnext.ai/docs" style="color: #4f46e5;">documentation</a> 
           helpful, or join our 
           <a href="https://discord.gg/zysPAnvP8f" style="color: #4f46e5;">Discord community</a> 
           for quick help from other creators.
@@ -156,14 +156,14 @@ export const sendContactFormEmail = async ({
       <div style="text-align: center; padding: 20px 0; border-top: 1px solid #e5e7eb; color: #9ca3af; font-size: 12px;">
         <p>
           Legnext - Midjourney API Integration Platform<br>
-          <a href="https://www.legnext.com" style="color: #4f46e5;">www.legnext.com</a>
+          <a href="https://www.legnext.ai" style="color: #4f46e5;">www.legnext.ai</a>
         </p>
       </div>
     </div>
   `;
 
   // 在测试模式下，将管理员邮件也发送给用户（因为Resend限制只能发送给已验证的邮箱）
-  const adminEmail = process.env.NODE_ENV === 'production' ? 'support@legnext.com' : email;
+  const adminEmail = process.env.NODE_ENV === 'production' ? 'support@legnext.ai' : email;
   
   console.log(`Sending admin notification to: ${adminEmail} (${process.env.NODE_ENV === 'production' ? 'production' : 'development'} mode)`);
   

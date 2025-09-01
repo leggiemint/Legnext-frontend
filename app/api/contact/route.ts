@@ -9,7 +9,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         { 
           error: "Email service is not configured. Please contact support directly.",
-          support: "support@legnext.com"
+          support: "support@legnext.ai"
         },
         { status: 500 }
       );
@@ -128,7 +128,7 @@ export async function POST(req: NextRequest) {
       
       return NextResponse.json(
         { 
-          error: "There was an issue sending your message. Please try again or contact us directly at support@legnext.com",
+          error: "There was an issue sending your message. Please try again or contact us directly at support@legnext.ai",
           details: process.env.NODE_ENV === 'development' ? emailError.message : undefined
         },
         { status: 500 }

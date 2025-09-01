@@ -1,0 +1,397 @@
+name: Deploy to VPS with Caddy
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  # Build and test job
+  build-and-test:
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_USER: postgres
+          POSTGRES_DB: test_db
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v3
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Setup test environment
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
+          DIRECT_URL: postgresql://postgres:postgres@localhost:5432/test_db
+          NEXTAUTH_SECRET: test-secret-key-for-testing
+          NEXTAUTH_URL: http://localhost:3000
+          SKIP_ENV_VALIDATION: true
+        run: |
+          # Generate Prisma client
+          pnpm prisma generate
+          # Run database migrations
+          pnpm prisma db push
+
+      - name: Run linting and type checking
+        run: pnpm run lint
+
+      - name: Build application
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
+          DIRECT_URL: postgresql://postgres:postgres@localhost:5432/test_db
+          NEXTAUTH_SECRET: test-secret-key-for-testing
+          NEXTAUTH_URL: http://localhost:3000
+          SKIP_ENV_VALIDATION: true
+        run: pnpm run build
+
+      - name: Create deployment package
+        if: github.ref == 'refs/heads/main'
+        run: |
+          # Create deployment directory
+          mkdir -p deploy-package
+          
+          # Copy necessary files for production
+          cp -r .next deploy-package/
+          cp -r public deploy-package/
+          cp -r prisma deploy-package/
+          cp package.json deploy-package/
+          cp pnpm-lock.yaml deploy-package/
+          cp next.config.js deploy-package/
+          cp tailwind.config.js deploy-package/
+          cp ecosystem.config.js deploy-package/
+          cp Caddyfile deploy-package/
+          cp -r scripts deploy-package/
+          
+          # Create tarball
+          tar -czf deploy-package.tar.gz -C deploy-package .
+
+      - name: Upload deployment package
+        if: github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@v4
+        with:
+          name: deployment-package
+          path: deploy-package.tar.gz
+          retention-days: 1
+
+  # Deploy to VPS job (only on main branch)
+  deploy:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+      - name: Download deployment package
+        uses: actions/download-artifact@v4
+        with:
+          name: deployment-package
+
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.8.0
+        with:
+          ssh-private-key: ${{ secrets.VPS_SSH_KEY }}
+
+      - name: Add VPS to known hosts
+        run: |
+          ssh-keyscan -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Deploy to VPS
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_PATH: ${{ secrets.VPS_PATH }}
+          APP_NAME: ${{ secrets.APP_NAME }}
+        run: |
+          # Copy deployment package to VPS
+          scp deploy-package.tar.gz $VPS_USER@$VPS_HOST:/tmp/
+          
+          # Execute deployment script on VPS
+          ssh $VPS_USER@$VPS_HOST << 'EOF'
+            set -e
+            
+            # Set variables
+            APP_PATH="${{ secrets.VPS_PATH }}"
+            APP_NAME="${{ secrets.APP_NAME }}"
+            BACKUP_PATH="/var/backups/$APP_NAME-$(date +%Y%m%d-%H%M%S)"
+            
+            echo "🚀 Starting deployment..."
+            
+            # Create backup of current deployment
+            if [ -d "$APP_PATH" ]; then
+              echo "📦 Creating backup..."
+              sudo mkdir -p /var/backups
+              sudo cp -r "$APP_PATH" "$BACKUP_PATH"
+              echo "✅ Backup created at $BACKUP_PATH"
+            fi
+            
+            # Create app directory
+            sudo mkdir -p "$APP_PATH"
+            cd "$APP_PATH"
+            
+            # Extract new deployment
+            echo "📥 Extracting deployment package..."
+            sudo tar -xzf /tmp/deploy-package.tar.gz -C "$APP_PATH"
+            sudo chown -R $USER:$USER "$APP_PATH"
+            
+            # Install pnpm if not exists
+            if ! command -v pnpm &> /dev/null; then
+              echo "📦 Installing pnpm..."
+              curl -fsSL https://get.pnpm.io/install.sh | sh -
+              source ~/.bashrc
+              export PATH="$HOME/.local/share/pnpm:$PATH"
+            fi
+            
+            # Install dependencies
+            echo "📦 Installing dependencies..."
+            pnpm install --frozen-lockfile --production
+            
+            # Generate Prisma client
+            echo "🔧 Generating Prisma client..."
+            pnpm prisma generate
+            
+            # Run database migrations
+            echo "🗄️ Running database migrations..."
+            pnpm prisma migrate deploy
+            
+            # Update Caddy configuration
+            echo "🔧 Updating Caddy configuration..."
+            sudo cp Caddyfile /etc/caddy/Caddyfile
+            sudo systemctl reload caddy
+            
+            # Restart application with PM2
+            echo "🔄 Restarting application..."
+            if command -v pm2 &> /dev/null; then
+              pm2 delete $APP_NAME || true
+              pm2 start ecosystem.config.js --name $APP_NAME
+              pm2 save
+            else
+              echo "⚠️  PM2 not found, please install PM2 or configure your process manager"
+            fi
+            
+            # Cleanup
+            rm -f /tmp/deploy-package.tar.gz
+            
+            echo "✅ Deployment completed successfully!"
+          EOF
+
+      - name: Health check
+        env:
+          APP_URL: ${{ secrets.APP_URL }}
+        run: |
+          echo "🏥 Running health check..."
+          
+          # Wait for application to start
+          sleep 30
+          
+          # Check if application is responding
+          for i in {1..5}; do
+            if curl -f --connect-timeout 10 --max-time 30 "$APP_URL/api/health" || curl -f --connect-timeout 10 --max-time 30 "$APP_URL"; then
+              echo "✅ Health check passed - Application is responding"
+              exit 0
+            else
+              echo "⏳ Attempt $i failed, retrying in 10 seconds..."
+              sleep 10
+            fi
+          done
+          
+          echo "❌ Health check failed - Application is not responding after 5 attempts"
+          exit 1
+
+      - name: Notify deployment status
+        if: always()
+        run: |
+          if [ "${{ job.status }}" == "success" ]; then
+            echo "✅ Deployment successful!"
+            
+            # Discord notification
+            if [ -n "${{ secrets.DISCORD_WEBHOOK_URL }}" ]; then
+              curl -X POST "${{ secrets.DISCORD_WEBHOOK_URL }}" \
+                -H "Content-Type: application/json" \
+                -d '{
+                  "embeds": [{
+                    "title": "🚀 Deployment Successful",
+                    "description": "Legnext application has been deployed successfully!",
+                    "color": 5763719,
+                    "fields": [
+                      {"name": "Branch", "value": "${{ github.ref_name }}", "inline": true},
+                      {"name": "Commit", "value": "${{ github.sha }}", "inline": true},
+                      {"name": "URL", "value": "${{ secrets.APP_URL }}", "inline": false}
+                    ],
+                    "timestamp": "'$(date -u +%Y-%m-%dT%H:%M:%S.000Z)'"
+                  }]
+                }' 2>/dev/null || echo "Discord notification failed"
+            fi
+            
+            # 飞书 notification
+            if [ -n "${{ secrets.FEISHU_WEBHOOK_URL }}" ]; then
+              curl -X POST "${{ secrets.FEISHU_WEBHOOK_URL }}" \
+                -H "Content-Type: application/json" \
+                -d '{
+                  "msg_type": "interactive",
+                  "card": {
+                    "elements": [
+                      {
+                        "tag": "div",
+                        "text": {
+                          "content": "🚀 **部署成功**\n\nLegnext 应用已成功部署！",
+                          "tag": "lark_md"
+                        }
+                      },
+                      {
+                        "tag": "hr"
+                      },
+                      {
+                        "tag": "div",
+                        "fields": [
+                          {
+                            "is_short": true,
+                            "text": {
+                              "content": "**分支**: ${{ github.ref_name }}",
+                              "tag": "lark_md"
+                            }
+                          },
+                          {
+                            "is_short": true,
+                            "text": {
+                              "content": "**提交**: ${{ github.sha }}",
+                              "tag": "lark_md"
+                            }
+                          }
+                        ]
+                      },
+                      {
+                        "tag": "div",
+                        "text": {
+                          "content": "**访问链接**: [${{ secrets.APP_URL }}](${{ secrets.APP_URL }})",
+                          "tag": "lark_md"
+                        }
+                      }
+                    ],
+                    "header": {
+                      "title": {
+                        "content": "🚀 Legnext 部署通知",
+                        "tag": "plain_text"
+                      },
+                      "template": "green"
+                    }
+                  }
+                }' 2>/dev/null || echo "飞书 notification failed"
+            fi
+            
+          else
+            echo "❌ Deployment failed!"
+            
+            # Discord notification
+            if [ -n "${{ secrets.DISCORD_WEBHOOK_URL }}" ]; then
+              curl -X POST "${{ secrets.DISCORD_WEBHOOK_URL }}" \
+                -H "Content-Type: application/json" \
+                -d '{
+                  "embeds": [{
+                    "title": "❌ Deployment Failed",
+                    "description": "Legnext application deployment failed!",
+                    "color": 15548997,
+                    "fields": [
+                      {"name": "Branch", "value": "${{ github.ref_name }}", "inline": true},
+                      {"name": "Commit", "value": "${{ github.sha }}", "inline": true},
+                      {"name": "Job Status", "value": "${{ job.status }}", "inline": true}
+                    ],
+                    "timestamp": "'$(date -u +%Y-%m-%dT%H:%M:%S.000Z)'"
+                  }]
+                }' 2>/dev/null || echo "Discord notification failed"
+            fi
+            
+            # 飞书 notification
+            if [ -n "${{ secrets.FEISHU_WEBHOOK_URL }}" ]; then
+              curl -X POST "${{ secrets.FEISHU_WEBHOOK_URL }}" \
+                -H "Content-Type: application/json" \
+                -d '{
+                  "msg_type": "interactive",
+                  "card": {
+                    "elements": [
+                      {
+                        "tag": "div",
+                        "text": {
+                          "content": "❌ **部署失败**\n\nLegnext 应用部署失败！",
+                          "tag": "lark_md"
+                        }
+                      },
+                      {
+                        "tag": "hr"
+                      },
+                      {
+                        "tag": "div",
+                        "fields": [
+                          {
+                            "is_short": true,
+                            "text": {
+                              "content": "**分支**: ${{ github.ref_name }}",
+                              "tag": "lark_md"
+                            }
+                          },
+                          {
+                            "is_short": true,
+                            "text": {
+                              "content": "**提交**: ${{ github.sha }}",
+                              "tag": "lark_md"
+                            }
+                          },
+                          {
+                            "is_short": true,
+                            "text": {
+                              "content": "**状态**: ${{ job.status }}",
+                              "tag": "lark_md"
+                            }
+                          }
+                        ]
+                      }
+                    ],
+                    "header": {
+                      "title": {
+                        "content": "❌ Legnext 部署失败",
+                        "tag": "plain_text"
+                      },
+                      "template": "red"
+                    }
+                  }
+                }' 2>/dev/null || echo "飞书 notification failed"
+            fi
+          fi

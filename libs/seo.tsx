@@ -97,7 +97,7 @@ export const renderSchemaTags = () => {
               "@type": "ContactPoint",
               "telephone": "+1-800-LEGNEXT",
               "contactType": "Customer Service",
-              "email": "support@legnext.com"
+              "email": "support@legnext.ai"
             },
             "offers": {
               "@type": "Offer",
