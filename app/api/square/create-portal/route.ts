@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/libs/next-auth";
-import { prisma } from "@/libs/prisma";
-import { createSquarePortal } from "@/libs/square";
 
 export async function POST(req: NextRequest) {
   try {
@@ -24,11 +22,6 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
     }
-
-    // Get user profile to find Square customer ID
-    const userProfile = await prisma.userProfile.findUnique({
-      where: { userId: session.user.id }
-    });
 
     // TODO: Add Square customer ID support
     return NextResponse.json(

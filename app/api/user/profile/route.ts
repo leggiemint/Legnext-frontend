@@ -6,6 +6,8 @@ import { getUserWithProfile } from "@/libs/user-service";
 import { prisma } from "@/libs/prisma";
 import { NextRequest } from "next/server";
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);

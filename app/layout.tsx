@@ -59,7 +59,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           <link rel="manifest" href="/favicon/site.webmanifest" />
         </head>
       )}
-      <body className="bg-gray-50 text-gray-900">
+      <body className="bg-white text-gray-900">
         {/* ClientLayout contains all the client wrappers (Crisp chat support, toast messages, tooltips, etc.) */}
         <ClientLayout>
           {children}

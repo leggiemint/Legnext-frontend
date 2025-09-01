@@ -10,7 +10,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
   return (
     <>
       <Header />
-      <main>
+      <main className="bg-white">
         {children}
       </main>
       <Footer />

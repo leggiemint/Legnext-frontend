@@ -86,7 +86,7 @@ const FAQ = ({
       case "custom":
         return className;
       default:
-        return "bg-gray-50";
+        return "bg-white";
     }
   };
 

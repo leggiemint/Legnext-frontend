@@ -4,6 +4,8 @@ import { authOptions } from "@/libs/next-auth";
 import { getUserWithProfile } from "@/libs/user-service";
 import { prisma } from "@/libs/prisma";
 
+export const dynamic = 'force-dynamic';
+
 // GET /api/user/settings - 获取用户设置和使用数据（标准架构）
 export async function GET() {
   try {

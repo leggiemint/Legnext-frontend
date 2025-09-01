@@ -192,14 +192,14 @@ const HeaderContent = () => {
           <Link
             href="/"
             aria-label={config.appName}
-            className="flex items-center space-x-2 basis-[120px] sm:basis-[160px] md:basis-[200px] flex-shrink-0 flex-grow-0"
+            className="flex items-center space-x-2 basis-[100px] sm:basis-[130px] md:basis-[160px] flex-shrink-0 flex-grow-0"
             title={`${config.appName} homepage`}
           >
             <div>
               <Image
                 src={logo}
                 alt={`${config.appName} Logo`}
-                className="w-[120px] sm:w-[160px] md:w-[200px] h-auto"
+                className="w-[100px] sm:w-[130px] md:w-[160px] h-auto"
                 priority={true}
                 width={200}
                 height={50}

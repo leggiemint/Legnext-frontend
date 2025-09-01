@@ -174,7 +174,7 @@ const HeaderBlogContent = () => {
             <Image
               src={logo}
               alt={`${config.appName} logo`}
-              className="w-52 h-auto"
+              className="w-40 h-auto"
               priority={true}
               width={64}
               height={32}
