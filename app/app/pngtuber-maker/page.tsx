@@ -6,6 +6,8 @@ import StepsSection from "@/components/StepsSection";
 import OCMakerExamples from "@/components/OCMakerExamples";
 import FAQ from "@/components/FAQ";
 import { pngtuberFAQList } from "@/components/FAQData";
+import FileUpload from "@/components/FileUpload";
+import { toast } from "react-hot-toast";
 
 type Step = 1 | 2 | 3;
 
@@ -14,6 +16,11 @@ export default function CreatePage() {
   const [textDescription, setTextDescription] = useState("");
   const [selectedAvatar, setSelectedAvatar] = useState<number | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [uploadedReference, setUploadedReference] = useState<{
+    url: string;
+    fileKey: string;
+    fileName: string;
+  } | null>(null);
 
   // Steps data for the StepsSection component
   const createSteps = [
@@ -49,12 +56,37 @@ export default function CreatePage() {
   };
 
   const handleGenerate = () => {
+    if (!textDescription.trim()) {
+      toast.error('Please enter a description for your PngTuber');
+      return;
+    }
+
     setIsGenerating(true);
-    // Simulate API call
+    
+    // 构建完整的prompt
+    let fullPrompt = textDescription.trim();
+    
+    // 文本中已经包含了@URL格式的参考图，直接使用
+
+    console.log('Sending prompt:', fullPrompt);
+    
+    // TODO: 调用AI生成API
+    // 这里应该调用你的AI生成服务
     setTimeout(() => {
       setIsGenerating(false);
       setCurrentStep(2);
     }, 3000);
+  };
+
+  const handleFileUploaded = (fileData: {
+    url: string;
+    fileKey: string;
+    fileName: string;
+  }) => {
+    setUploadedReference(fileData);
+    // 将图片URL添加到文本描述中
+    const imagePrompt = `@${fileData.url} `;
+    setTextDescription(prev => imagePrompt + prev);
   };
 
   return (
@@ -98,30 +130,12 @@ export default function CreatePage() {
                 <div className="flex gap-4">
                   {/* Left: Square Upload Area */}
                   <div className="flex-shrink-0">
-                    <label className="cursor-pointer">
-                      <div className="w-32 h-32 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center bg-gray-50 hover:bg-gray-100 transition-colors">
-                        <div className="text-center">
-                          <div className="w-8 h-8 text-gray-400 hover:text-[#06b6d4] transition-colors mx-auto mb-2">
-                            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                            </svg>
-                          </div>
-                          <p className="text-xs text-gray-500">Upload Image</p>
-                        </div>
-                        <input 
-                          type="file" 
-                          className="hidden" 
-                          accept="image/*" 
-                          onChange={(e) => {
-                            // Handle file upload
-                            if (e.target.files && e.target.files[0]) {
-                              // Process uploaded file
-                              console.log('File uploaded:', e.target.files[0]);
-                            }
-                          }}
-                        />
-                      </div>
-                    </label>
+                    <FileUpload
+                      onFileUploaded={handleFileUploaded}
+                      type="reference"
+                      maxSize={5 * 1024 * 1024} // 5MB
+                      accept="image/*"
+                    />
                   </div>
                   
                   {/* Right: Text Input Area */}
@@ -132,6 +146,7 @@ export default function CreatePage() {
                       value={textDescription}
                       onChange={(e) => setTextDescription(e.target.value)}
                     ></textarea>
+
                   </div>
                 </div>
                 
@@ -144,7 +159,7 @@ export default function CreatePage() {
                 <button 
                   className="btn bg-[#06b6d4] hover:bg-[#06b6d4]/90 text-white border-none"
                   onClick={handleGenerate}
-                  disabled={!textDescription.trim()}
+                  disabled={!textDescription.trim() || isGenerating}
                 >
                   {isGenerating ? (
                     <>

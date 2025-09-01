@@ -56,6 +56,13 @@ SQUARE_ENVIRONMENT=production
 # Mailgun配置
 MAILGUN_API_KEY=your-mailgun-api-key
 MAILGUN_DOMAIN=mg.pngtubermaker.com
+
+# Cloudflare R2存储配置
+R2_ENDPOINT=https://your-account-id.r2.cloudflarestorage.com
+R2_ACCESS_KEY_ID=your-r2-access-key-id
+R2_SECRET_ACCESS_KEY=your-r2-secret-access-key
+R2_BUCKET_NAME=your-bucket-name
+R2_PUBLIC_URL=https://your-bucket.your-subdomain.r2.cloudflarestorage.com
 ```
 
 ## 📋 Vercel部署步骤

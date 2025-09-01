@@ -95,6 +95,13 @@ SQUARE_APPLICATION_ID=your_app_id
 SQUARE_LOCATION_ID=your_location_id
 SQUARE_WEBHOOK_SECRET=your_webhook_secret
 SQUARE_ENVIRONMENT=production
+
+# Cloudflare R2 Storage
+R2_ENDPOINT=https://your-account-id.r2.cloudflarestorage.com
+R2_ACCESS_KEY_ID=your-r2-access-key-id
+R2_SECRET_ACCESS_KEY=your-r2-secret-access-key
+R2_BUCKET_NAME=your-bucket-name
+R2_PUBLIC_URL=https://your-bucket.your-subdomain.r2.cloudflarestorage.com
 ```
 
 ## 📁 Project Structure

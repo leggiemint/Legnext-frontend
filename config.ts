@@ -59,6 +59,12 @@ const config = {
     bucketUrl: `https://bucket-name.s3.amazonaws.com/`,
     cdn: "https://cdn-id.cloudfront.net/",
   },
+  r2: {
+    // Cloudflare R2 storage configuration
+    bucket: process.env.R2_BUCKET_NAME || "pngtubermaker-storage",
+    publicUrl: process.env.R2_PUBLIC_URL || "https://your-bucket.your-subdomain.r2.cloudflarestorage.com",
+    endpoint: process.env.R2_ENDPOINT || "https://your-account-id.r2.cloudflarestorage.com",
+  },
   mailgun: {
     // subdomain to use when sending emails, if you don't have a subdomain, just remove it. Highly recommended to have one (i.e. mg.yourdomain.com or mail.yourdomain.com)
     subdomain: "mg",

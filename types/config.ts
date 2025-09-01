@@ -65,6 +65,11 @@ export interface ConfigProps {
     bucketUrl?: string;
     cdn?: string;
   };
+  r2?: {
+    bucket?: string;
+    publicUrl?: string;
+    endpoint?: string;
+  };
   mailgun: {
     subdomain: string;
     fromNoReply: string;
