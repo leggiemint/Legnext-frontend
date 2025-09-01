@@ -34,7 +34,7 @@ const ComparisonSection = () => {
           </h2>
           
           <p className="mt-3 text-base font-medium text-gray-600 sm:text-lg md:mx-auto md:max-w-2xl lg:text-xl">
-            Save thousands on development costs and integrate Midjourney's powerful AI into your applications in minutes, not months.
+            Save thousands on development costs and integrate Midjourney&apos;s powerful AI into your applications in minutes, not months.
           </p>
         </div>
 

@@ -152,8 +152,14 @@ export async function POST(req: NextRequest) {
       case "customer.subscription.updated": {
         const subscription = event.data.object as Stripe.Subscription;
         
-        const profile = await prisma.userProfile.findFirst({
+        const customer = await prisma.customer.findFirst({
           where: { stripeCustomerId: subscription.customer as string }
+        });
+        
+        if (!customer) break;
+        
+        const profile = await prisma.userProfile.findFirst({
+          where: { userId: customer.userId }
         });
 
         if (!profile) break;
@@ -177,8 +183,14 @@ export async function POST(req: NextRequest) {
       case "customer.subscription.deleted": {
         const subscription = event.data.object as Stripe.Subscription;
         
-        const profile = await prisma.userProfile.findFirst({
+        const customer = await prisma.customer.findFirst({
           where: { stripeCustomerId: subscription.customer as string }
+        });
+        
+        if (!customer) break;
+        
+        const profile = await prisma.userProfile.findFirst({
+          where: { userId: customer.userId }
         });
 
         if (!profile) break;
@@ -197,8 +209,14 @@ export async function POST(req: NextRequest) {
         
         if (invoice.subscription && invoice.billing_reason === "subscription_cycle") {
           // Only process recurring subscription payments, not the initial payment
-          const profile = await prisma.userProfile.findFirst({
+          const customer = await prisma.customer.findFirst({
             where: { stripeCustomerId: invoice.customer as string }
+          });
+          
+          if (!customer) return;
+          
+          const profile = await prisma.userProfile.findFirst({
+            where: { userId: customer.userId }
           });
 
           if (profile && profile.plan === "pro") {
@@ -226,8 +244,14 @@ export async function POST(req: NextRequest) {
       case "invoice.payment_failed": {
         const invoice = event.data.object as Stripe.Invoice;
         
-        const profile = await prisma.userProfile.findFirst({
+        const customer = await prisma.customer.findFirst({
           where: { stripeCustomerId: invoice.customer as string }
+        });
+        
+        if (!customer) break;
+        
+        const profile = await prisma.userProfile.findFirst({
+          where: { userId: customer.userId }
         });
 
         if (profile) {

@@ -30,22 +30,12 @@ export async function POST(req: NextRequest) {
       where: { userId: session.user.id }
     });
 
-    if (!userProfile?.squareCustomerId) {
-      return NextResponse.json(
-        { error: "You don't have a Square billing account yet. Make a purchase first." },
-        { status: 400 }
-      );
-    }
+    // TODO: Add Square customer ID support
+    return NextResponse.json(
+      { error: "Square portal not yet implemented" },
+      { status: 501 }
+    );
 
-    // Create Square customer portal session
-    const portalUrl = await createSquarePortal({
-      customerId: userProfile.squareCustomerId,
-      returnUrl,
-    });
-
-    return NextResponse.json({
-      url: portalUrl
-    });
 
   } catch (error: any) {
     console.error("Square portal error:", error);

@@ -17,23 +17,23 @@ export async function GET(
       );
     }
 
-    const avatar = await prisma.avatar.findFirst({
+    const image = await prisma.midjourneyImage.findFirst({
       where: {
         id: params.avatarId,
         userId: session.user.id
       }
     });
 
-    if (!avatar) {
+    if (!image) {
       return NextResponse.json(
-        { error: "Avatar not found" }, 
+        { error: "Image not found" }, 
         { status: 404 }
       );
     }
 
-    return NextResponse.json(avatar);
+    return NextResponse.json(image);
   } catch (error) {
-    console.error("Error fetching avatar:", error);
+    console.error("Error fetching image:", error);
     return NextResponse.json(
       { error: "Internal server error" }, 
       { status: 500 }
@@ -56,33 +56,33 @@ export async function PATCH(
     }
 
     const body = await req.json();
-    const { name, isFavorite } = body;
+    const { prompt, status } = body;
 
-    const avatar = await prisma.avatar.findFirst({
+    const image = await prisma.midjourneyImage.findFirst({
       where: {
         id: params.avatarId,
         userId: session.user.id
       }
     });
 
-    if (!avatar) {
+    if (!image) {
       return NextResponse.json(
-        { error: "Avatar not found" }, 
+        { error: "Image not found" }, 
         { status: 404 }
       );
     }
 
-    const updatedAvatar = await prisma.avatar.update({
+    const updatedImage = await prisma.midjourneyImage.update({
       where: { id: params.avatarId },
       data: {
-        ...(name !== undefined && { name }),
-        ...(isFavorite !== undefined && { isFavorite })
+        ...(prompt !== undefined && { prompt }),
+        ...(status !== undefined && { status })
       }
     });
 
-    return NextResponse.json(updatedAvatar);
+    return NextResponse.json(updatedImage);
   } catch (error) {
-    console.error("Error updating avatar:", error);
+    console.error("Error updating image:", error);
     return NextResponse.json(
       { error: "Internal server error" }, 
       { status: 500 }
@@ -104,21 +104,21 @@ export async function DELETE(
       );
     }
 
-    const avatar = await prisma.avatar.findFirst({
+    const image = await prisma.midjourneyImage.findFirst({
       where: {
         id: params.avatarId,
         userId: session.user.id
       }
     });
 
-    if (!avatar) {
+    if (!image) {
       return NextResponse.json(
-        { error: "Avatar not found" }, 
+        { error: "Image not found" }, 
         { status: 404 }
       );
     }
 
-    await prisma.avatar.delete({
+    await prisma.midjourneyImage.delete({
       where: { id: params.avatarId }
     });
 
@@ -126,7 +126,7 @@ export async function DELETE(
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Error deleting avatar:", error);
+    console.error("Error deleting image:", error);
     return NextResponse.json(
       { error: "Internal server error" }, 
       { status: 500 }

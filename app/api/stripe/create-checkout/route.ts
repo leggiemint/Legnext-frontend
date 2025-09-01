@@ -47,9 +47,13 @@ export async function POST(req: NextRequest) {
         include: { profile: true }
       });
 
-      // Use existing Stripe customer ID if available
-      if (user?.profile?.stripeCustomerId) {
-        customerId = user.profile.stripeCustomerId;
+      // Get customer info for existing Stripe customer ID
+      const customer = await prisma.customer.findUnique({
+        where: { userId: session.user.id }
+      });
+
+      if (customer?.stripeCustomerId) {
+        customerId = customer.stripeCustomerId;
       }
     }
 

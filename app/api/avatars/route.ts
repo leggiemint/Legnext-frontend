@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/libs/next-auth";
 import { prisma } from "@/libs/prisma";
-import { consumeCredits, incrementAvatarCount } from "@/libs/user-service";
+import { consumeCredits, incrementImageCount } from "@/libs/user-service";
 
 export async function GET() {
   try {
@@ -15,27 +15,27 @@ export async function GET() {
       );
     }
 
-    const avatars = await prisma.avatar.findMany({
+    const images = await prisma.midjourneyImage.findMany({
       where: {
         userId: session.user.id,
-        status: { in: ["completed", "generating", "processing"] }
+        status: { in: ["completed", "generating", "pending", "failed"] }
       },
       orderBy: { createdAt: "desc" },
       select: {
         id: true,
-        name: true,
-        style: true,
+        prompt: true,
+        model: true,
         status: true,
-        isFavorite: true,
-        downloadCount: true,
-        images: true,
+        progress: true,
+        imageUrl: true,
+        storedImages: true,
         createdAt: true
       }
     });
 
-    return NextResponse.json(avatars);
+    return NextResponse.json(images);
   } catch (error) {
-    console.error("Error fetching avatars:", error);
+    console.error("Error fetching images:", error);
     return NextResponse.json(
       { error: "Internal server error" }, 
       { status: 500 }
@@ -78,39 +78,32 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Create avatar record
-    const avatar = await prisma.avatar.create({
+    // Create image generation record
+    const image = await prisma.midjourneyImage.create({
       data: {
         userId: session.user.id,
-        name: name || "Untitled Avatar",
         prompt,
-        style,
-        status: "generating"
+        model: style || "v6",
+        status: "pending"
       }
     });
 
-    // Increment user's avatar count
-    await incrementAvatarCount(session.user.id);
+    // Increment user's image count
+    await incrementImageCount(session.user.id);
 
-    // TODO: Add your AI avatar generation logic here
+    // TODO: Add your Midjourney API generation logic here
     // For now, we'll simulate generation with a completed status
     setTimeout(async () => {
-      await prisma.avatar.update({
-        where: { id: avatar.id },
+      await prisma.midjourneyImage.update({
+        where: { id: image.id },
         data: {
           status: "completed",
-          images: {
+          progress: 100,
+          imageUrl: `https://example.com/images/${image.id}.png`,
+          storedImages: {
             original: {
-              url: `https://example.com/avatars/${avatar.id}-original.png`,
-              key: `avatars/${avatar.id}-original.png`
-            },
-            expressions: {
-              neutral: `https://example.com/avatars/${avatar.id}-neutral.png`,
-              happy: `https://example.com/avatars/${avatar.id}-happy.png`,
-              sad: `https://example.com/avatars/${avatar.id}-sad.png`,
-              angry: `https://example.com/avatars/${avatar.id}-angry.png`,
-              surprised: `https://example.com/avatars/${avatar.id}-surprised.png`,
-              wink: `https://example.com/avatars/${avatar.id}-wink.png`
+              url: `https://example.com/images/${image.id}.png`,
+              key: `images/${image.id}.png`
             }
           }
         }
@@ -118,13 +111,13 @@ export async function POST(req: NextRequest) {
     }, 2000);
 
     return NextResponse.json({
-      id: avatar.id,
-      status: avatar.status,
+      id: image.id,
+      status: image.status,
       creditsRemaining: creditResult.newBalance
     });
 
   } catch (error) {
-    console.error("Error creating avatar:", error);
+    console.error("Error creating image:", error);
     return NextResponse.json(
       { error: "Internal server error" }, 
       { status: 500 }

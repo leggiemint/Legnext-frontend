@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
       cancelUrl,
       clientReferenceId: user?.id || undefined,
       user: user ? {
-        customerId: user.profile?.squareCustomerId || undefined,
+        customerId: undefined, // TODO: Add Square customer ID support
         email: user.email || undefined,
       } : undefined,
     });

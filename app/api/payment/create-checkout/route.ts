@@ -35,11 +35,19 @@ export async function POST(req: NextRequest) {
     const session = await getServerSession(authOptions);
     let user = null;
 
+    let customer = null;
     if (session?.user?.id) {
       // Get user with profile for existing customer ID
       user = await prisma.user.findUnique({
         where: { id: session.user.id },
-        include: { profile: true }
+        include: { 
+          profile: true
+        }
+      });
+      
+      // Get customer info separately
+      customer = await prisma.customer.findUnique({
+        where: { userId: session.user.id }
       });
     }
 
@@ -51,7 +59,7 @@ export async function POST(req: NextRequest) {
       cancelUrl,
       clientReferenceId: user?.id || undefined,
       user: user ? {
-        customerId: user.profile?.stripeCustomerId || user.profile?.squareCustomerId || undefined,
+        customerId: customer?.stripeCustomerId || customer?.qubicoStripeCustomerId || undefined,
         email: user.email || undefined,
       } : undefined,
     });

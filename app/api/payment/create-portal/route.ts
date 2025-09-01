@@ -25,12 +25,12 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Get user profile to find customer ID
-    const userProfile = await prisma.userProfile.findUnique({
+    // Get customer to find customer ID
+    const customer = await prisma.customer.findUnique({
       where: { userId: session.user.id }
     });
 
-    const customerId = userProfile?.stripeCustomerId || userProfile?.squareCustomerId;
+    const customerId = customer?.stripeCustomerId || customer?.qubicoStripeCustomerId;
 
     if (!customerId) {
       return NextResponse.json(

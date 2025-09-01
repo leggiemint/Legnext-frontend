@@ -22,10 +22,16 @@ export async function GET(req: NextRequest) {
 
     // 2. 检查用户配置
     let userProfile = null;
+    let customer = null;
     if (userId) {
       userProfile = await prisma.userProfile.findUnique({
         where: { userId },
         include: { user: true }
+      });
+      
+      // 获取customer信息（包含stripeCustomerId）
+      customer = await prisma.customer.findUnique({
+        where: { userId }
       });
     }
 
@@ -71,9 +77,9 @@ export async function GET(req: NextRequest) {
 
     // 6. 检查用户是否有Stripe客户ID
     let stripeCustomer = null;
-    if (userProfile?.stripeCustomerId) {
+    if (customer?.stripeCustomerId) {
       try {
-        stripeCustomer = await stripe.customers.retrieve(userProfile.stripeCustomerId);
+        stripeCustomer = await stripe.customers.retrieve(customer.stripeCustomerId);
       } catch (error) {
         console.error("Failed to retrieve Stripe customer:", error);
       }
@@ -92,10 +98,7 @@ export async function GET(req: NextRequest) {
         plan: userProfile.plan,
         subscriptionStatus: userProfile.subscriptionStatus,
         credits: userProfile.credits,
-        stripeCustomerId: userProfile.stripeCustomerId,
-        currentPriceId: userProfile.currentPriceId,
-        subscriptionStart: userProfile.subscriptionStart,
-        subscriptionEnd: userProfile.subscriptionEnd
+        stripeCustomerId: customer?.stripeCustomerId || null
       } : null,
       stripeCustomer: stripeCustomer ? {
         id: stripeCustomer.id,

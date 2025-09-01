@@ -29,12 +29,12 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Get user profile to find Stripe customer ID
-    const userProfile = await prisma.userProfile.findUnique({
+    // Get customer to find Stripe customer ID
+    const customer = await prisma.customer.findUnique({
       where: { userId: session.user.id }
     });
 
-    if (!userProfile?.stripeCustomerId) {
+    if (!customer?.stripeCustomerId) {
       return NextResponse.json(
         { error: "You don't have a Stripe billing account yet. Make a purchase first." },
         { status: 400 }
@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
 
     // Create customer portal session
     const portalSession = await stripe.billingPortal.sessions.create({
-      customer: userProfile.stripeCustomerId,
+      customer: customer.stripeCustomerId,
       return_url: returnUrl,
     });
 
