@@ -5,7 +5,8 @@ import { toast } from 'react-hot-toast';
 import { useSession, signIn } from 'next-auth/react';
 
 interface FileUploadProps {
-  onFileUploaded: (_data: {
+  // eslint-disable-next-line no-unused-vars
+  onFileUploaded: (data: {
     url: string;
     fileKey: string;
     fileName: string;
