@@ -130,7 +130,7 @@ const HeaderContent = () => {
           className="user-avatar-btn flex items-center justify-center w-10 h-10 rounded-full border-2 border-purple-600 bg-white hover:bg-gray-50 transition-colors duration-200"
           aria-label="User menu"
         >
-          {session?.user?.image ? (
+          {session?.user?.image && session.user.image.trim() !== '' ? (
             <Image
               src={session.user.image}
               alt={session.user.name || "User avatar"}

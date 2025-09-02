@@ -66,7 +66,7 @@ const AppHeader = () => {
                 onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                 className="flex relative justify-center items-center box-border overflow-hidden align-middle outline-none w-8 h-8 text-tiny bg-cyan-500 text-white rounded-full z-10 transition-transform hover:scale-105"
               >
-                {session?.user?.image ? (
+                {session?.user?.image && session.user.image.trim() !== '' ? (
                   <Image
                     src={session.user.image}
                     alt="User avatar"
@@ -90,7 +90,7 @@ const AppHeader = () => {
                   <div className="px-4 py-3 border-b border-base-200">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 bg-purple-600 rounded-full flex items-center justify-center">
-                        {session?.user?.image ? (
+                        {session?.user?.image && session.user.image.trim() !== '' ? (
                           <Image
                             src={session.user.image}
                             alt="User avatar"
