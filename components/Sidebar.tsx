@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
-import { PhotoIcon, Cog6ToothIcon } from "@heroicons/react/24/outline";
+import { PhotoIcon, Cog6ToothIcon, KeyIcon } from "@heroicons/react/24/outline";
 import Image from "next/image";
 
 const sidebarItems = [
@@ -17,6 +17,11 @@ const sidebarItems = [
     name: "Images",
     href: "/app/images",
     icon: <PhotoIcon className="w-5 h-5" />,
+  },
+  {
+    name: "API Keys",
+    href: "/app/api-keys",
+    icon: <KeyIcon className="w-5 h-5" />,
   },
   {
     name: "Settings",
@@ -74,11 +79,11 @@ const Sidebar = () => {
                     href={item.href}
                     className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl text-sm transition-all duration-200 hover:scale-[1.02] ${
                       isActive
-                        ? "bg-[#4f46e5]/10 text-[#4f46e5] font-semibold shadow-sm"
+                        ? "bg-purple-600/10 text-purple-600 font-semibold shadow-sm"
                         : "text-slate-600 hover:bg-base-300 hover:text-slate-800"
                     }`}
                   >
-                    <div className={`${isActive ? "text-[#4f46e5]" : "text-slate-500"} flex-shrink-0`}>
+                    <div className={`${isActive ? "text-purple-600" : "text-slate-500"} flex-shrink-0`}>
                       {item.icon}
                     </div>
                     <span className="truncate font-medium">{item.name}</span>
@@ -109,7 +114,7 @@ const Sidebar = () => {
                 <div className="flex items-center gap-2">
                   <div className={`px-2 py-1 rounded-full text-xs font-semibold uppercase tracking-wide ${
                     userData.user.plan === 'pro' 
-                      ? 'bg-[#4f46e5]/10 text-[#4f46e5]' 
+                      ? 'bg-purple-600/10 text-purple-600' 
                       : 'bg-gray-100 text-gray-600'
                   }`}>
                     {userData.user.plan}
@@ -132,7 +137,7 @@ const Sidebar = () => {
               {userData.user.plan === 'free' && (
                 <Link 
                   href="/pricing"
-                  className="w-full block text-center bg-gradient-to-r from-[#4f46e5] to-[#0891b2] text-white py-2 px-3 rounded-lg text-sm font-medium hover:from-[#0891b2] hover:to-[#0e7490] transition-all duration-200 hover:scale-[1.02] shadow-sm"
+                  className="w-full block text-center bg-gradient-to-r from-purple-600 to-cyan-600 text-white py-2 px-3 rounded-lg text-sm font-medium hover:from-cyan-600 hover:to-cyan-700 transition-all duration-200 hover:scale-[1.02] shadow-sm"
                 >
                   ⚡ Upgrade to Pro
                 </Link>

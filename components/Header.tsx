@@ -28,7 +28,7 @@ const links: {
 
 const cta = (
   <Link href="/app/midjourney">
-    <button className="inline-flex items-center justify-center px-4 py-2 bg-[#4f46e5] text-white font-medium rounded-lg hover:bg-[#4f46e5]/90 transition-colors duration-200 shadow-sm">
+    <button className="inline-flex items-center justify-center px-4 py-2 bg-purple-600 text-white font-medium rounded-lg hover:bg-purple-600/90 transition-colors duration-200 shadow-sm">
       Create Now
     </button>
   </Link>
@@ -117,7 +117,7 @@ const HeaderContent = () => {
       {/* Dashboard Button - Hidden on mobile */}
       <div className="hidden md:block">
         <Link href="/app/midjourney">
-          <button className="inline-flex items-center justify-center px-4 py-2 bg-[#4f46e5] text-white font-medium rounded-lg hover:bg-[#4f46e5]/90 transition-colors duration-200 shadow-sm">
+          <button className="inline-flex items-center justify-center px-4 py-2 bg-purple-600 text-white font-medium rounded-lg hover:bg-purple-600/90 transition-colors duration-200 shadow-sm">
             Dashboard
           </button>
         </Link>
@@ -127,7 +127,7 @@ const HeaderContent = () => {
       <div className="hidden md:block relative">
         <button
           onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
-          className="user-avatar-btn flex items-center justify-center w-10 h-10 rounded-full border-2 border-[#4f46e5] bg-white hover:bg-gray-50 transition-colors duration-200"
+          className="user-avatar-btn flex items-center justify-center w-10 h-10 rounded-full border-2 border-purple-600 bg-white hover:bg-gray-50 transition-colors duration-200"
           aria-label="User menu"
         >
           {session?.user?.image ? (
@@ -136,10 +136,14 @@ const HeaderContent = () => {
               alt={session.user.name || "User avatar"}
               width={36}
               height={36}
-              className="w-9 h-9 rounded-full"
+              className="w-9 h-9 rounded-full object-cover"
             />
           ) : (
-            <div className="w-9 h-9 bg-[#06b6d4] rounded-full"></div>
+            <div className="w-9 h-9 bg-purple-600 rounded-full flex items-center justify-center">
+              <span className="text-white text-sm font-medium">
+                {session?.user?.name?.charAt(0).toUpperCase() || session?.user?.email?.charAt(0).toUpperCase() || 'U'}
+              </span>
+            </div>
           )}
         </button>
         
@@ -244,7 +248,7 @@ const HeaderContent = () => {
               {/* Mobile CTA Display (Visible only on small screens) */}
               <div className="block sm:hidden">
                 <Link href="/app/midjourney">
-                  <button className="inline-flex items-center justify-center px-4 py-2 bg-[#4f46e5] text-white font-medium rounded-lg hover:bg-[#4f46e5]/90 transition-colors duration-200 shadow-sm">
+                  <button className="inline-flex items-center justify-center px-4 py-2 bg-purple-600 text-white font-medium rounded-lg hover:bg-purple-600/90 transition-colors duration-200 shadow-sm">
                     Create Now
                   </button>
                 </Link>
@@ -346,7 +350,7 @@ const HeaderContent = () => {
                     </p>
                   </div>
                   <Link href="/app/midjourney" className="w-full">
-                    <button className="w-full inline-flex items-center justify-center px-4 py-2 bg-[#4f46e5] text-white font-medium rounded-lg hover:bg-[#4f46e5]/90 transition-colors duration-200 shadow-sm">
+                    <button className="w-full inline-flex items-center justify-center px-4 py-2 bg-purple-600 text-white font-medium rounded-lg hover:bg-purple-600/90 transition-colors duration-200 shadow-sm">
                       Dashboard
                     </button>
                   </Link>
@@ -367,7 +371,7 @@ const HeaderContent = () => {
                 </div>
               ) : (
                 <Link href="/app/midjourney" className="w-full">
-                  <button className="w-full inline-flex items-center justify-center px-4 py-2 bg-[#4f46e5] text-white font-medium rounded-lg hover:bg-[#4f46e5]/90 transition-colors duration-200 shadow-sm">
+                  <button className="w-full inline-flex items-center justify-center px-4 py-2 bg-purple-600 text-white font-medium rounded-lg hover:bg-purple-600/90 transition-colors duration-200 shadow-sm">
                     Create Now
                   </button>
                 </Link>

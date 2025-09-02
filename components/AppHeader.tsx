@@ -75,7 +75,11 @@ const AppHeader = () => {
                     className="w-full h-full rounded-full object-cover"
                   />
                 ) : (
-                  <div className="w-full h-full bg-[#06b6d4] rounded-full"></div>
+                  <div className="w-full h-full bg-purple-600 rounded-full flex items-center justify-center">
+                    <span className="text-white text-xs font-medium">
+                      {session?.user?.name?.charAt(0).toUpperCase() || session?.user?.email?.charAt(0).toUpperCase() || 'U'}
+                    </span>
+                  </div>
                 )}
               </button>
 
@@ -85,8 +89,8 @@ const AppHeader = () => {
                   {/* User Info */}
                   <div className="px-4 py-3 border-b border-base-200">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-[#06b6d4] rounded-full">
-                        {session?.user?.image && (
+                      <div className="w-10 h-10 bg-purple-600 rounded-full flex items-center justify-center">
+                        {session?.user?.image ? (
                           <Image
                             src={session.user.image}
                             alt="User avatar"
@@ -94,6 +98,10 @@ const AppHeader = () => {
                             height={40}
                             className="w-full h-full rounded-full object-cover"
                           />
+                        ) : (
+                          <span className="text-white text-sm font-medium">
+                            {session?.user?.name?.charAt(0).toUpperCase() || session?.user?.email?.charAt(0).toUpperCase() || 'U'}
+                          </span>
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
