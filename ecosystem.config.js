@@ -2,7 +2,7 @@ module.exports = {
   apps: [
     {
       name: 'legnext-app',
-      script: 'node_modules/.bin/next',
+      script: 'npm',
       args: 'start',
       cwd: './',
       instances: 1,
