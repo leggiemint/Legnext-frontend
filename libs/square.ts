@@ -33,7 +33,11 @@ const getSquareClient = () => {
   // 如果设置了代理 URL，则使用 Cloudflare Worker 作为代理
   if (proxyUrl) {
     console.log(`🔗 Using Cloudflare proxy: ${proxyUrl}`);
-    clientConfig.basePath = `${proxyUrl}/proxy`;
+    clientConfig.baseUrl = proxyUrl;
+    // 添加自定义头来帮助 Worker 识别环境
+    clientConfig.headers = {
+      'Square-Environment': environment || 'sandbox',
+    };
   }
 
   const client = new SquareClient(clientConfig);

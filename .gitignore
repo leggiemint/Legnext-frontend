@@ -60,4 +60,6 @@ CLAUDE.md
 
 .claude/
 
-cloudflare-worker.js
+# Square proxy test files and documentation
+test-square-proxy.js
+SQUARE_PROXY_SETUP.md
