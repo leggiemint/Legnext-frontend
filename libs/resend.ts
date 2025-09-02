@@ -1,14 +1,26 @@
 import { Resend } from 'resend';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Lazy initialize Resend to avoid build-time errors when API key is missing
+let resend: Resend | null = null;
 
-if (!process.env.RESEND_API_KEY) {
-  console.group("⚠️ RESEND_API_KEY missing from .env");
-  console.error("It's required to send emails.");
-  console.error("Add your Resend API key to .env.local as RESEND_API_KEY");
-  console.error("You can get an API key from https://resend.com/api-keys");
-  console.groupEnd();
-}
+const getResendClient = () => {
+  if (!resend) {
+    const apiKey = process.env.RESEND_API_KEY;
+    
+    if (!apiKey) {
+      console.group("⚠️ RESEND_API_KEY missing from .env");
+      console.error("It's required to send emails.");
+      console.error("Add your Resend API key to .env.local as RESEND_API_KEY");
+      console.error("You can get an API key from https://resend.com/api-keys");
+      console.groupEnd();
+      throw new Error('RESEND_API_KEY is required but not configured');
+    }
+    
+    resend = new Resend(apiKey);
+  }
+  
+  return resend;
+};
 
 /**
  * Sends an email using Resend API
@@ -39,7 +51,8 @@ export const sendEmail = async ({
       replyTo,
     });
 
-    const { data, error } = await resend.emails.send({
+    const client = getResendClient();
+    const { data, error } = await client.emails.send({
       from: fromAddress,
       to: Array.isArray(to) ? to : [to],
       subject,
