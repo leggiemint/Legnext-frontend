@@ -657,3 +657,5 @@ sudo tail -f /var/log/postgresql/postgresql-15-main.log
 - 监控资源使用情况并根据需要扩展
 
 您的应用现在可以在 https://legnext.ai 访问！
+
+完成第一次部署 - 2025 09 02
