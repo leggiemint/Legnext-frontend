@@ -341,21 +341,23 @@ jobs:
             if ! command -v pnpm &> /dev/null; then
               echo "📦 Installing pnpm..."
               curl -fsSL https://get.pnpm.io/install.sh | sh -
-              source ~/.bashrc
               export PATH="$HOME/.local/share/pnpm:$PATH"
             fi
             
-            # Install dependencies
+            # Ensure pnpm is in PATH
+            export PATH="$HOME/.local/share/pnpm:$PATH"
+            
+            # Install dependencies (including dev for build tools)
             echo "📦 Installing dependencies..."
-            pnpm install --force --production
+            pnpm install --force
             
             # Generate Prisma client
             echo "🔧 Generating Prisma client..."
-            pnpm prisma generate
+            npx prisma generate
             
             # Run database migrations
             echo "🗄️ Running database migrations..."
-            pnpm prisma migrate deploy
+            npx prisma migrate deploy
             
             # Update Caddy configuration (requires passwordless sudo or manual setup)
             echo "🔧 Updating Caddy configuration..."
