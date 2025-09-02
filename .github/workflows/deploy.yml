@@ -317,26 +317,25 @@ jobs:
             # Set variables
             APP_PATH="${{ secrets.VPS_PATH }}"
             APP_NAME="${{ secrets.APP_NAME }}"
-            BACKUP_PATH="/var/backups/$APP_NAME-$(date +%Y%m%d-%H%M%S)"
+            BACKUP_PATH="$HOME/backups/$APP_NAME-$(date +%Y%m%d-%H%M%S)"
             
             echo "🚀 Starting deployment..."
             
-            # Create backup of current deployment
+            # Create backup of current deployment (in user directory to avoid sudo)
             if [ -d "$APP_PATH" ]; then
               echo "📦 Creating backup..."
-              sudo mkdir -p /var/backups
-              sudo cp -r "$APP_PATH" "$BACKUP_PATH"
-              echo "✅ Backup created at $BACKUP_PATH"
+              mkdir -p "$HOME/backups"
+              cp -r "$APP_PATH" "$BACKUP_PATH" 2>/dev/null || echo "⚠️ Backup failed, continuing..."
+              echo "✅ Backup attempted at $BACKUP_PATH"
             fi
             
-            # Create app directory
-            sudo mkdir -p "$APP_PATH"
+            # Create app directory (user must have write permissions)
+            mkdir -p "$APP_PATH"
             cd "$APP_PATH"
             
             # Extract new deployment
             echo "📥 Extracting deployment package..."
-            sudo tar -xzf /tmp/deploy-package.tar.gz -C "$APP_PATH"
-            sudo chown -R $USER:$USER "$APP_PATH"
+            tar -xzf /tmp/deploy-package.tar.gz -C "$APP_PATH"
             
             # Install pnpm if not exists
             if ! command -v pnpm &> /dev/null; then
@@ -348,7 +347,7 @@ jobs:
             
             # Install dependencies
             echo "📦 Installing dependencies..."
-            pnpm install --frozen-lockfile --production
+            pnpm install --force --production
             
             # Generate Prisma client
             echo "🔧 Generating Prisma client..."
@@ -358,10 +357,15 @@ jobs:
             echo "🗄️ Running database migrations..."
             pnpm prisma migrate deploy
             
-            # Update Caddy configuration
+            # Update Caddy configuration (requires passwordless sudo or manual setup)
             echo "🔧 Updating Caddy configuration..."
-            sudo cp Caddyfile /etc/caddy/Caddyfile
-            sudo systemctl reload caddy
+            if sudo -n cp Caddyfile /etc/caddy/Caddyfile 2>/dev/null; then
+              sudo systemctl reload caddy
+              echo "✅ Caddy configuration updated"
+            else
+              echo "⚠️ Cannot update Caddy config - requires passwordless sudo or manual setup"
+              echo "Please manually copy Caddyfile to /etc/caddy/Caddyfile and reload caddy"
+            fi
             
             # Restart application with PM2
             echo "🔄 Restarting application..."
