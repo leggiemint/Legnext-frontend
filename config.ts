@@ -132,9 +132,15 @@ const config = {
   },
 } as ConfigProps;
 
-// 根据支付网关返回对应配置
+// 根据支付网关返回对应配置 - 暂时硬编码使用Square
 export function getPaymentConfig() {
-  // 支持客户端和服务端调用
+  // 暂时硬编码使用Square，避免环境变量配置问题
+  return { 
+    gateway: 'square',
+    plans: config.square.plans 
+  };
+  
+  /* 原来的环境变量逻辑，暂时注释
   const gateway = (
     process.env.NEXT_PUBLIC_PAYMENT_GATEWAY || 
     process.env.PAYMENT_GATEWAY
@@ -153,6 +159,7 @@ export function getPaymentConfig() {
         plans: config.stripe.plans 
       };
   }
+  */
 }
 
 export default config;

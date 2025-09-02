@@ -139,17 +139,11 @@ const HeaderContent = () => {
               className="w-9 h-9 rounded-full"
             />
           ) : (
-            <svg
-              className="w-6 h-6 text-[#4f46e5]"
-              fill="currentColor"
-              viewBox="0 0 20 20"
-            >
-              <path
-                fillRule="evenodd"
-                d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
-                clipRule="evenodd"
-              />
-            </svg>
+            <div className="w-9 h-9 bg-[#06b6d4] rounded-full flex items-center justify-center">
+              <span className="text-white font-semibold text-sm">
+                {session?.user?.name?.[0]?.toUpperCase() || "U"}
+              </span>
+            </div>
           )}
         </button>
         

@@ -7,13 +7,18 @@ import { createSquareCheckout, createSquarePortal } from "@/libs/square";
 // 支付网关类型
 type PaymentGateway = 'stripe' | 'square';
 
-// 获取当前配置的支付网关
+// 获取当前配置的支付网关 - 暂时硬编码使用Square
 function getCurrentGateway(): PaymentGateway {
+  // 暂时硬编码使用Square，避免环境变量配置问题
+  return 'square';
+  
+  /* 原来的环境变量逻辑，暂时注释
   const gateway = (
     process.env.NEXT_PUBLIC_PAYMENT_GATEWAY || 
     process.env.PAYMENT_GATEWAY
   )?.toLowerCase() as PaymentGateway;
   return gateway === 'square' ? 'square' : 'stripe'; // 默认使用stripe
+  */
 }
 
 // 创建结账会话的统一接口
@@ -74,5 +79,5 @@ export function getPaymentGatewayType(): PaymentGateway {
 // 在应用启动时打印当前配置
 if (typeof window === 'undefined') {
   const gateway = getCurrentGateway();
-  console.log(`💳 Payment Gateway: ${gateway.toUpperCase()}`);
+  console.log(`💳 Payment Gateway: ${gateway.toUpperCase()} (HARDCODED)`);
 }
