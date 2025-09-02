@@ -263,13 +263,24 @@ DOMAIN_NAME="legnext.ai"
 
 ### 6.3 获取Google OAuth凭据
 
+**⚠️ 重要**: 确保OAuth配置使用正确的域名，避免登录失败。
+
 1. 访问 [Google Cloud Console](https://console.cloud.google.com/)
 2. 创建新项目或选择现有项目
 3. 启用 Google+ API
 4. 创建OAuth 2.0客户端ID
-5. 添加授权重定向URI:
+5. **已授权的JavaScript来源**:
+   - `https://legnext.ai`
+   - **不要**添加 `https://www.legnext.ai`（www会重定向）
+6. **已授权的重定向URI**:
    - `https://legnext.ai/api/auth/callback/google`
-6. 复制客户端ID和客户端密钥到环境变量
+   - **不要**添加www版本的URI
+7. 复制客户端ID和客户端密钥到环境变量
+
+**常见错误**:
+- ❌ 使用了 `https://www.legnext.ai` 作为JavaScript源
+- ❌ 环境变量中 `NEXTAUTH_URL` 设置为www版本
+- ❌ 重定向URI包含多余的斜杠
 
 ### 6.4 Stripe配置 (如果使用)
 
@@ -337,81 +348,114 @@ DOMAIN_NAME="legnext.ai"
 - 🔄 应用自动重启通知
 - 🚨 应用重启失败警报
 
-## 🌐 第七步：Caddy配置
+## 🌐 第七步：手动配置文件同步
 
-### 7.1 更新Caddyfile
+### 7.1 重要提醒：自动部署不会同步这些配置文件
 
+**⚠️ 注意**: GitHub Actions部署流程**不会自动更新**以下配置文件到VPS，需要手动同步：
+
+1. **Caddyfile** - Web服务器配置
+2. **ecosystem.config.js** - PM2进程管理配置  
+3. **监控脚本** - scripts目录下的监控和备份脚本
+4. **环境变量** - .env.production文件
+
+### 7.2 手动同步配置的方法
+
+#### 方法一：使用SCP直接复制
 ```bash
+# 从本地复制Caddyfile到VPS
+scp Caddyfile deploy@YOUR_VPS_IP:/tmp/
+scp ecosystem.config.js deploy@YOUR_VPS_IP:/var/www/legnext/
+scp -r scripts/ deploy@YOUR_VPS_IP:/var/www/legnext/
+
+# 在VPS上应用Caddy配置
+ssh deploy@YOUR_VPS_IP
+sudo cp /tmp/Caddyfile /etc/caddy/
+sudo chown root:root /etc/caddy/Caddyfile
+sudo chmod 644 /etc/caddy/Caddyfile
+sudo systemctl reload caddy
+```
+
+#### 方法二：直接在VPS上编辑
+```bash
+# SSH到VPS
+ssh deploy@YOUR_VPS_IP
+
+# 编辑Caddy配置
 sudo nano /etc/caddy/Caddyfile
 ```
 
-确认配置内容正确（域名已更新为legnext.ai）：
+### 7.3 当前简化的Caddyfile配置
+
+将以下内容复制到VPS的 `/etc/caddy/Caddyfile`：
 
 ```caddyfile
-legnext.ai {
-    # 反向代理到Next.js应用
-    reverse_proxy localhost:3000
+# Legnext Midjourney API - Simplified Caddy Configuration
 
-    # 静态文件缓存
-    @static {
-        path *.js *.css *.png *.jpg *.jpeg *.gif *.ico *.svg *.woff *.woff2
-    }
-    header @static Cache-Control max-age=31536000
+legnext.ai, www.legnext.ai {
+    # Redirect www to non-www
+    @www host www.legnext.ai
+    redir @www https://legnext.ai{uri} permanent
 
-    # 安全头部
+    # Security headers
     header {
-        X-Content-Type-Options nosniff
-        X-Frame-Options DENY
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "SAMEORIGIN"
         X-XSS-Protection "1; mode=block"
-        Referrer-Policy strict-origin-when-cross-origin
-        Permissions-Policy "geolocation=(), microphone=(), camera=()"
+        -Server
+        -X-Powered-By
     }
 
-    # 速率限制
-    rate_limit {
-        zone dynamic {
-            key {remote_host}
-            events 100
-            window 1m
+    # Static files caching
+    @static path /_next/static/* /favicon.ico *.css *.js *.woff *.woff2
+    handle @static {
+        header Cache-Control "public, max-age=31536000, immutable"
+        reverse_proxy localhost:3000
+    }
+
+    @images path *.jpg *.jpeg *.png *.gif *.ico *.svg *.webp
+    handle @images {
+        header Cache-Control "public, max-age=2592000"
+        reverse_proxy localhost:3000
+    }
+
+    # Rate limiting for auth routes
+    handle /api/auth/* {
+        reverse_proxy localhost:3000 {
+            header_up X-Forwarded-Proto {scheme}
+            header_up X-Real-IP {remote}
         }
     }
-    
-    # API路由速率限制
-    @api {
-        path /api/*
-    }
-    rate_limit @api {
-        zone api {
-            key {remote_host}
-            events 30
-            window 1m
+
+    # All other routes
+    handle {
+        reverse_proxy localhost:3000 {
+            header_up X-Forwarded-Proto {scheme}
+            header_up X-Real-IP {remote}
         }
     }
 
-    # 日志记录
-    log {
-        output file /var/log/caddy/legnext.log
-        format json
-    }
-
-    # 错误页面
-    handle_errors {
-        rewrite * /{err.status_code}.html
-        file_server
-    }
-}
-
-# www重定向
-www.legnext.ai {
-    redir https://legnext.ai{uri} permanent
+    # Compression and logging
+    encode gzip
+    log
 }
 ```
 
-### 7.2 重启Caddy
+### 7.4 应用Caddy配置
 
 ```bash
+# 检查配置语法
+sudo caddy validate --config /etc/caddy/Caddyfile
+
+# 重载配置
 sudo systemctl reload caddy
+
+# 检查状态
 sudo systemctl status caddy
+
+# 查看日志
+sudo journalctl -u caddy -f
 ```
 
 ## 🚀 第八步：首次部署
@@ -639,22 +683,114 @@ sudo tail -f /var/log/postgresql/postgresql-15-main.log
 3. 运行健康检查: `curl https://legnext.ai/api/health`
 4. 联系开发团队并提供日志输出
 
+## 📂 需要手动同步到VPS的文件清单
+
+### 🔧 配置文件（需要手动同步）
+
+| 文件 | 本地路径 | VPS路径 | 同步时机 | 同步方法 |
+|------|----------|---------|----------|----------|
+| **Caddyfile** | `./Caddyfile` | `/etc/caddy/Caddyfile` | 修改后 | `scp` + `sudo systemctl reload caddy` |
+| **ecosystem.config.js** | `./ecosystem.config.js` | `/var/www/legnext/ecosystem.config.js` | 修改后 | `scp` + `pm2 restart` |
+| **监控脚本** | `./scripts/` | `/var/www/legnext/scripts/` | 新增/修改后 | `scp -r scripts/` |
+| **.env.production** | 手动创建 | `/var/www/legnext/.env.production` | 环境变量变更 | SSH直接编辑 |
+| **备份脚本** | `./scripts/backup-db.sh` | `/var/www/legnext/scripts/` | 修改后 | `scp` |
+
+### 🤖 自动同步文件（通过GitHub Actions）
+
+这些文件会在每次推送到main分支时自动同步：
+
+- `.next/` - 构建输出
+- `public/` - 静态资源
+- `prisma/` - 数据库schema
+- `package.json` - 依赖配置
+- `next.config.js` - Next.js配置
+- `tailwind.config.js` - 样式配置
+
+### 📝 配置文件同步SOP（标准操作流程）
+
+#### 1. Caddyfile更新流程
+```bash
+# 1. 本地修改Caddyfile后
+scp Caddyfile deploy@YOUR_VPS_IP:/tmp/
+
+# 2. SSH到VPS应用配置
+ssh deploy@YOUR_VPS_IP
+sudo cp /tmp/Caddyfile /etc/caddy/
+sudo caddy validate --config /etc/caddy/Caddyfile
+sudo systemctl reload caddy
+sudo rm /tmp/Caddyfile
+```
+
+#### 2. PM2配置更新流程
+```bash
+# 1. 修改ecosystem.config.js后
+scp ecosystem.config.js deploy@YOUR_VPS_IP:/var/www/legnext/
+
+# 2. SSH到VPS重启应用
+ssh deploy@YOUR_VPS_IP
+cd /var/www/legnext
+pm2 delete legnext-app
+pm2 start ecosystem.config.js
+pm2 save
+```
+
+#### 3. 环境变量更新流程
+```bash
+# SSH到VPS直接编辑
+ssh deploy@YOUR_VPS_IP
+sudo -u deploy nano /var/www/legnext/.env.production
+
+# 重启应用使新环境变量生效
+pm2 restart legnext-app
+```
+
+#### 4. 监控脚本更新流程
+```bash
+# 1. 本地修改scripts/后
+scp -r scripts/ deploy@YOUR_VPS_IP:/var/www/legnext/
+
+# 2. SSH到VPS设置权限
+ssh deploy@YOUR_VPS_IP
+chmod +x /var/www/legnext/scripts/*.sh
+
+# 3. 更新crontab（如果需要）
+crontab -e
+```
+
 ## 📝 部署清单
 
-**部署前:**
+**部署前准备:**
 - [ ] VPS已准备并可SSH访问
 - [ ] 域名已添加到Cloudflare
 - [ ] DNS记录已配置并传播
 - [ ] GitHub Secrets已设置
-- [ ] 环境变量已准备
+- [ ] 环境变量模板已准备
+- [ ] Google OAuth配置已设置（使用 `https://legnext.ai/api/auth/callback/google`）
 
-**部署后:**
+**手动配置同步:**
+- [ ] Caddyfile已同步到VPS并重载
+- [ ] ecosystem.config.js已同步到应用目录
+- [ ] .env.production已在VPS创建并配置
+- [ ] 监控脚本已同步并设置权限
+- [ ] crontab已配置定时任务
+
+**首次部署:**
+- [ ] GitHub Actions自动部署成功
 - [ ] 网站可正常访问 (https://legnext.ai)
 - [ ] 健康检查通过 (https://legnext.ai/api/health)
-- [ ] 用户注册登录功能正常
+- [ ] www.legnext.ai正确重定向到legnext.ai
+
+**功能测试:**
+- [ ] 用户注册登录功能正常（Google OAuth）
 - [ ] 支付系统测试通过
+- [ ] 图片生成API功能正常
+- [ ] 邮件通知功能正常
+
+**监控和维护:**
 - [ ] 监控脚本运行正常
 - [ ] 数据库备份配置完成
+- [ ] 飞书/Discord通知配置完成
+- [ ] SSL证书自动续期正常
 
 ## 🎉 部署完成
 
@@ -668,4 +804,47 @@ sudo tail -f /var/log/postgresql/postgresql-15-main.log
 
 您的应用现在可以在 https://legnext.ai 访问！
 
-完成第一次部署 - 2025 09 02
+## 🚨 重要提醒：Google OAuth登录问题解决
+
+### 域名配置一致性检查
+
+如果遇到Google登录失败，请确认以下配置一致：
+
+1. **Google Cloud Console OAuth配置**：
+   - 已授权的JavaScript来源: `https://legnext.ai`
+   - 已授权的重定向URI: `https://legnext.ai/api/auth/callback/google`
+
+2. **环境变量配置**：
+   ```bash
+   NEXTAUTH_URL="https://legnext.ai"
+   SITE_URL="https://legnext.ai"
+   APP_URL="https://legnext.ai"
+   ```
+
+3. **Caddyfile重定向配置**：
+   ```caddyfile
+   # 确认www重定向到主域名
+   @www host www.legnext.ai
+   redir @www https://legnext.ai{uri} permanent
+   ```
+
+### 部署后验证步骤
+
+```bash
+# 1. 检查域名重定向
+curl -I https://www.legnext.ai
+# 应该返回 301 重定向到 https://legnext.ai
+
+# 2. 检查OAuth回调端点
+curl https://legnext.ai/api/auth/providers
+# 应该返回包含google的JSON响应
+
+# 3. 查看应用日志
+pm2 logs legnext-app
+# 检查是否有OAuth相关错误
+```
+
+---
+
+**更新日期**: 2025年9月2日  
+**版本**: 2.1 - 增加手动配置同步指南和OAuth故障排除

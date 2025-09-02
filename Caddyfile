@@ -1,154 +1,50 @@
-# Legnext Midjourney API - Caddy Configuration
+# Legnext Midjourney API - Simplified Caddy Configuration
 
-# Main domain configuration
 legnext.ai, www.legnext.ai {
     # Redirect www to non-www
     @www host www.legnext.ai
     redir @www https://legnext.ai{uri} permanent
 
-    # Rate limiting for API endpoints
-    rate_limit {
-        zone api {
-            key {remote}
-            events 100
-            window 1m
-        }
-        zone auth {
-            key {remote}
-            events 10
-            window 1m
-        }
-    }
-
     # Security headers
     header {
-        # Security
-        Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
         X-Content-Type-Options "nosniff"
         X-Frame-Options "SAMEORIGIN"
         X-XSS-Protection "1; mode=block"
-        Referrer-Policy "strict-origin-when-cross-origin"
-        Permissions-Policy "camera=(), microphone=(), location=(), accelerometer=(), gyroscope=(), magnetometer=()"
-        
-        # Remove server info
         -Server
         -X-Powered-By
     }
 
-    # Static files with long cache (Next.js static assets)
-    @static {
-        path /_next/static/*
-        path /favicon.ico
-        path *.css
-        path *.js
-        path *.woff
-        path *.woff2
-        path *.ttf
-        path *.otf
-    }
-
-    @images {
-        path *.jpg *.jpeg *.png *.gif *.ico *.svg *.webp
-    }
-
-    @media {
-        path *.mp4 *.webm *.ogg *.mp3 *.wav
-    }
-
-    # Cache static assets
+    # Static files caching
+    @static path /_next/static/* /favicon.ico *.css *.js *.woff *.woff2
     handle @static {
         header Cache-Control "public, max-age=31536000, immutable"
         reverse_proxy localhost:3000
     }
 
+    @images path *.jpg *.jpeg *.png *.gif *.ico *.svg *.webp
     handle @images {
         header Cache-Control "public, max-age=2592000"
         reverse_proxy localhost:3000
     }
 
-    handle @media {
-        header Cache-Control "public, max-age=2592000"
-        reverse_proxy localhost:3000
-    }
-
-    # API routes with rate limiting
+    # Rate limiting for auth routes
     handle /api/auth/* {
-        rate_limit auth
         reverse_proxy localhost:3000 {
             header_up X-Forwarded-Proto {scheme}
-            header_up X-Forwarded-For {remote}
             header_up X-Real-IP {remote}
         }
     }
 
-    handle /api/* {
-        rate_limit api
-        reverse_proxy localhost:3000 {
-            header_up X-Forwarded-Proto {scheme}
-            header_up X-Forwarded-For {remote}
-            header_up X-Real-IP {remote}
-        }
-    }
-
-    # Health check endpoint (no rate limiting)
-    handle /health {
-        reverse_proxy localhost:3000
-    }
-
-    # Main application
+    # All other routes
     handle {
         reverse_proxy localhost:3000 {
             header_up X-Forwarded-Proto {scheme}
-            header_up X-Forwarded-For {remote}
             header_up X-Real-IP {remote}
         }
     }
 
-    # Gzip compression
+    # Compression and logging
     encode gzip
-
-    # Logging
-    log {
-        output file /var/log/caddy/legnext.log {
-            roll_size 100MiB
-            roll_keep 10
-        }
-        format json
-        level INFO
-    }
-
-    # Error pages
-    handle_errors {
-        @502 expression {http.error.status_code} == 502
-        handle @502 {
-            rewrite * /errors/502.html
-            file_server {
-                root /var/www/error-pages
-            }
-        }
-
-        @503 expression {http.error.status_code} == 503
-        handle @503 {
-            rewrite * /errors/503.html
-            file_server {
-                root /var/www/error-pages
-            }
-        }
-    }
-}
-
-# Development/staging subdomain (optional)
-dev.legnext.ai {
-    reverse_proxy localhost:3001 {
-        header_up X-Forwarded-Proto {scheme}
-        header_up X-Forwarded-For {remote}
-        header_up X-Real-IP {remote}
-    }
-
-    # Basic auth for dev environment
-    basicauth {
-        dev $2a$14$hF4Z1J0j8.ZN5Z8K5K5K5K5K5K5K5K5K5K5K5K5K5K5K5K5K5K5K5K
-    }
-
-    encode gzip
+    log
 }

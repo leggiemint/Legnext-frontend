@@ -154,7 +154,7 @@ export const sendContactFormEmail = async ({
         
         <p style="color: #4b5563; line-height: 1.6;">
           In the meantime, you might find our 
-          <a href="https://www.legnext.ai/docs" style="color: #4f46e5;">documentation</a> 
+          <a href="https://legnext.ai/docs" style="color: #4f46e5;">documentation</a> 
           helpful, or join our 
           <a href="https://discord.gg/zysPAnvP8f" style="color: #4f46e5;">Discord community</a> 
           for quick help from other creators.
@@ -169,7 +169,7 @@ export const sendContactFormEmail = async ({
       <div style="text-align: center; padding: 20px 0; border-top: 1px solid #e5e7eb; color: #9ca3af; font-size: 12px;">
         <p>
           Legnext - Midjourney API Integration Platform<br>
-          <a href="https://www.legnext.ai" style="color: #4f46e5;">www.legnext.ai</a>
+          <a href="https://legnext.ai" style="color: #4f46e5;">legnext.ai</a>
         </p>
       </div>
     </div>
