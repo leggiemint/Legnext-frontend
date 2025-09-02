@@ -139,11 +139,7 @@ const HeaderContent = () => {
               className="w-9 h-9 rounded-full"
             />
           ) : (
-            <div className="w-9 h-9 bg-[#06b6d4] rounded-full flex items-center justify-center">
-              <span className="text-white font-semibold text-sm">
-                {session?.user?.name?.[0]?.toUpperCase() || "U"}
-              </span>
-            </div>
+            <div className="w-9 h-9 bg-[#06b6d4] rounded-full"></div>
           )}
         </button>
         

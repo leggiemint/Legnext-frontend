@@ -9,6 +9,7 @@ import crypto from 'crypto';
 const getSquareClient = () => {
   const token = process.env.SQUARE_ACCESS_TOKEN;
   const environment = process.env.SQUARE_ENVIRONMENT;
+  const proxyUrl = process.env.SQUARE_PROXY_URL; // Cloudflare Worker URL
 
   if (!token) {
     console.error('❌ SQUARE_ACCESS_TOKEN is not configured');
@@ -22,12 +23,20 @@ const getSquareClient = () => {
 
   console.log(`🔗 Initializing Square client for ${environment || 'sandbox'} environment`);
 
-  const client = new SquareClient({
+  const clientConfig: any = {
     token: token,
     environment: environment === 'production'
       ? SquareEnvironment.Production
       : SquareEnvironment.Sandbox
-  });
+  };
+
+  // 如果设置了代理 URL，则使用 Cloudflare Worker 作为代理
+  if (proxyUrl) {
+    console.log(`🔗 Using Cloudflare proxy: ${proxyUrl}`);
+    clientConfig.basePath = `${proxyUrl}/proxy`;
+  }
+
+  const client = new SquareClient(clientConfig);
 
   return client;
 };
