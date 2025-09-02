@@ -32,29 +32,16 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 8
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '18'
-          cache: 'npm'
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v2
-        with:
-          version: 8
-
-      - name: Get pnpm store directory
-        shell: bash
-        run: |
-          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
-
-      - name: Setup pnpm cache
-        uses: actions/cache@v3
-        with:
-          path: ${{ env.STORE_PATH }}
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-store-
+          cache: 'pnpm'
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -112,6 +99,167 @@ jobs:
           name: deployment-package
           path: deploy-package.tar.gz
           retention-days: 1
+
+      - name: Notify build status
+        if: always()
+        run: |
+          if [ "${{ job.status }}" == "success" ]; then
+            echo "✅ Build successful!"
+            
+            # Discord notification
+            if [ -n "${{ secrets.DISCORD_WEBHOOK_URL }}" ]; then
+              curl -X POST "${{ secrets.DISCORD_WEBHOOK_URL }}" \
+                -H "Content-Type: application/json" \
+                -d '{
+                  "embeds": [{
+                    "title": "🔨 Build Successful",
+                    "description": "Legnext application build completed successfully!",
+                    "color": 5763719,
+                    "fields": [
+                      {"name": "Branch", "value": "${{ github.ref_name }}", "inline": true},
+                      {"name": "Commit", "value": "${{ github.sha }}", "inline": true},
+                      {"name": "Workflow", "value": "Build & Test", "inline": true}
+                    ],
+                    "timestamp": "'$(date -u +%Y-%m-%dT%H:%M:%S.000Z)'"
+                  }]
+                }' 2>/dev/null || echo "Discord notification failed"
+            fi
+            
+            # 飞书 notification
+            if [ -n "${{ secrets.FEISHU_WEBHOOK_URL }}" ]; then
+              curl -X POST "${{ secrets.FEISHU_WEBHOOK_URL }}" \
+                -H "Content-Type: application/json" \
+                -d '{
+                  "msg_type": "interactive",
+                  "card": {
+                    "elements": [
+                      {
+                        "tag": "div",
+                        "text": {
+                          "content": "🔨 **构建成功**\n\nLegnext 应用构建完成！",
+                          "tag": "lark_md"
+                        }
+                      },
+                      {
+                        "tag": "hr"
+                      },
+                      {
+                        "tag": "div",
+                        "fields": [
+                          {
+                            "is_short": true,
+                            "text": {
+                              "content": "**分支**: ${{ github.ref_name }}",
+                              "tag": "lark_md"
+                            }
+                          },
+                          {
+                            "is_short": true,
+                            "text": {
+                              "content": "**提交**: ${{ github.sha }}",
+                              "tag": "lark_md"
+                            }
+                          }
+                        ]
+                      }
+                    ],
+                    "header": {
+                      "title": {
+                        "content": "🔨 Legnext 构建通知",
+                        "tag": "plain_text"
+                      },
+                      "template": "green"
+                    }
+                  }
+                }' 2>/dev/null || echo "飞书 notification failed"
+            fi
+            
+          else
+            echo "❌ Build failed!"
+            
+            # Discord notification
+            if [ -n "${{ secrets.DISCORD_WEBHOOK_URL }}" ]; then
+              curl -X POST "${{ secrets.DISCORD_WEBHOOK_URL }}" \
+                -H "Content-Type: application/json" \
+                -d '{
+                  "embeds": [{
+                    "title": "❌ Build Failed",
+                    "description": "Legnext application build failed!",
+                    "color": 15548997,
+                    "fields": [
+                      {"name": "Branch", "value": "${{ github.ref_name }}", "inline": true},
+                      {"name": "Commit", "value": "${{ github.sha }}", "inline": true},
+                      {"name": "Workflow", "value": "Build & Test", "inline": true},
+                      {"name": "Job Status", "value": "${{ job.status }}", "inline": true}
+                    ],
+                    "timestamp": "'$(date -u +%Y-%m-%dT%H:%M:%S.000Z)'"
+                  }]
+                }' 2>/dev/null || echo "Discord notification failed"
+            fi
+            
+            # 飞书 notification
+            if [ -n "${{ secrets.FEISHU_WEBHOOK_URL }}" ]; then
+              curl -X POST "${{ secrets.FEISHU_WEBHOOK_URL }}" \
+                -H "Content-Type: application/json" \
+                -d '{
+                  "msg_type": "interactive",
+                  "card": {
+                    "elements": [
+                      {
+                        "tag": "div",
+                        "text": {
+                          "content": "❌ **构建失败**\n\nLegnext 应用构建失败，请检查代码！",
+                          "tag": "lark_md"
+                        }
+                      },
+                      {
+                        "tag": "hr"
+                      },
+                      {
+                        "tag": "div",
+                        "fields": [
+                          {
+                            "is_short": true,
+                            "text": {
+                              "content": "**分支**: ${{ github.ref_name }}",
+                              "tag": "lark_md"
+                            }
+                          },
+                          {
+                            "is_short": true,
+                            "text": {
+                              "content": "**提交**: ${{ github.sha }}",
+                              "tag": "lark_md"
+                            }
+                          },
+                          {
+                            "is_short": true,
+                            "text": {
+                              "content": "**状态**: ${{ job.status }}",
+                              "tag": "lark_md"
+                            }
+                          }
+                        ]
+                      },
+                      {
+                        "tag": "div",
+                        "text": {
+                          "content": "**查看详情**: [GitHub Actions](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})",
+                          "tag": "lark_md"
+                        }
+                      }
+                    ],
+                    "header": {
+                      "title": {
+                        "content": "❌ Legnext 构建失败",
+                        "tag": "plain_text"
+                      },
+                      "template": "red"
+                    }
+                  }
+                }' 2>/dev/null || echo "飞书 notification failed"
+            fi
+          fi
 
   # Deploy to VPS job (only on main branch)
   deploy:

@@ -309,12 +309,22 @@ DOMAIN_NAME="legnext.ai"
    - 在GitHub仓库设置中添加 `FEISHU_WEBHOOK_URL`
    - 值为步骤1中获得的Webhook URL
 
+4. **测试Webhook (可选)**：
+   ```bash
+   # 测试飞书webhook是否正常工作
+   ./scripts/test-feishu-webhook.sh "https://open.feishu.cn/open-apis/bot/v2/hook/xxxxxxxxxx"
+   ```
+
 #### 通知功能
 
 配置完成后，您将收到以下飞书通知：
 
+**CI/CD构建通知：**
+- 🔨 构建成功通知
+- ❌ 构建失败通知（包含GitHub Actions链接）
+
 **CI/CD部署通知：**
-- ✅ 部署成功通知
+- 🚀 部署成功通知
 - ❌ 部署失败通知
 
 **系统监控通知：**
