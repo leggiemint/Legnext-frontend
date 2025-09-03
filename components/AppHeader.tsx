@@ -1,14 +1,16 @@
 "use client";
 
-import { useSession, signOut } from "next-auth/react";
+import { signOut } from "next-auth/react";
 import Link from "next/link";
 import Image from "next/image";
 import { useState } from "react";
 import logo from "@/app/logo.svg";
 import ButtonSignin from "./ButtonSignin";
+import UserAvatar from "./UserAvatar";
+import { useUserProfile } from "@/hooks/useUserProfile";
 
 const AppHeader = () => {
-  const { data: session } = useSession();
+  const { userProfile, isAuthenticated } = useUserProfile();
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 
   return (
@@ -35,7 +37,7 @@ const AppHeader = () => {
       {/* Right side - Navigation and User Menu */}
       <ul className="flex gap-4 h-full flex-row flex-nowrap items-center px-0 mx-0">
         {/* Login Button for unauthenticated users */}
-        {!session && (
+        {!isAuthenticated && (
           <li className="text-medium whitespace-nowrap box-border list-none flex items-center gap-1 sm:gap-2 mx-0 px-0">
             <ButtonSignin text="Sign In" />
           </li>
@@ -58,59 +60,53 @@ const AppHeader = () => {
         </li>
 
         {/* User Menu for authenticated users */}
-        {session && (
+        {isAuthenticated && (
           <li className="text-medium whitespace-nowrap box-border list-none flex items-center gap-1 sm:gap-2 mx-0 px-0">
             {/* User Avatar Dropdown */}
             <div className="relative">
               <button
                 onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                className="flex relative justify-center items-center box-border overflow-hidden align-middle outline-none w-8 h-8 text-tiny bg-cyan-500 text-white rounded-full z-10 transition-transform hover:scale-105"
+                className="flex relative justify-center items-center box-border overflow-hidden align-middle outline-none w-8 h-8 text-tiny bg-cyan-500 text-white rounded-full z-10 transition-transform hover:scale-105 p-0"
               >
-                {session?.user?.image && session.user.image.trim() !== '' ? (
-                  <Image
-                    src={session.user.image}
-                    alt="User avatar"
-                    width={32}
-                    height={32}
-                    className="w-full h-full rounded-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full bg-purple-600 rounded-full flex items-center justify-center">
-                    <span className="text-white text-xs font-medium">
-                      {session?.user?.name?.charAt(0).toUpperCase() || session?.user?.email?.charAt(0).toUpperCase() || 'U'}
-                    </span>
-                  </div>
-                )}
+                <UserAvatar
+                  src={userProfile?.image}
+                  name={userProfile?.name}
+                  email={userProfile?.email}
+                  size="sm"
+                  className="border-0"
+                />
               </button>
 
               {/* Dropdown Menu */}
               {isUserMenuOpen && (
-                <div className="absolute right-0 mt-2 w-64 bg-base-100 rounded-lg shadow-lg border border-base-300 py-2 z-50">
+                <div className="absolute right-0 mt-2 w-72 bg-base-100 rounded-lg shadow-lg border border-base-300 py-2 z-50">
                   {/* User Info */}
                   <div className="px-4 py-3 border-b border-base-200">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-purple-600 rounded-full flex items-center justify-center">
-                        {session?.user?.image && session.user.image.trim() !== '' ? (
-                          <Image
-                            src={session.user.image}
-                            alt="User avatar"
-                            width={40}
-                            height={40}
-                            className="w-full h-full rounded-full object-cover"
-                          />
-                        ) : (
-                          <span className="text-white text-sm font-medium">
-                            {session?.user?.name?.charAt(0).toUpperCase() || session?.user?.email?.charAt(0).toUpperCase() || 'U'}
-                          </span>
-                        )}
-                      </div>
+                      <UserAvatar
+                        src={userProfile?.image}
+                        name={userProfile?.name}
+                        email={userProfile?.email}
+                        size="md"
+                      />
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-base-content truncate">
-                          {session?.user?.name || "User"}
+                          {userProfile?.name || "User"}
                         </p>
                         <p className="text-xs text-base-content/60 truncate">
-                          {session?.user?.email}
+                          {userProfile?.email}
                         </p>
+                        {userProfile?.profile && (
+                          <div className="flex items-center gap-2 mt-1">
+                            <span className="text-xs text-purple-600 font-medium">
+                              {userProfile.profile.apiCalls || userProfile.profile.credits} credits
+                            </span>
+                            <span className="text-xs text-gray-400">•</span>
+                            <span className="text-xs text-gray-600 capitalize">
+                              {userProfile.profile.plan} plan
+                            </span>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -130,6 +126,13 @@ const AppHeader = () => {
                       onClick={() => setIsUserMenuOpen(false)}
                     >
                       Dashboard
+                    </Link>
+                    <Link 
+                      href="/app/api-keys" 
+                      className="block px-4 py-2 text-sm text-base-content hover:bg-base-200 transition-colors"
+                      onClick={() => setIsUserMenuOpen(false)}
+                    >
+                      API Keys
                     </Link>
                     <hr className="my-2 border-base-200" />
                     <button

@@ -5,8 +5,10 @@ import { useSearchParams } from "next/navigation";
 import config from "@/config";
 import Image from "next/image";
 import Link from "next/link";
-import { useSession, signOut } from "next-auth/react";
+import { signOut } from "next-auth/react";
 import logo from "@/app/logo.svg";
+import UserAvatar from "./UserAvatar";
+import { useUserProfile } from "@/hooks/useUserProfile";
 
 const links: {
   href: string;
@@ -46,7 +48,7 @@ const HeaderContent = () => {
   const searchParams = useSearchParams();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState<boolean>(false);
-  const { data: session } = useSession();
+  const { userProfile, loading, isAuthenticated } = useUserProfile();
 
   // Close menus when the route changes
   useEffect(() => {
@@ -112,7 +114,7 @@ const HeaderContent = () => {
   }, [isMobileMenuOpen, isUserDropdownOpen]);
 
   // User avatar component
-  const UserAvatar = () => (
+  const UserAvatarSection = () => (
     <div className="flex items-center space-x-3">
       {/* Dashboard Button - Hidden on mobile */}
       <div className="hidden md:block">
@@ -127,51 +129,69 @@ const HeaderContent = () => {
       <div className="hidden md:block relative">
         <button
           onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
-          className="user-avatar-btn flex items-center justify-center w-10 h-10 rounded-full border-2 border-purple-600 bg-white hover:bg-gray-50 transition-colors duration-200"
+          className="user-avatar-btn flex items-center justify-center w-10 h-10 rounded-full border-2 border-purple-600 bg-white hover:bg-gray-50 transition-colors duration-200 p-0"
           aria-label="User menu"
         >
-          {session?.user?.image && session.user.image.trim() !== '' ? (
-            <Image
-              src={session.user.image}
-              alt={session.user.name || "User avatar"}
-              width={36}
-              height={36}
-              className="w-9 h-9 rounded-full object-cover"
-            />
-          ) : (
-            <div className="w-9 h-9 bg-purple-600 rounded-full flex items-center justify-center">
-              <span className="text-white text-sm font-medium">
-                {session?.user?.name?.charAt(0).toUpperCase() || session?.user?.email?.charAt(0).toUpperCase() || 'U'}
-              </span>
-            </div>
-          )}
+          <UserAvatar
+            src={userProfile?.image}
+            name={userProfile?.name}
+            email={userProfile?.email}
+            size="md"
+            className="border-0"
+          />
         </button>
         
         {/* User Dropdown Menu */}
         {isUserDropdownOpen && (
-          <div className="user-dropdown absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 py-1 z-50">
-            <div className="px-4 py-2 border-b border-gray-100">
-              <p className="text-sm font-medium text-gray-900">
-                {session?.user?.name || "User"}
-              </p>
-              <p className="text-sm text-gray-500">
-                {session?.user?.email}
-              </p>
+          <div className="user-dropdown absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg border border-gray-200 py-1 z-50">
+            <div className="px-4 py-3 border-b border-gray-100">
+              <div className="flex items-center gap-3">
+                <UserAvatar
+                  src={userProfile?.image}
+                  name={userProfile?.name}
+                  email={userProfile?.email}
+                  size="md"
+                />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-gray-900 truncate">
+                    {userProfile?.name || "User"}
+                  </p>
+                  <p className="text-xs text-gray-500 truncate">
+                    {userProfile?.email}
+                  </p>
+                  {userProfile?.profile && (
+                    <p className="text-xs text-purple-600 font-medium">
+                      {userProfile.profile.apiCalls || userProfile.profile.credits} credits
+                    </p>
+                  )}
+                </div>
+              </div>
             </div>
-            <button
-              onClick={async () => {
-                try {
-                  await signOut({ callbackUrl: "/" });
-                  setIsUserDropdownOpen(false);
-                } catch (error) {
-                  console.error("Sign out error:", error);
-                  window.location.href = "/";
-                }
-              }}
-              className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-            >
-              Sign out
-            </button>
+            <div className="py-1">
+              <Link
+                href="/app/settings"
+                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                onClick={() => setIsUserDropdownOpen(false)}
+              >
+                Settings
+              </Link>
+            </div>
+            <div className="border-t border-gray-100">
+              <button
+                onClick={async () => {
+                  try {
+                    await signOut({ callbackUrl: "/" });
+                    setIsUserDropdownOpen(false);
+                  } catch (error) {
+                    console.error("Sign out error:", error);
+                    window.location.href = "/";
+                  }
+                }}
+                className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+              >
+                Sign out
+              </button>
+            </div>
           </div>
         )}
       </div>
@@ -236,8 +256,8 @@ const HeaderContent = () => {
         {/* Right Side Actions */}
         <div className="flex items-center space-x-2 sm:space-x-3 flex-shrink-0">
           {/* Show user avatar and dashboard when logged in, otherwise show CTA */}
-          {session ? (
-            <UserAvatar />
+          {isAuthenticated ? (
+            <UserAvatarSection />
           ) : (
             <>
               {/* CTA Button (Hidden on small mobile) */}
@@ -339,19 +359,39 @@ const HeaderContent = () => {
             
             {/* Mobile CTA/Auth Section */}
             <div className="mt-4 p-2">
-              {session ? (
+              {isAuthenticated ? (
                 <div className="space-y-2">
                   <div className="px-2 py-1 border-b border-gray-100">
-                    <p className="text-sm font-medium text-gray-900">
-                      {session.user?.name || "User"}
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      {session.user?.email}
-                    </p>
+                    <div className="flex items-center gap-3">
+                      <UserAvatar
+                        src={userProfile?.image}
+                        name={userProfile?.name}
+                        email={userProfile?.email}
+                        size="sm"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-900 truncate">
+                          {userProfile?.name || "User"}
+                        </p>
+                        <p className="text-xs text-gray-500 truncate">
+                          {userProfile?.email}
+                        </p>
+                        {userProfile?.profile && (
+                          <p className="text-xs text-purple-600 font-medium">
+                            {userProfile.profile.apiCalls || userProfile.profile.credits} credits
+                          </p>
+                        )}
+                      </div>
+                    </div>
                   </div>
                   <Link href="/app/midjourney" className="w-full">
                     <button className="w-full inline-flex items-center justify-center px-4 py-2 bg-purple-600 text-white font-medium rounded-lg hover:bg-purple-600/90 transition-colors duration-200 shadow-sm">
                       Dashboard
+                    </button>
+                  </Link>
+                  <Link href="/app/settings" className="w-full">
+                    <button className="w-full inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-background bg-gray-100 text-gray-700 hover:bg-gray-200 h-9 px-3">
+                      Settings
                     </button>
                   </Link>
                   <button
@@ -364,7 +404,7 @@ const HeaderContent = () => {
                         window.location.href = "/";
                       }
                     }}
-                    className="w-full inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-background bg-gray-100 text-gray-700 hover:bg-gray-200 h-9 px-3 rounded-md text-sm"
+                    className="w-full inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-background bg-red-100 text-red-700 hover:bg-red-200 h-9 px-3"
                   >
                     Sign out
                   </button>
