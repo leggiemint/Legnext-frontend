@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
-import { PhotoIcon, Cog6ToothIcon, KeyIcon } from "@heroicons/react/24/outline";
+import { PhotoIcon, Cog6ToothIcon, KeyIcon, VideoCameraIcon } from "@heroicons/react/24/outline";
 import Image from "next/image";
 
 const sidebarItems = [
@@ -12,6 +12,11 @@ const sidebarItems = [
     name: "Midjourney",
     href: "/app/midjourney",
     icon: <Image src="/images/Midjourney_logo.png" alt="Midjourney" width={20} height={20} className="w-5 h-5" />,
+  },
+  {
+    name: "Create Video",
+    href: "/app/create-video",
+    icon: <VideoCameraIcon className="w-5 h-5" />,
   },
   {
     name: "Images",
@@ -113,11 +118,13 @@ const Sidebar = () => {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <div className={`px-2 py-1 rounded-full text-xs font-semibold uppercase tracking-wide ${
-                    userData.user.plan === 'pro' 
+                    (userData.user.plan === 'premium' || userData.user.plan === 'pro')
                       ? 'bg-purple-600/10 text-purple-600' 
                       : 'bg-gray-100 text-gray-600'
                   }`}>
-                    {userData.user.plan}
+                    {userData.user.plan === 'free' ? 'hobbyist' : 
+                     userData.user.plan === 'pro' ? 'premium' : 
+                     userData.user.plan}
                   </div>
                 </div>
               </div>
@@ -129,17 +136,17 @@ const Sidebar = () => {
                   <span className="font-semibold text-gray-900">{userData.credits.balance}</span>
                 </div>
                 <div className="text-xs text-gray-500">
-                  {userData.user.plan === 'pro' ? 'Pro plan' : 'Free plan'}
+                  {(userData.user.plan === 'premium' || userData.user.plan === 'pro') ? 'Premium plan' : 'Hobbyist plan'}
                 </div>
               </div>
 
-              {/* Upgrade Button for Free Users */}
-              {userData.user.plan === 'free' && (
+              {/* Upgrade Button for Free/Hobbyist Users */}
+              {(userData.user.plan === 'hobbyist' || userData.user.plan === 'free') && (
                 <Link 
                   href="/pricing"
                   className="w-full block text-center bg-gradient-to-r from-purple-600 to-cyan-600 text-white py-2 px-3 rounded-lg text-sm font-medium hover:from-cyan-600 hover:to-cyan-700 transition-all duration-200 hover:scale-[1.02] shadow-sm"
                 >
-                  ⚡ Upgrade to Pro
+                  ⚡ Upgrade to Premium
                 </Link>
               )}
             </div>

@@ -53,13 +53,45 @@ export const authOptions: NextAuthOptions = {
           console.log(`🔐 User signing in: ${user.email} (${user.id})`);
           
           // Import here to avoid circular dependency
-          const { getUserWithProfile } = await import("./user-service");
+          const { getUserWithProfile, createUserBackendAccount } = await import("./user-service");
           
           // This will create profile and grant welcome credits if needed
           const userWithProfile = await getUserWithProfile(user.id);
           
           if (userWithProfile) {
             console.log(`✅ User profile ready: ${user.email}, credits: ${userWithProfile.profile.credits}`);
+            
+            // 🚀 检查并创建后端账户（仅在登录时执行一次）
+            const preferences = userWithProfile.profile.preferences as any;
+            if (user.email && !preferences?.backendAccountId) {
+              console.log(`🔍 Creating backend account for user: ${user.email}`);
+              try {
+                const backendResult = await createUserBackendAccount(user.id, user.email, userWithProfile.profile.plan);
+                console.log(`✅ Backend account created successfully for: ${user.email}`);
+                
+                // 🎁 授予新用户100欢迎credits (前端+后端同步)
+                if (backendResult.success && userWithProfile.profile.totalCreditsEarned === 0) {
+                  console.log(`🎁 Granting welcome credits for new user: ${user.email}`);
+                  const { grantCredits } = await import("./user-service");
+                  
+                  const welcomeResult = await grantCredits(
+                    user.id,
+                    100,
+                    "Welcome bonus for new user",
+                    "welcome_bonus",
+                    null
+                  );
+                  
+                  if (welcomeResult.success) {
+                    console.log(`✅ Welcome credits granted to: ${user.email}`);
+                  } else {
+                    console.warn(`⚠️ Failed to grant welcome credits:`, welcomeResult.error);
+                  }
+                }
+              } catch (error) {
+                console.warn(`🔔 Backend account creation failed for ${user.email}:`, error?.message || error);
+              }
+            }
           } else {
             console.error(`❌ Failed to get/create user profile for: ${user.email}`);
           }

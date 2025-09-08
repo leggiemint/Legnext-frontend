@@ -134,7 +134,7 @@ model UserProfile {
   userId            String   @unique
   
   // Subscription
-  plan              String   @default("free") // "free" | "pro" | "enterprise"
+  plan              String   @default("hobbyist") // "hobbyist" | "premium" | "enterprise"
   subscriptionStatus String  @default("inactive") // "active" | "inactive" | "canceled" | "past_due"
   
   // API Calls system (replacing credits)

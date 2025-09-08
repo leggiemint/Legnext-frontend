@@ -4,6 +4,7 @@ import { Viewport } from "next";
 import PlausibleProvider from "next-plausible";
 import { getSEOTags } from "@/libs/seo";
 import ClientLayout from "@/components/LayoutClient";
+import { AuthProvider } from "@/components/AuthProvider";
 import config from "@/config";
 import "./globals.css";
 
@@ -62,7 +63,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <body className="bg-white text-gray-900">
         {/* ClientLayout contains all the client wrappers (Crisp chat support, toast messages, tooltips, etc.) */}
         <ClientLayout>
-          {children}
+          <AuthProvider>
+            {children}
+          </AuthProvider>
         </ClientLayout>
       </body>
     </html>

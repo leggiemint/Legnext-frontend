@@ -42,8 +42,8 @@ const ButtonCheckout = ({
             const userResponse = await fetch('/api/user/settings');
             const userData = await userResponse.json();
             
-            if (userData?.user?.plan === "pro" && userData?.user?.subscriptionStatus === "active") {
-              alert("You are already subscribed to the Pro plan!");
+            if ((userData?.user?.plan === "premium" || userData?.user?.plan === "pro") && userData?.user?.subscriptionStatus === "active") {
+              alert("You are already subscribed to the Premium plan!");
               return;
             }
           } catch (error) {
@@ -115,7 +115,7 @@ const ButtonCheckout = ({
               <circle cx="12" cy="9" r="1.5" fill="white"/>
             </svg>
           )}
-          <span>{isFree ? "Try Free" : "Go Pro"}</span>
+          <span>{isFree ? "Try Hobbyist" : "Go Premium"}</span>
         </div>
       )}
     </button>

@@ -19,8 +19,8 @@ const config = {
     // Credit-based pricing system (0.1$ = 1 credit)
     plans: [
       {
-        // Free plan - no priceId needed as it doesn't require payment
-        name: "Free",
+        // Hobbyist plan - no priceId needed as it doesn't require payment
+        name: "Hobbyist",
         description: "Get Started",
         price: 0,
         credits: 100, // 100 free API calls (keeping credits for compatibility)
@@ -34,16 +34,16 @@ const config = {
         ],
       },
       {
-        // Pro subscription plan - Stripe 硬编码 Price ID
+        // Premium subscription plan - Stripe 硬编码 Price ID
         priceId: "price_1S1qwI3W9QrG6TfeSztwI9lT",
         isFeatured: true,
-        name: "Pro",
+        name: "Premium",
         description: "Best Value",
-        price: 29,
-        credits: 5000, // 5000 API calls per month (keeping credits for compatibility)
+        price: 30,
+        credits: 30000, // 30,000 credits per month (1$ = 1000 credits)
         priceAnchor: 99,
         features: [
-          { name: "5,000 API calls monthly" },
+          { name: "30,000 API calls monthly" },
           { name: "All Midjourney models (v5, v6, niji)" },
           { name: "Fast & Turbo generation modes" },
           { name: "Image upscaling & variations" },
@@ -95,8 +95,8 @@ const config = {
     // Square 独立配置
     plans: [
       {
-        // Free plan - 两个网关共享相同的免费计划逻辑
-        name: "Free",
+        // Hobbyist plan - 两个网关共享相同的免费计划逻辑
+        name: "Hobbyist",
         description: "Get Started", 
         price: 0,
         credits: 100,
@@ -110,16 +110,16 @@ const config = {
         ],
       },
       {
-        // Pro subscription plan - Square 专用价格标识
-        priceId: "pro-monthly-subscription", // Square 自定义标识
+        // Premium subscription plan - Square 专用价格标识
+        priceId: "premium-monthly-subscription", // Square 自定义标识
         isFeatured: true,
-        name: "Pro", 
+        name: "Premium", 
         description: "Best Value",
-        price: 29, // 正常生产价格 $29/月
-        credits: 5000,
+        price: 30, // 正常生产价格 $30/月
+        credits: 30000, // 30,000 credits per month (1$ = 1000 credits)
         priceAnchor: 99,
         features: [
-          { name: "5,000 API calls monthly" },
+          { name: "30,000 API calls monthly" },
           { name: "All Midjourney models (v5, v6, niji)" },
           { name: "Fast & Turbo generation modes" },
           { name: "Image upscaling & variations" },

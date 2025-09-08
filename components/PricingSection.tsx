@@ -134,8 +134,8 @@ const PricingSection = () => {
                   <div className="space-y-2">
                     {/* 🎯 智能显示当前计划状态 - 基于完整状态验证 */}
                     {session && userPlan === plan.name.toLowerCase() && 
-                     (plan.name.toLowerCase() === 'free' || 
-                      (plan.name.toLowerCase() === 'pro' && subscriptionStatus?.subscriptionStatus === 'active' && subscriptionStatus?.hasAccess)) ? (
+                     (plan.name.toLowerCase() === 'hobbyist' || plan.name.toLowerCase() === 'free' || 
+                      ((plan.name.toLowerCase() === 'premium' || plan.name.toLowerCase() === 'pro') && subscriptionStatus?.subscriptionStatus === 'active' && subscriptionStatus?.hasAccess)) ? (
                       <div className="relative">
                         {/* Current Plan Badge */}
                         <div 
@@ -157,7 +157,7 @@ const PricingSection = () => {
                         </div>
                         
                         {/* 额外状态信息 */}
-                        {subscriptionStatus && plan.name.toLowerCase() === 'pro' && (
+                        {subscriptionStatus && (plan.name.toLowerCase() === 'premium' || plan.name.toLowerCase() === 'pro') && (
                           <div className="mt-2 text-xs text-center">
                             {subscriptionStatus.subscriptionStatus === 'active' ? (
                               <span className="text-green-600 font-medium">
@@ -179,7 +179,7 @@ const PricingSection = () => {
                     ) : (
                       <div className="relative">
                         {/* 🚫 Pro用户防重复订阅检查 */}
-                        {session && userPlan === 'pro' && subscriptionStatus?.subscriptionStatus === 'active' && plan.name.toLowerCase() === 'pro' ? (
+                        {session && (userPlan === 'premium' || userPlan === 'pro') && subscriptionStatus?.subscriptionStatus === 'active' && (plan.name.toLowerCase() === 'premium' || plan.name.toLowerCase() === 'pro') ? (
                           <div className="btn btn-block bg-gray-400 text-white cursor-not-allowed opacity-75">
                             Already Subscribed
                           </div>

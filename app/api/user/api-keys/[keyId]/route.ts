@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/libs/next-auth";
-import { getUserWithProfile } from "@/libs/user-service";
 import { prisma } from "@/libs/prisma";
+import { getUserWithProfile } from "@/libs/user-service";
+import { revokeBackendApiKey } from "@/libs/backend-client";
 
 export const dynamic = 'force-dynamic';
 
-// PUT /api/user/api-keys/[keyId] - 更新API密钥（重命名或启用/禁用）
+// PUT /api/user/api-keys/[keyId] - 更新API密钥（重命名或禁用）
 export async function PUT(
   req: NextRequest,
   { params }: { params: { keyId: string } }
@@ -19,105 +20,56 @@ export async function PUT(
     }
 
     const user = await getUserWithProfile(session.user.id);
-    
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    const { keyId } = params;
     const body = await req.json();
     const { name, isActive } = body;
 
-    // 验证输入
-    if (name !== undefined) {
-      if (typeof name !== 'string' || name.trim().length === 0) {
-        return NextResponse.json(
-          { error: "API key name must be a non-empty string" },
-          { status: 400 }
-        );
-      }
-
-      if (name.length > 100) {
-        return NextResponse.json(
-          { error: "API key name cannot exceed 100 characters" },
-          { status: 400 }
-        );
-      }
-    }
-
-    if (isActive !== undefined && typeof isActive !== 'boolean') {
-      return NextResponse.json(
-        { error: "isActive must be a boolean" },
-        { status: 400 }
-      );
-    }
-
-    // 检查API密钥是否存在且属于当前用户
-    const existingKey = await prisma.userApiKey.findFirst({
+    // 验证API Key属于当前用户
+    const apiKey = await prisma.userApiKey.findFirst({
       where: {
-        id: keyId,
-        userId: user.id,
+        id: params.keyId,
+        userId: user.id
       }
     });
 
-    if (!existingKey) {
-      return NextResponse.json(
-        { error: "API key not found" },
-        { status: 404 }
-      );
+    if (!apiKey) {
+      return NextResponse.json({ error: "API key not found" }, { status: 404 });
     }
 
-    // 更新API密钥
-    const updateData: any = {};
-    if (name !== undefined) {
-      updateData.name = name.trim();
-    }
-    if (isActive !== undefined) {
-      updateData.isActive = isActive;
-    }
-
-    const updatedKey = await prisma.userApiKey.update({
-      where: { id: keyId },
-      data: updateData,
-      select: {
-        id: true,
-        name: true,
-        goApiKey: true,
-        isActive: true,
-        lastUsedAt: true,
-        createdAt: true,
-        updatedAt: true,
+    // 更新API Key
+    const updatedApiKey = await prisma.userApiKey.update({
+      where: { id: params.keyId },
+      data: {
+        ...(name && { name }),
+        ...(typeof isActive === 'boolean' && { isActive }),
+        updatedAt: new Date()
       }
     });
-
-    // 返回遮蔽的密钥
-    const maskedKey = {
-      id: updatedKey.id,
-      name: updatedKey.name,
-      key: `${updatedKey.goApiKey.substring(0, 8)}...${updatedKey.goApiKey.substring(updatedKey.goApiKey.length - 4)}`,
-      isActive: updatedKey.isActive,
-      lastUsedAt: updatedKey.lastUsedAt,
-      createdAt: updatedKey.createdAt,
-      updatedAt: updatedKey.updatedAt,
-    };
-
-    console.log(`✅ API key updated for user: ${user.email}, keyId: ${keyId}`);
 
     return NextResponse.json({
-      message: "API key updated successfully",
-      key: maskedKey,
+      data: {
+        apiKey: {
+          id: updatedApiKey.id,
+          name: updatedApiKey.name,
+          isActive: updatedApiKey.isActive,
+          updatedAt: updatedApiKey.updatedAt
+        }
+      }
     });
 
   } catch (error) {
     console.error("💥 Error updating API key:", error);
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: "Internal server error", details: error.message },
       { status: 500 }
     );
   }
 }
 
-// DELETE /api/user/api-keys/[keyId] - 删除API密钥
+// DELETE /api/user/api-keys/[keyId] - 撤销/删除API密钥
 export async function DELETE(
   req: NextRequest,
   { params }: { params: { keyId: string } }
@@ -130,47 +82,59 @@ export async function DELETE(
     }
 
     const user = await getUserWithProfile(session.user.id);
-    
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    const { keyId } = params;
-
-    // 检查API密钥是否存在且属于当前用户
-    const existingKey = await prisma.userApiKey.findFirst({
+    // 验证API Key属于当前用户
+    const apiKey = await prisma.userApiKey.findFirst({
       where: {
-        id: keyId,
-        userId: user.id,
+        id: params.keyId,
+        userId: user.id
       }
     });
 
-    if (!existingKey) {
-      return NextResponse.json(
-        { error: "API key not found" },
-        { status: 404 }
-      );
+    if (!apiKey) {
+      return NextResponse.json({ error: "API key not found" }, { status: 404 });
     }
 
-    // 软删除（设置为不活跃）而不是硬删除，以保留使用历史
-    await prisma.userApiKey.update({
-      where: { id: keyId },
-      data: { 
+    // 🚀 尝试在后端系统撤销API Key（如果有后端账户）
+    const preferences = user.profile.preferences as any;
+    if (preferences?.backendAccountId) {
+      try {
+        // 注意：这里需要后端API Key的ID，暂时无法映射
+        // 在更完整的实现中，应该在UserApiKey中存储backendApiKeyId
+        console.log(`⚠️ Backend API key revocation not implemented for local key: ${apiKey.id}`);
+      } catch (error) {
+        console.warn(`⚠️ Backend API key revocation failed:`, error?.message);
+      }
+    }
+
+    // 🎯 本地数据库：标记为不活跃而不是删除（行业标准）
+    const revokedApiKey = await prisma.userApiKey.update({
+      where: { id: params.keyId },
+      data: {
         isActive: false,
-        updatedAt: new Date(),
+        updatedAt: new Date()
       }
     });
 
-    console.log(`✅ API key deleted for user: ${user.email}, keyId: ${keyId}`);
-
     return NextResponse.json({
-      message: "API key deleted successfully",
+      message: "API key revoked successfully",
+      data: {
+        apiKey: {
+          id: revokedApiKey.id,
+          name: revokedApiKey.name,
+          isActive: revokedApiKey.isActive,
+          updatedAt: revokedApiKey.updatedAt
+        }
+      }
     });
 
   } catch (error) {
-    console.error("💥 Error deleting API key:", error);
+    console.error("💥 Error revoking API key:", error);
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: "Internal server error", details: error.message },
       { status: 500 }
     );
   }

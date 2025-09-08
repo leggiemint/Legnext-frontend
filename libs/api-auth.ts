@@ -1,12 +1,15 @@
-// API Key 验证中间件
+// API Key 验证中间件 - 支持前端和后端API Key系统
 import { NextRequest } from "next/server";
 import { prisma } from "@/libs/prisma";
+import { getBackendApiKeys } from "@/libs/backend-client";
+import { getUserWithProfile } from "@/libs/user-service";
 
 export interface ApiKeyValidationResult {
   isValid: boolean;
   userId?: string;
   keyId?: string;
   error?: string;
+  source?: 'frontend' | 'backend'; // 标识API密钥来源
   user?: {
     id: string;
     email: string;
@@ -19,7 +22,7 @@ export interface ApiKeyValidationResult {
 }
 
 /**
- * 验证API密钥并返回用户信息
+ * 验证API密钥并返回用户信息 - 支持前端和后端API Key系统
  */
 export async function validateApiKey(apiKey: string): Promise<ApiKeyValidationResult> {
   try {
@@ -27,12 +30,109 @@ export async function validateApiKey(apiKey: string): Promise<ApiKeyValidationRe
       return { isValid: false, error: "API key is required" };
     }
 
-    // 验证API密钥格式
-    if (!apiKey.startsWith('lnx_')) {
+    // 验证API密钥格式 (支持前端lnx_格式和后端格式)
+    if (!apiKey.startsWith('lnx_') && !apiKey.startsWith('go_')) {
       return { isValid: false, error: "Invalid API key format" };
     }
 
-    // 从数据库查找API密钥
+    // 优先尝试后端API Key验证
+    if (apiKey.startsWith('go_')) {
+      return await validateBackendApiKey(apiKey);
+    }
+
+    // 回退到前端API Key验证 (已废弃，但保持兼容性)
+    return await validateFrontendApiKey(apiKey);
+
+  } catch (error) {
+    console.error("💥 Error validating API key:", error);
+    return { isValid: false, error: "Internal server error during API key validation" };
+  }
+}
+
+/**
+ * 验证后端API密钥
+ */
+async function validateBackendApiKey(apiKey: string): Promise<ApiKeyValidationResult> {
+  try {
+    // 首先从前端数据库查找用户关联的后端账户
+    const users = await prisma.user.findMany({
+      include: { profile: true },
+      where: {
+        profile: {
+          preferences: {
+            path: ['backendAccountId'],
+            not: null
+          }
+        },
+        isDelete: false
+      }
+    });
+
+    for (const user of users) {
+      const backendAccountId = user.profile?.preferences?.backendAccountId;
+      if (!backendAccountId) continue;
+
+      try {
+        // 获取后端API Keys
+        const backendResult = await getBackendApiKeys(backendAccountId);
+        if (backendResult.code !== 200) continue;
+
+        // 检查API Key是否匹配且未撤销
+        const matchingKey = backendResult.data.apiKeys.find(
+          key => key.value === apiKey && !key.revoked
+        );
+
+        if (matchingKey) {
+          // 检查用户是否有足够的API调用余额
+          if (user.profile.apiCalls <= 0) {
+            return { 
+              isValid: false, 
+              error: "Insufficient API call balance. Please recharge your account.",
+              userId: user.id,
+              keyId: matchingKey.id.toString(),
+              source: 'backend'
+            };
+          }
+
+          console.log(`✅ Backend API key validated for user: ${user.email}`);
+
+          return {
+            isValid: true,
+            userId: user.id,
+            keyId: matchingKey.id.toString(),
+            source: 'backend',
+            user: {
+              id: user.id,
+              email: user.email,
+              profile: {
+                plan: user.profile.plan,
+                apiCalls: user.profile.apiCalls,
+                subscriptionStatus: user.profile.subscriptionStatus,
+              }
+            }
+          };
+        }
+      } catch (backendError) {
+        console.error(`❌ Error checking backend keys for user ${user.email}:`, backendError);
+        continue;
+      }
+    }
+
+    return { isValid: false, error: "Invalid or inactive backend API key" };
+  } catch (error) {
+    console.error("💥 Error validating backend API key:", error);
+    return { isValid: false, error: "Error validating backend API key" };
+  }
+}
+
+/**
+ * 验证前端API密钥 (已废弃，但保持兼容性)
+ */
+async function validateFrontendApiKey(apiKey: string): Promise<ApiKeyValidationResult> {
+  try {
+    console.log(`⚠️ [DEPRECATED] Frontend API key validation used: ${apiKey.substring(0, 12)}...`);
+
+    // 从前端数据库查找API密钥
     const userApiKey = await prisma.userApiKey.findFirst({
       where: {
         goApiKey: apiKey,
@@ -48,7 +148,7 @@ export async function validateApiKey(apiKey: string): Promise<ApiKeyValidationRe
     });
 
     if (!userApiKey) {
-      return { isValid: false, error: "Invalid or inactive API key" };
+      return { isValid: false, error: "Invalid or inactive frontend API key (deprecated)" };
     }
 
     // 检查用户是否被删除
@@ -63,6 +163,7 @@ export async function validateApiKey(apiKey: string): Promise<ApiKeyValidationRe
         error: "Insufficient API call balance. Please recharge your account.",
         userId: userApiKey.userId,
         keyId: userApiKey.id,
+        source: 'frontend'
       };
     }
 
@@ -76,6 +177,7 @@ export async function validateApiKey(apiKey: string): Promise<ApiKeyValidationRe
       isValid: true,
       userId: userApiKey.userId,
       keyId: userApiKey.id,
+      source: 'frontend',
       user: {
         id: userApiKey.user.id,
         email: userApiKey.user.email,
@@ -88,8 +190,8 @@ export async function validateApiKey(apiKey: string): Promise<ApiKeyValidationRe
     };
 
   } catch (error) {
-    console.error("💥 Error validating API key:", error);
-    return { isValid: false, error: "Internal server error during API key validation" };
+    console.error("💥 Error validating frontend API key:", error);
+    return { isValid: false, error: "Error validating frontend API key" };
   }
 }
 

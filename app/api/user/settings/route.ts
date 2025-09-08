@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/libs/next-auth";
 import { getUserWithProfile } from "@/libs/user-service";
 import { prisma } from "@/libs/prisma";
+import { getBackendWallet, calculateAvailableCredits } from "@/libs/backend-client";
 
 export const dynamic = 'force-dynamic';
 
@@ -22,6 +23,104 @@ export async function GET() {
     }
 
     console.log(`✅ User data fetched successfully: ${user.email}`);
+    console.log(`🔍 [DEBUG] Current frontend credits: ${user.profile.credits}`);
+
+    // 🚀 获取后端系统的真实credits数据（单一数据源）
+    let actualCredits = user.profile.credits; // 默认使用前端数据作为备用
+    let backendCreditsAvailable = false;
+    let syncPerformed = false;
+    
+    if (user.profile.preferences?.backendAccountId) {
+      const backendAccountId = user.profile.preferences.backendAccountId;
+      console.log(`🔍 [DEBUG] Checking backend account: ${backendAccountId}`);
+      
+      try {
+        // 🎯 使用专门的钱包API获取完整的credit_packs数据
+        const walletResult = await getBackendWallet(backendAccountId);
+        console.log(`🔍 [DEBUG] Wallet API success: ${walletResult.success}`);
+        
+        if (walletResult.success && walletResult.wallet) {
+          console.log(`🔍 [DEBUG] Full wallet response:`, JSON.stringify(walletResult.wallet, null, 2));
+          
+          // 🎯 正确计算credits：从credit_packs计算可用余额
+          actualCredits = calculateAvailableCredits(walletResult.wallet);
+          backendCreditsAvailable = true;
+          
+          const creditPacks = walletResult.wallet.credit_packs || [];
+          console.log(`🔍 [DEBUG] Wallet API point_remain: ${walletResult.wallet.point_remain}`);
+          console.log(`🔍 [DEBUG] Credit packs found: ${creditPacks.length}`);
+          if (Array.isArray(creditPacks)) {
+            creditPacks.forEach((pack: any, index: number) => {
+              console.log(`🔍 [DEBUG] Pack ${index + 1}: capacity=${pack.capacity}, used=${pack.used}, available=${pack.capacity - pack.used}, active=${pack.active}`);
+            });
+          }
+          console.log(`🔍 [DEBUG] Calculated total credits: ${actualCredits}`);
+          
+          // 🔄 懒加载同步：如果后端数据与前端不一致，自动同步前端数据库
+          if (actualCredits !== user.profile.credits) {
+            const creditsDiff = actualCredits - user.profile.credits;
+            console.log(`🔍 [DEBUG] Credits mismatch detected!`);
+            console.log(`🔍 [DEBUG] Frontend: ${user.profile.credits}, Backend: ${actualCredits}, Diff: ${creditsDiff > 0 ? '+' : ''}${creditsDiff}`);
+            console.log(`🔄 [SYNC] Starting lazy sync for ${user.email}: ${user.profile.credits} → ${actualCredits}`);
+            
+            // 更新前端数据库并记录同步日志
+            await prisma.$transaction(async (tx) => {
+              await tx.userProfile.update({
+                where: { userId: user.id },
+                data: { 
+                  credits: actualCredits,
+                  apiCalls: actualCredits, // 保持兼容
+                  // 根据变化更新统计数据
+                  ...(creditsDiff < 0 && {
+                    totalCreditsSpent: user.profile.totalCreditsSpent + Math.abs(creditsDiff),
+                    totalApiCallsUsed: user.profile.totalApiCallsUsed + Math.abs(creditsDiff)
+                  }),
+                  ...(creditsDiff > 0 && {
+                    totalCreditsEarned: user.profile.totalCreditsEarned + creditsDiff,
+                    totalApiCallsPurchased: user.profile.totalApiCallsPurchased + creditsDiff
+                  }),
+                  preferences: {
+                    ...user.profile.preferences,
+                    backendSyncedAt: new Date().toISOString()
+                  }
+                }
+              });
+
+              // 记录同步交易日志
+              await tx.transaction.create({
+                data: {
+                  userId: user.id,
+                  type: creditsDiff > 0 ? "credit_sync_add" : "credit_sync_deduct",
+                  amount: creditsDiff,
+                  description: `Lazy sync from backend: ${user.profile.credits} → ${actualCredits}`,
+                  status: "completed",
+                  metadata: {
+                    syncType: "lazy_sync",
+                    backendAccountId: user.profile.preferences.backendAccountId,
+                    previousCredits: user.profile.credits,
+                    newCredits: actualCredits,
+                    trigger: "user_settings_access"
+                  }
+                }
+              });
+            });
+            
+            syncPerformed = true;
+            console.log(`✅ [SYNC] Lazy sync completed successfully for ${user.email}`);
+            console.log(`🔍 [DEBUG] Transaction record created with type: ${creditsDiff > 0 ? 'credit_sync_add' : 'credit_sync_deduct'}`);
+          } else {
+            console.log(`🔍 [DEBUG] Credits already in sync - no update needed`);
+          }
+        } else {
+          console.log(`❌ [ERROR] Wallet API failed: ${walletResult.error}`);
+        }
+      } catch (error) {
+        console.error(`❌ [ERROR] Failed to fetch backend credits for ${user.email}:`, error?.message);
+        console.log(`🔍 [DEBUG] Error details:`, error);
+      }
+    } else {
+      console.log(`🔍 [DEBUG] No backend account configured for user: ${user.email}`);
+    }
 
     return NextResponse.json({
       user: {
@@ -35,21 +134,36 @@ export async function GET() {
         preferences: user.profile.preferences,
       },
       credits: {
-        balance: user.profile.credits,
+        balance: actualCredits, // 🎯 使用后端真实数据
         totalEarned: user.profile.totalCreditsEarned,
         totalSpent: user.profile.totalCreditsSpent,
         lastCreditGrant: {
-          date: new Date().toISOString(), // 临时，后续可以从交易记录获取
+          date: new Date().toISOString(),
           amount: 60,
           reason: "Welcome bonus credits"
+        },
+        // 添加数据源标识和同步状态
+        dataSource: backendCreditsAvailable ? 'backend' : 'frontend',
+        syncStatus: {
+          lastSyncedAt: user.profile.preferences?.backendSyncedAt || null,
+          syncPerformed: syncPerformed,
+          backendAvailable: backendCreditsAvailable
         }
       },
+      // 🔍 [DEBUG] 在响应中添加调试信息
+      debug: {
+        frontendCredits: user.profile.credits,
+        backendCredits: backendCreditsAvailable ? actualCredits : null,
+        creditsDifference: backendCreditsAvailable ? actualCredits - user.profile.credits : null,
+        backendAccountId: user.profile.preferences?.backendAccountId || null,
+        syncTriggered: syncPerformed
+      },
       planLimits: {
-        creditsPerMonth: user.profile.plan === "pro" ? 260 : 0,
-        animationsAllowed: user.profile.plan === "pro",
-        hdExportsAllowed: user.profile.plan === "pro",
-        watermarkFree: user.profile.plan === "pro",
-        commercialUse: user.profile.plan === "pro",
+        creditsPerMonth: (user.profile.plan === "pro" || user.profile.plan === "premium") ? 30000 : 0,
+        animationsAllowed: (user.profile.plan === "pro" || user.profile.plan === "premium"),
+        hdExportsAllowed: (user.profile.plan === "pro" || user.profile.plan === "premium"),
+        watermarkFree: (user.profile.plan === "pro" || user.profile.plan === "premium"),
+        commercialUse: (user.profile.plan === "pro" || user.profile.plan === "premium"),
       },
       subscription: {
         isActive: user.profile.subscriptionStatus === "active",

@@ -42,6 +42,7 @@ interface UserData {
   };
 }
 
+
 export default function SettingsPage() {
   const { data: session } = useSession();
   const [userData, setUserData] = useState<UserData | null>(null);
@@ -76,18 +77,18 @@ export default function SettingsPage() {
       setIsLoading(true);
       setError(null);
       
-      const response = await fetch("/api/user/settings");
+      const userResponse = await fetch("/api/user/settings");
       
-      if (!response.ok) {
+      if (!userResponse.ok) {
         throw new Error("Failed to fetch user data");
       }
       
-      const data: UserData = await response.json();
-      setUserData(data);
+      const userData: UserData = await userResponse.json();
+      setUserData(userData);
       
       // Update form data with fetched user data
       setFormData({
-        name: data.user.name || "",
+        name: userData.user.name || "",
       });
     } catch (err) {
       console.error("Error fetching user data:", err);
@@ -96,6 +97,7 @@ export default function SettingsPage() {
       setIsLoading(false);
     }
   };
+
 
   const handleSaveSettings = async () => {
     try {
@@ -323,13 +325,16 @@ export default function SettingsPage() {
           </div>
         </div>
 
+
         {/* Credits & Subscription */}
         <div className="card bg-base-200 shadow-lg">
           <div className="card-body">
             <div className="flex justify-between items-start mb-6">
               <h2 className="card-title">Credits & Subscription</h2>
-              <div className={`badge ${userData?.user?.plan === 'pro' ? '!bg-[#4f46e5] !text-white' : 'badge-outline'}`}>
-                {userData?.user?.plan?.toUpperCase() || 'FREE'} Plan
+              <div className={`badge ${(userData?.user?.plan === 'premium' || userData?.user?.plan === 'pro') ? '!bg-[#4f46e5] !text-white' : 'badge-outline'}`}>
+                {(userData?.user?.plan === 'premium' || userData?.user?.plan === 'pro') ? 'PREMIUM' : 
+                 (userData?.user?.plan === 'hobbyist' || userData?.user?.plan === 'free') ? 'HOBBYIST' : 
+                 (userData?.user?.plan?.toUpperCase() || 'HOBBYIST')} Plan
               </div>
             </div>
             
@@ -340,7 +345,7 @@ export default function SettingsPage() {
                   <div className="stat-title">Available Credits</div>
                   <div className="stat-value text-3xl text-[#4f46e5]">{userData?.credits?.balance || 0}</div>
                   <div className="stat-desc">
-                    ${((userData?.credits?.balance || 0) * 0.1).toFixed(2)} worth
+                    ${((userData?.credits?.balance || 0) / 1000).toFixed(2)} worth
                   </div>
                 </div>
               </div>
@@ -348,12 +353,12 @@ export default function SettingsPage() {
 
             {/* Simple Plan Info */}
             <div className="bg-base-300 rounded-lg p-4 mb-6">
-              <h3 className="font-semibold mb-3">Current Plan: {userData?.user?.plan === 'pro' ? 'Pro' : 'Free'}</h3>
+              <h3 className="font-semibold mb-3">Current Plan: {(userData?.user?.plan === 'premium' || userData?.user?.plan === 'pro') ? 'Premium' : 'Hobbyist'}</h3>
               <div className="text-sm text-base-content/70">
-                {userData?.user?.plan === 'pro' ? (
-                  <p>✅ Pro plan with 260 credits monthly</p>
+                {(userData?.user?.plan === 'premium' || userData?.user?.plan === 'pro') ? (
+                  <p>✅ Premium plan with 30,000 credits monthly</p>
                 ) : (
-                  <p>Free plan with 60 welcome credits</p>
+                  <p>Hobbyist plan with 100 welcome credits</p>
                 )}
               </div>
             </div>
@@ -362,7 +367,7 @@ export default function SettingsPage() {
             <div className="flex gap-2">
               <Link href="/pricing">
                 <button className="btn bg-[#4f46e5] hover:bg-[#4f46e5]/90 text-white border-none">
-                  {userData?.user?.plan === 'pro' ? 'Manage Subscription' : 'Upgrade to Pro'}
+                  {(userData?.user?.plan === 'premium' || userData?.user?.plan === 'pro') ? 'Manage Subscription' : 'Upgrade to Premium'}
                 </button>
               </Link>
             </div>
