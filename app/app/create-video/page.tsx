@@ -242,7 +242,6 @@ export default function VideoPage() {
                       <div className="aspect-video w-full max-w-2xl overflow-hidden rounded-lg shadow-lg">
                         <video 
                           src={upscaledVideo} 
-                          alt="Enhanced video"
                           className="w-full h-full object-cover"
                           controls
                           autoPlay

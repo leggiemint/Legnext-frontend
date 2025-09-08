@@ -72,12 +72,10 @@ export async function GET() {
                   apiCalls: actualCredits, // 保持兼容
                   // 根据变化更新统计数据
                   ...(creditsDiff < 0 && {
-                    totalCreditsSpent: user.profile.totalCreditsSpent + Math.abs(creditsDiff),
-                    totalApiCallsUsed: user.profile.totalApiCallsUsed + Math.abs(creditsDiff)
+                    totalCreditsSpent: user.profile.totalCreditsSpent + Math.abs(creditsDiff)
                   }),
                   ...(creditsDiff > 0 && {
-                    totalCreditsEarned: user.profile.totalCreditsEarned + creditsDiff,
-                    totalApiCallsPurchased: user.profile.totalApiCallsPurchased + creditsDiff
+                    totalCreditsEarned: user.profile.totalCreditsEarned + creditsDiff
                   }),
                   preferences: {
                     ...user.profile.preferences,

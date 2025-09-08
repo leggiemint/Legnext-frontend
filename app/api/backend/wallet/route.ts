@@ -128,7 +128,7 @@ export async function GET() {
               daysUntilExpiry: Math.ceil((new Date(pack.expired_at).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))
             }))
           },
-          details: sortedPacks.map(pack => ({
+          details: sortedPacks.map((pack: any) => ({
             id: pack.id,
             capacity: pack.capacity,
             used: pack.used,
@@ -139,7 +139,7 @@ export async function GET() {
             expiresAt: pack.expired_at,
             createdAt: pack.created_at,
             updatedAt: pack.updated_at,
-            isExpiring: expiringPacks.some(ep => ep.id === pack.id)
+            isExpiring: expiringPacks.some((ep: any) => ep.id === pack.id)
           }))
         },
         

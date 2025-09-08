@@ -69,16 +69,16 @@ async function validateBackendApiKey(apiKey: string): Promise<ApiKeyValidationRe
     });
 
     for (const user of users) {
-      const backendAccountId = user.profile?.preferences?.backendAccountId;
+      const backendAccountId = (user.profile?.preferences as any)?.backendAccountId;
       if (!backendAccountId) continue;
 
       try {
         // 获取后端API Keys
         const backendResult = await getBackendApiKeys(backendAccountId);
-        if (backendResult.code !== 200) continue;
+        if (!backendResult.success || !backendResult.apiKeys) continue;
 
         // 检查API Key是否匹配且未撤销
-        const matchingKey = backendResult.data.apiKeys.find(
+        const matchingKey = backendResult.apiKeys.find(
           key => key.value === apiKey && !key.revoked
         );
 
