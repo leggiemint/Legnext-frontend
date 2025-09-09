@@ -27,7 +27,9 @@ const getSquareClient = () => {
     token: token,
     environment: environment === 'production'
       ? SquareEnvironment.Production
-      : SquareEnvironment.Sandbox
+      : SquareEnvironment.Sandbox,
+    // 增加超时设置
+    timeout: 30000, // 30秒超时
   };
 
   // 如果设置了代理 URL，则使用 Cloudflare Worker 作为代理
@@ -37,6 +39,8 @@ const getSquareClient = () => {
     // 添加自定义头来帮助 Worker 识别环境
     clientConfig.headers = {
       'Square-Environment': environment || 'sandbox',
+      'User-Agent': 'LegNext-API-Client/1.0',
+      'X-Client-Version': '1.0.0',
     };
   }
 
@@ -62,6 +66,32 @@ interface SquarePortalParams {
   customerId: string;
   returnUrl: string;
 }
+
+// 重试机制辅助函数
+const retryWithBackoff = async <T>(
+  operation: () => Promise<T>,
+  maxRetries: number = 3,
+  baseDelay: number = 1000
+): Promise<T> => {
+  let lastError: Error;
+  
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      return await operation();
+    } catch (error) {
+      lastError = error as Error;
+      console.warn(`Attempt ${attempt}/${maxRetries} failed:`, error.message);
+      
+      if (attempt < maxRetries) {
+        const delay = baseDelay * Math.pow(2, attempt - 1); // 指数退避
+        console.log(`Retrying in ${delay}ms...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
+  }
+  
+  throw lastError!;
+};
 
 // 创建Square结账会话
 export const createSquareCheckout = async (params: SquareCheckoutParams): Promise<string | null> => {
@@ -163,7 +193,10 @@ export const createSquareCheckout = async (params: SquareCheckoutParams): Promis
       idempotencyKey: createPaymentLinkRequest.idempotencyKey
     });
 
-    const response = await client.checkout.paymentLinks.create(createPaymentLinkRequest);
+    // 使用重试机制创建支付链接
+    const response = await retryWithBackoff(async () => {
+      return await client.checkout.paymentLinks.create(createPaymentLinkRequest);
+    }, 3, 1000); // 最多重试3次，基础延迟1秒
 
     if (response.paymentLink?.url) {
       const duration = Date.now() - startTime;
