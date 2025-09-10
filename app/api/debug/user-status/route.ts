@@ -41,8 +41,7 @@ export async function GET(req: NextRequest) {
     const recentWebhooks = await prisma.webhookEvent.findMany({
       where: {
         OR: [
-          { provider: 'stripe' },
-          { provider: 'square' }
+          { provider: 'stripe' }
         ]
       },
       orderBy: { createdAt: 'desc' },

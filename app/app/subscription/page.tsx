@@ -15,7 +15,6 @@ export default function SubscriptionPage() {
   const [canceling, setCanceling] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
-  const [isImmediateCancel, setIsImmediateCancel] = useState(false);
   
   // Use unified user state management
   const { userData, loading, refreshUserData } = useUser();
@@ -35,7 +34,7 @@ export default function SubscriptionPage() {
         },
         body: JSON.stringify({
           reason: cancelReason || 'User requested cancellation',
-          cancelAtPeriodEnd: !isImmediateCancel // 根据用户选择决定是否立即取消
+          cancelAtPeriodEnd: true // 固定为在周期结束时取消
         })
       });
 
@@ -59,7 +58,6 @@ export default function SubscriptionPage() {
       // 关闭模态框并刷新用户数据
       setShowCancelModal(false);
       setCancelReason("");
-      setIsImmediateCancel(false);
       await refreshUserData();
 
     } catch (error: any) {
@@ -223,52 +221,17 @@ export default function SubscriptionPage() {
 
               {/* Content */}
               <div className="mb-6">
-                <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
                   <div className="flex">
-                    <ExclamationTriangleIcon className="h-5 w-5 text-red-600 mt-0.5 mr-3 flex-shrink-0" />
-                    <div className="text-sm text-red-800">
-                      <p className="font-medium mb-1">取消订阅后：</p>
+                    <ExclamationTriangleIcon className="h-5 w-5 text-blue-600 mt-0.5 mr-3 flex-shrink-0" />
+                    <div className="text-sm text-blue-800">
+                      <p className="font-medium mb-1">订阅将在当前计费周期结束时取消</p>
                       <ul className="list-disc list-inside space-y-1 text-xs">
-                        <li>您将失去Pro功能访问权限</li>
-                        <li>现有credits将保留但无法获得新的月度credits</li>
+                        <li>您可以继续使用Pro功能直到当前周期结束</li>
+                        <li>现有credits将保留</li>
                         <li>可以随时重新订阅恢复Pro功能</li>
                       </ul>
                     </div>
-                  </div>
-                </div>
-
-                {/* Cancellation Type Selection */}
-                <div className="space-y-3 mb-4">
-                  <label className="block text-sm font-medium text-gray-700">
-                    取消方式
-                  </label>
-                  <div className="space-y-2">
-                    <label className="flex items-center">
-                      <input
-                        type="radio"
-                        name="cancelType"
-                        checked={!isImmediateCancel}
-                        onChange={() => setIsImmediateCancel(false)}
-                        className="h-4 w-4 text-red-600 border-gray-300 focus:ring-red-500"
-                        disabled={canceling}
-                      />
-                      <span className="ml-2 text-sm text-gray-700">
-                        在计费周期结束时取消（推荐）
-                      </span>
-                    </label>
-                    <label className="flex items-center">
-                      <input
-                        type="radio"
-                        name="cancelType"
-                        checked={isImmediateCancel}
-                        onChange={() => setIsImmediateCancel(true)}
-                        className="h-4 w-4 text-red-600 border-gray-300 focus:ring-red-500"
-                        disabled={canceling}
-                      />
-                      <span className="ml-2 text-sm text-gray-700">
-                        立即取消
-                      </span>
-                    </label>
                   </div>
                 </div>
 
@@ -287,17 +250,6 @@ export default function SubscriptionPage() {
                   />
                 </div>
 
-                {/* Warning for immediate cancellation */}
-                {isImmediateCancel && (
-                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
-                    <div className="flex">
-                      <ExclamationTriangleIcon className="h-4 w-4 text-yellow-600 mt-0.5 mr-2 flex-shrink-0" />
-                      <p className="text-xs text-yellow-800">
-                        立即取消将立即停止您的Pro功能访问。建议选择在计费周期结束时取消，这样您可以继续使用Pro功能直到当前周期结束。
-                      </p>
-                    </div>
-                  </div>
-                )}
               </div>
 
               {/* Actions */}
@@ -323,7 +275,7 @@ export default function SubscriptionPage() {
                       处理中...
                     </>
                   ) : (
-                    `确认${isImmediateCancel ? '立即' : '在周期结束时'}取消`
+                    '确认取消订阅'
                   )}
                 </button>
               </div>

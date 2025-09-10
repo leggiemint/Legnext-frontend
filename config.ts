@@ -35,7 +35,7 @@ const config = {
       },
       {
         // Pro subscription plan - Price ID from environment variable
-        priceId: process.env.NEXT_PUBLIC_STRIPE_PRO_PRICE_ID || "price_1S5w2j3W9QrG6Tfe5g1OrDeq",
+        priceId: "price_1S1tKj3W9QrG6TfeQpb6F765",
         isFeatured: true,
         name: "Pro",
         description: "Best Value",

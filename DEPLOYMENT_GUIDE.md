@@ -243,7 +243,7 @@ GOOGLE_ID="your-google-oauth-client-id"
 GOOGLE_SECRET="your-google-oauth-client-secret"
 
 # 支付网关配置
-PAYMENT_GATEWAY="stripe"  # 或 "square"
+PAYMENT_GATEWAY="stripe"
 
 # Stripe配置 (如果使用Stripe)
 STRIPE_PUBLIC_KEY="pk_live_..."

@@ -51,7 +51,7 @@ Integrate Midjourney into your apps — no Midjourney account required. Reliable
 - **Styling**: Tailwind CSS + DaisyUI
 - **Database**: PostgreSQL with Prisma
 - **Authentication**: NextAuth.js with Google OAuth
-- **Payments**: Stripe (primary) / Square (alternative)
+- **Payments**: Stripe
 - **Deployment**: Vercel Ready
 - **Language**: TypeScript
 
@@ -83,19 +83,13 @@ DATABASE_URL="postgresql://username:password@host:port/database"
 DIRECT_URL="postgresql://username:password@host:port/database"
 
 # Payment Gateway (choose one)
-PAYMENT_GATEWAY=stripe  # or square
+PAYMENT_GATEWAY=stripe
 
 # Stripe (if using Stripe)
 STRIPE_SECRET_KEY=sk_live_...
 STRIPE_WEBHOOK_SECRET=whsec_...
 NEXT_PUBLIC_STRIPE_PRO_PRICE_ID=price_...
 
-# Square (if using Square)
-SQUARE_ACCESS_TOKEN=your_production_token
-SQUARE_APPLICATION_ID=your_app_id
-SQUARE_LOCATION_ID=your_location_id
-SQUARE_WEBHOOK_SECRET=your_webhook_secret
-SQUARE_ENVIRONMENT=production
 
 # Cloudflare R2 Storage
 R2_ENDPOINT=https://your-account-id.r2.cloudflarestorage.com
@@ -130,7 +124,6 @@ libs/
 ├── next-auth.ts            # NextAuth configuration
 ├── payment.ts              # Payment gateway abstraction
 ├── stripe.ts               # Stripe implementation
-└── square.ts               # Square implementation
 
 models/
 ├── User.ts                 # NextAuth user data
@@ -170,7 +163,7 @@ models/
 3. Run Prisma migrations: `npx prisma migrate deploy`
 
 ### Payment Gateway Setup
-1. Choose between Stripe or Square
+1. Configure Stripe payment gateway
 2. Set `PAYMENT_GATEWAY` environment variable
 3. Configure gateway-specific credentials
 
@@ -195,7 +188,7 @@ Google OAuth → NextAuth → PostgreSQL (users table)
 Business Data: UserProfile (API calls, plan, preferences)
 
 Payment Flow:
-Stripe/Square → Webhook → Update User + UserProfile
+Stripe → Webhook → Update User + UserProfile
                          ↓
 Frontend API → Read from UserProfile
 ```

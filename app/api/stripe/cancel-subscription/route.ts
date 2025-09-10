@@ -76,8 +76,7 @@ export async function POST(req: NextRequest) {
           },
           data: {
             status: cancelAtPeriodEnd ? 'active' : 'canceled',
-            cancelAtPeriodEnd: cancelAtPeriodEnd,
-            updatedAt: new Date()
+            cancelAtPeriodEnd: cancelAtPeriodEnd
           }
         });
         
@@ -86,8 +85,7 @@ export async function POST(req: NextRequest) {
           where: { userId: session.user.id },
           data: {
             plan: 'free',
-            subscriptionStatus: 'canceled',
-            updatedAt: new Date()
+            subscriptionStatus: 'canceled'
           }
         });
         
@@ -133,82 +131,30 @@ export async function POST(req: NextRequest) {
       },
       data: {
         status: cancelAtPeriodEnd ? 'active' : 'canceled',
-        cancelAtPeriodEnd: cancelAtPeriodEnd,
-        updatedAt: new Date()
+        cancelAtPeriodEnd: cancelAtPeriodEnd
       }
     });
 
-    // 如果是立即取消，需要同步到后端系统
-    if (!cancelAtPeriodEnd) {
-      console.log(`🔄 [CANCEL] Syncing immediate cancellation to backend for user: ${session.user.email}`);
-
-      try {
-        const userProfile = await prisma.userProfile.findUnique({
-          where: { userId: session.user.id }
-        });
-
-        const backendAccountId = userProfile?.preferences && typeof userProfile.preferences === 'object' && 'backendAccountId' in userProfile.preferences 
-          ? (userProfile.preferences as any).backendAccountId 
-          : null;
-        
-        if (backendAccountId) {
-          console.log(`🔄 [CANCEL] Downgrading backend account plan: ${backendAccountId}`);
-          
-          const { updateBackendAccountPlan } = await import('@/libs/backend-client');
-          
-          const planUpdateResult = await updateBackendAccountPlan({
-            accountId: backendAccountId,
-            newPlan: "hobbyist"
-          });
-
-          if (planUpdateResult.success) {
-            console.log(`✅ [CANCEL] Backend plan downgraded to hobbyist for account ${backendAccountId}`);
-          } else {
-            console.error(`⚠️ [CANCEL] Failed to downgrade backend plan: ${planUpdateResult.error}`);
-          }
-
-          // 记录取消同步结果
-          await prisma.transaction.create({
-            data: {
-              userId: session.user.id,
-              type: "subscription_cancellation",
-              amount: 0,
-              description: "Subscription cancellation with backend sync",
-              status: planUpdateResult.success ? "completed" : "partial",
-              gateway: "stripe",
-              gatewayTxnId: subscription.id,
-              metadata: {
-                backendAccountId: backendAccountId,
-                planUpdateSuccess: planUpdateResult.success,
-                planUpdateError: planUpdateResult.error,
-                cancelReason: reason,
-                cancelAtPeriodEnd: cancelAtPeriodEnd,
-                canceledAt: new Date()
-              }
-            }
-          });
-
-          // 更新用户profile为free计划
-          await prisma.userProfile.updateMany({
-            where: { userId: session.user.id },
-            data: {
-              plan: 'free',
-              subscriptionStatus: 'canceled',
-              updatedAt: new Date()
-            }
-          });
-
-        } else {
-          console.log(`⚠️ [CANCEL] No backend account ID found for user ${session.user.id}, skipping backend sync`);
+    // 记录取消操作
+    console.log(`ℹ️ [CANCEL] Subscription marked for period-end cancellation, backend sync will happen via webhook when actually canceled`);
+    
+    // 记录取消操作到数据库
+    await prisma.transaction.create({
+      data: {
+        userId: session.user.id,
+        type: "subscription_cancellation",
+        amount: 0,
+        description: "Subscription marked for cancellation at period end",
+        status: "completed",
+        gateway: "stripe",
+        gatewayTxnId: subscription.id,
+        metadata: {
+          cancelReason: reason,
+          cancelAtPeriodEnd: cancelAtPeriodEnd,
+          canceledAt: new Date()
         }
-
-      } catch (backendError) {
-        console.error(`❌ [CANCEL] Backend cancellation sync failed:`, backendError);
-        // 不抛出错误，因为前端取消已经成功
       }
-    } else {
-      console.log(`ℹ️ [CANCEL] Subscription marked for period-end cancellation, backend sync will happen via webhook when actually canceled`);
-    }
+    });
 
     return NextResponse.json({
       success: true,

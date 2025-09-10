@@ -60,9 +60,6 @@ class PaymentErrorBoundary extends Component<Props, State> {
     if (error.message.includes("Proxy error") || error.message.includes("Cloudflare")) {
       title = "Service Temporarily Unavailable";
       message = "Payment service is temporarily unavailable. Please try again in a few moments";
-    } else if (error.message.includes("Square")) {
-      title = "Payment Service Error";
-      message = "Payment processing is temporarily unavailable. Please try again later";
     } else if (error.message.includes("Network") || error.message.includes("fetch")) {
       title = "Connection Error";
       message = "Network connection failed. Please check your internet connection and try again";

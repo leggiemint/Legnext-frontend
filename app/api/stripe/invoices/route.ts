@@ -59,15 +59,12 @@ export async function GET(req: NextRequest) {
     const limit = parseInt(url.searchParams.get('limit') || '20');
     const cursor = url.searchParams.get('cursor') || undefined;
 
-    console.log(`📄 [STRIPE-INVOICES] Fetching invoices for user: ${session.user.email}`);
-
     // Get customer to find Stripe customer ID
     const customer = await prisma.customer.findUnique({
       where: { userId: session.user.id }
     });
 
     if (!customer?.stripeCustomerId) {
-      console.log(`⚠️ [STRIPE-INVOICES] No Stripe customer found for user: ${session.user.email}`);
       return NextResponse.json({
         invoices: [],
         pagination: {
@@ -85,8 +82,6 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    console.log(`🔍 [STRIPE-INVOICES] Fetching Stripe invoices for customer: ${customer.stripeCustomerId}`);
-
     // Fetch invoices from Stripe
     const stripeParams: Stripe.InvoiceListParams = {
       customer: customer.stripeCustomerId,
@@ -99,8 +94,6 @@ export async function GET(req: NextRequest) {
     }
 
     const stripeInvoices = await stripe.invoices.list(stripeParams);
-
-    console.log(`📊 [STRIPE-INVOICES] Retrieved ${stripeInvoices.data.length} invoices from Stripe`);
 
     // Transform Stripe invoices to our format
     const invoices = stripeInvoices.data.map(invoice => {
@@ -205,13 +198,9 @@ export async function GET(req: NextRequest) {
       summary
     };
 
-    console.log(`✅ [STRIPE-INVOICES] Successfully returned ${invoices.length} invoices for ${session.user.email}`);
-
     return NextResponse.json(response);
 
   } catch (error: any) {
-    console.error("❌ [STRIPE-INVOICES] Error fetching Stripe invoices:", error);
-    
     return NextResponse.json(
       { error: error.message || "Failed to fetch invoices" },
       { status: 500 }
