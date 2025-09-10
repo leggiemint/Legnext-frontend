@@ -116,7 +116,6 @@ export async function POST(req: NextRequest) {
     const balanceCheck = await checkCreditsBalance(user.id, estimatedCost);
     
     if (!balanceCheck.sufficient) {
-      console.warn(`❌ Insufficient credits for user ${user.email}: need ${estimatedCost}, have ${balanceCheck.currentBalance}`);
       return NextResponse.json(
         { 
           error: "Insufficient API call balance", 
@@ -155,13 +154,6 @@ export async function POST(req: NextRequest) {
 
     // 这里应该调用实际的Midjourney API
     // 目前返回模拟响应
-    console.log(`🎨 Image generation requested by API key user: ${user.email}`, {
-      taskId: imageRecord.id,
-      prompt: prompt,
-      model: model,
-      mode: mode,
-      estimatedCost: estimatedCost
-    });
 
     // 更新用户资料以获取最新余额
     const updatedUser = await prisma.userProfile.findUnique({
@@ -179,7 +171,6 @@ export async function POST(req: NextRequest) {
     });
 
   } catch (error) {
-    console.error("💥 Error in API v1 generate:", error);
     return NextResponse.json(
       { error: "Internal server error", message: "Please try again later" },
       { status: 500 }

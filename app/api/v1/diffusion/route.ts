@@ -102,7 +102,9 @@ export async function POST(req: NextRequest) {
       body: JSON.stringify({
         text,
         callback
-      })
+      }),
+      // 增加超时时间到30秒
+      signal: AbortSignal.timeout(30000)
     });
 
     if (!backendResponse.ok) {

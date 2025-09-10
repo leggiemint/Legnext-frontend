@@ -72,7 +72,6 @@ export default function CreatePage() {
           const activeKey = data.data.apiKeys.find((key: any) => key.isActive);
           if (activeKey) {
             setUserApiKey(activeKey.goApiKey);
-            console.log(`✅ Loaded API key for user: ${activeKey.preview}`);
           } else {
             toast.error('No active API key found. Please create an API key in your dashboard.');
           }

@@ -60,7 +60,6 @@ export async function validateApiKey(apiKey: string): Promise<ApiKeyValidationRe
       data: { lastUsedAt: new Date() }
     });
 
-    console.log(`✅ API key validated for user: ${userApiKey.user.email}`);
 
     return {
       isValid: true,
@@ -103,7 +102,6 @@ export async function getUserBackendApiKey(userId: string): Promise<string | nul
       return null;
     }
 
-    console.log(`✅ Found API key for user ${userId}: ${userApiKey.goApiKey.substring(0, 16)}...`);
     return userApiKey.goApiKey;
   } catch (error) {
     console.error("💥 Error getting backend API key:", error);

@@ -88,7 +88,9 @@ export async function GET(
         headers: {
           'Content-Type': 'application/json',
           'x-api-key': backendApiKey
-        }
+        },
+        // 增加超时时间到30秒
+        signal: AbortSignal.timeout(30000)
       });
 
       if (!backendResponse.ok) {

@@ -40,7 +40,6 @@ export async function POST(req: NextRequest) {
     // 生成API Key名称
     const apiKeyName = name || generateApiKeyName(session.user.email);
 
-    console.log(`🔑 Creating API Key for user: ${session.user.email}`);
 
     // 创建API Key
     const result = await createBackendApiKey({
@@ -118,7 +117,6 @@ export async function GET() {
       });
     }
 
-    console.log(`🔍 Fetching API Keys for account: ${backendAccountId}`);
 
     // 获取所有API Keys
     const result = await getBackendApiKeys(backendAccountId);
@@ -144,7 +142,6 @@ export async function GET() {
       accountId: key.account_id
     }));
 
-    console.log(`📋 Found ${formattedApiKeys.length} API keys for user ${session.user.email}`);
 
     return NextResponse.json({
       data: {

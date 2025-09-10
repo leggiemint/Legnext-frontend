@@ -84,7 +84,6 @@ export default function CreditBalancePage() {
       const data = await response.json();
       setCreditData(data);
       
-      console.log('✅ Credit balance data fetched:', data);
     } catch (err: any) {
       console.error('❌ Error fetching credit balance:', err);
       setError(err.message || 'Failed to fetch credit balance');

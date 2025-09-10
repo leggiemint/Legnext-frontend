@@ -407,7 +407,6 @@ export async function createUserBackendAccount(
             isActive: !initialApiKey.revoked
           }
         });
-        console.log(`✅ Initial API key stored for user: ${email}`);
       } catch (error) {
         console.warn(`⚠️ Failed to store initial API key:`, error?.message);
       }

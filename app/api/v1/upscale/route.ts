@@ -115,7 +115,9 @@ export async function POST(req: NextRequest) {
           imageNo: index,
           type: 0, // 固定为0，根据用户提供的curl示例
           callback
-        })
+        }),
+        // 增加超时时间到30秒
+        signal: AbortSignal.timeout(30000)
       });
     } catch (fetchError) {
       return NextResponse.json(

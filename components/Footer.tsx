@@ -5,14 +5,14 @@ const footerLinks = {
   functions: {
     title: "Functions",
     links: [
-      { label: "Imagine", href: "/functions/imagine" },
-      { label: "Upscale", href: "/functions/upscale" },
-      { label: "Variation", href: "/functions/variation" },
-      { label: "Describe", href: "/functions/describe" },
-      { label: "Blend", href: "/functions/blend" },
-      { label: "Inpaint", href: "/functions/inpaint" },
-      { label: "Zoom", href: "/functions/zoom" },
-      { label: "Pan", href: "/functions/pan" },
+      { label: "Imagine", href: "/imagine" },
+      { label: "Upscale", href: "/upscale" },
+      { label: "Variation", href: "/variation" },
+      { label: "Describe", href: "/describe" },
+      { label: "Blend", href: "/blend" },
+      { label: "Inpaint", href: "/inpaint" },
+      { label: "Zoom", href: "/zoom" },
+      { label: "Pan", href: "/pan" },
     ]
   },
   supported_modes: {

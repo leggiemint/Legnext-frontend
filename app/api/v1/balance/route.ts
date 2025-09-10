@@ -84,7 +84,6 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    console.log(`💰 Balance queried by API key user: ${user.email}, remaining: ${userProfile.apiCalls}`);
 
     return NextResponse.json({
       success: true,
@@ -104,7 +103,6 @@ export async function GET(req: NextRequest) {
     });
 
   } catch (error) {
-    console.error("💥 Error in API v1 balance:", error);
     return NextResponse.json(
       { error: "Internal server error", message: "Please try again later" },
       { status: 500 }
