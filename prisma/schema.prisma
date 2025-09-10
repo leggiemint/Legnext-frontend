@@ -110,7 +110,6 @@ model Customer {
   paypalCustomerId           String? @unique
   radomCustomerId            String? @unique
   stripeCustomerId           String? @unique
-  squareCustomerId           String? @unique // Added Square customer ID
   goapiStripeV2CustomerId    String? @unique
   goapiStripeV3CustomerId    String? @unique
   piapiStripeCustomerId      String? @unique
@@ -123,7 +122,6 @@ model Customer {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([stripeCustomerId])
-  @@index([squareCustomerId])
   @@index([paypalCustomerId])
 }
 

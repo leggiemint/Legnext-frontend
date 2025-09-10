@@ -34,8 +34,8 @@ const config = {
         ],
       },
       {
-        // Pro subscription plan - Stripe 硬编码 Price ID
-        priceId: "price_1S1qwI3W9QrG6TfeSztwI9lT",
+        // Pro subscription plan - Stripe sandbox Price ID
+        priceId: "price_1S5uw4KyeXh3bz3dRuK7bAcv",
         isFeatured: true,
         name: "Pro",
         description: "Best Value",
@@ -90,74 +90,14 @@ const config = {
     // REQUIRED — the path you want to redirect users after successfull login (i.e. /app, /private). This is normally a private page for users to manage their accounts. It's used in apiClient (/libs/api.js) upon 401 errors from our API & in ButtonSignin.js
     callbackUrl: "/app",
   },
-  square: {
-    // Square 独立配置
-    plans: [
-      {
-        // Free plan - 两个网关共享相同的免费计划逻辑
-        name: "Free",
-        description: "Get Started", 
-        price: 0,
-        credits: 100,
-        isFree: true,
-        features: [
-          { name: "200 free API points" },
-          { name: "Image generation" },
-          { name: "Standard quality output" },
-          { name: "Community support" },
-          { name: "Rate limited requests" },
-        ],
-      },
-      {
-        // Pro subscription plan - Square 专用价格标识
-        priceId: "pro-monthly-subscription", // Square 自定义标识
-        isFeatured: true,
-        name: "Pro", 
-        description: "Best Value",
-        price: 30, // 正常生产价格 $30/月
-        credits: 30000, // 30,000 credits per month (1$ = 1000 credits)
-        priceAnchor: 99,
-        features: [
-          { name: "30,000 API points monthly" },
-          { name: "All Midjourney models (v6, v7, niji 6)" },
-          { name: "Fast & Turbo generation modes" },
-          { name: "support video generation" },
-          { name: "support Moodboard feature" },
-          { name: "Priority support" },
-        ],
-      },
-    ],
-  },
 } as ConfigProps;
 
-// 根据支付网关返回对应配置 - 暂时硬编码使用Square
+// Payment configuration - Stripe only
 export function getPaymentConfig() {
-  // 暂时硬编码使用Square，避免环境变量配置问题
   return { 
-    gateway: 'square',
-    plans: config.square.plans 
+    gateway: 'stripe' as const,
+    plans: config.stripe.plans 
   };
-  
-  /* 原来的环境变量逻辑，暂时注释
-  const gateway = (
-    process.env.NEXT_PUBLIC_PAYMENT_GATEWAY || 
-    process.env.PAYMENT_GATEWAY
-  )?.toLowerCase();
-  
-  switch (gateway) {
-    case 'square':
-      return { 
-        gateway: 'square',
-        plans: config.square.plans 
-      };
-    case 'stripe':
-    default:
-      return { 
-        gateway: 'stripe',
-        plans: config.stripe.plans 
-      };
-  }
-  */
 }
 
 export default config;

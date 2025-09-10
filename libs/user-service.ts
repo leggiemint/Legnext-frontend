@@ -278,7 +278,7 @@ async function legacyDirectGrant(
 }
 
 /**
- * Update user subscription (optimized for Square payments only)
+ * Update user subscription (Stripe payments)
  */
 export async function updateSubscription(
   userId: string,
@@ -290,15 +290,12 @@ export async function updateSubscription(
   subscriptionEnd?: Date
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    // 更新UserProfile
+    // 更新UserProfile（只更新plan和订阅状态）
     await prisma.userProfile.upsert({
       where: { userId },
       update: {
         plan,
         subscriptionStatus: status,
-        ...(priceId && { currentPriceId: priceId }),
-        ...(subscriptionStart && { subscriptionStart }),
-        ...(subscriptionEnd && { subscriptionEnd }),
         lastActiveAt: new Date()
       },
       create: {
@@ -307,9 +304,6 @@ export async function updateSubscription(
         subscriptionStatus: status,
         credits: 100,
         totalCreditsEarned: 100,
-        ...(priceId && { currentPriceId: priceId }),
-        ...(subscriptionStart && { subscriptionStart }),
-        ...(subscriptionEnd && { subscriptionEnd }),
         preferences: {
           defaultStyle: "anime",
           emailNotifications: true,
@@ -318,16 +312,55 @@ export async function updateSubscription(
       }
     });
 
-    // 如果提供了customerId，存储到Customer表（使用stripeCustomerId字段存储Square customer ID）
+    // 如果提供了customerId，存储到Customer表
     if (customerId) {
       await prisma.customer.upsert({
         where: { userId },
-        update: { stripeCustomerId: customerId }, // 复用现有字段存储Square customer ID
+        update: { stripeCustomerId: customerId },
         create: {
           userId,
           stripeCustomerId: customerId
         }
       });
+    }
+
+    // 如果有订阅相关信息，创建/更新Subscription记录
+    if (priceId || subscriptionStart || subscriptionEnd) {
+      // 先查找是否存在该用户的Stripe订阅
+      const existingSubscription = await prisma.subscription.findFirst({
+        where: {
+          userId: userId,
+          platform: "stripe"
+        }
+      });
+
+      if (existingSubscription) {
+        // 更新现有订阅
+        await prisma.subscription.update({
+          where: { id: existingSubscription.id },
+          data: {
+            status: status,
+            ...(customerId && { customerId }),
+            ...(subscriptionStart && { currentPeriodStart: subscriptionStart }),
+            ...(subscriptionEnd && { currentPeriodEnd: subscriptionEnd }),
+            ...(subscriptionEnd && { nextInvoiceDate: subscriptionEnd })
+          }
+        });
+      } else {
+        // 创建新订阅记录
+        await prisma.subscription.create({
+          data: {
+            userId,
+            name: `${plan} subscription`,
+            platform: "stripe",
+            status: status,
+            ...(customerId && { customerId }),
+            ...(subscriptionStart && { currentPeriodStart: subscriptionStart }),
+            ...(subscriptionEnd && { currentPeriodEnd: subscriptionEnd }),
+            ...(subscriptionEnd && { nextInvoiceDate: subscriptionEnd })
+          }
+        });
+      }
     }
 
     return { success: true };

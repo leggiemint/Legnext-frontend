@@ -63,6 +63,7 @@ export default function InvoicePage() {
     totalAmount: 0,
     lastInvoiceDate: null as string | null
   });
+  const [activeTab, setActiveTab] = useState<'all' | 'stripe' | 'square'>('all');
 
   // 获取发票数据
   useEffect(() => {
@@ -81,32 +82,75 @@ export default function InvoicePage() {
       setLoading(cursor ? false : true); // 只在初始加载时显示loading
       setError(null);
       
-      console.log("📄 Fetching invoices from Square API...");
+      console.log("📄 Fetching invoices from both Stripe and Square APIs...");
       
-      const url = cursor 
-        ? `/api/square/invoices?limit=20&cursor=${cursor}`
-        : '/api/square/invoices?limit=20';
+      // Fetch from both APIs in parallel
+      const [stripeResponse, squareResponse] = await Promise.allSettled([
+        fetch('/api/stripe/invoices?limit=20'),
+        fetch('/api/square/invoices?limit=20')
+      ]);
       
-      const response = await fetch(url);
+      let allInvoices: Invoice[] = [];
+      let combinedSummary = {
+        totalInvoices: 0,
+        paidInvoices: 0,
+        pendingInvoices: 0,
+        totalAmount: 0,
+        lastInvoiceDate: null as string | null
+      };
       
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      // Process Stripe invoices
+      if (stripeResponse.status === 'fulfilled' && stripeResponse.value.ok) {
+        const stripeData: InvoiceResponse = await stripeResponse.value.json();
+        allInvoices = [...allInvoices, ...stripeData.invoices];
+        console.log("✅ Stripe invoices loaded:", stripeData.invoices.length);
+      } else {
+        console.log("⚠️ Stripe invoices failed to load");
       }
       
-      const data: InvoiceResponse = await response.json();
+      // Process Square invoices
+      if (squareResponse.status === 'fulfilled' && squareResponse.value.ok) {
+        const squareData: InvoiceResponse = await squareResponse.value.json();
+        allInvoices = [...allInvoices, ...squareData.invoices];
+        console.log("✅ Square invoices loaded:", squareData.invoices.length);
+      } else {
+        if (squareResponse.status === 'fulfilled' && squareResponse.value.status === 404) {
+          console.log("ℹ️ Square invoices API not available (404)");
+        } else {
+          console.log("⚠️ Square invoices failed to load");
+        }
+      }
+      
+      // Sort all invoices by date (newest first)
+      allInvoices.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      
+      // Calculate combined summary
+      combinedSummary = {
+        totalInvoices: allInvoices.length,
+        paidInvoices: allInvoices.filter(inv => inv.status === 'paid').length,
+        pendingInvoices: allInvoices.filter(inv => inv.status === 'pending').length,
+        totalAmount: allInvoices
+          .filter(inv => inv.status === 'paid')
+          .reduce((sum, inv) => sum + inv.amount, 0),
+        lastInvoiceDate: allInvoices.length > 0 ? allInvoices[0].date : null
+      };
       
       if (!cursor) {
         // First load - replace invoices
-        setInvoices(data.invoices);
+        setInvoices(allInvoices);
       } else {
-        // Pagination - append invoices
-        setInvoices(prev => [...prev, ...data.invoices]);
+        // Pagination - append invoices (for future enhancement)
+        setInvoices(prev => [...prev, ...allInvoices]);
       }
       
-      setPagination(data.pagination);
-      setSummary(data.summary);
+      setPagination({
+        limit: 20,
+        cursor: undefined,
+        hasNext: false // Disable pagination for now since we're combining APIs
+      });
+      setSummary(combinedSummary);
       
-      console.log("✅ Invoices loaded:", data.summary);
+      console.log("✅ All invoices loaded:", combinedSummary);
       
     } catch (err: any) {
       console.error("❌ Error fetching invoices:", err);
@@ -114,6 +158,11 @@ export default function InvoicePage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const getFilteredInvoices = () => {
+    if (activeTab === 'all') return invoices;
+    return invoices.filter(invoice => invoice.metadata?.gateway === activeTab);
   };
 
   const getStatusBadge = (status: string) => {
@@ -220,6 +269,46 @@ export default function InvoicePage() {
           </button>
         </div>
 
+        {/* Tab Navigation */}
+        {!loading && invoices.length > 0 && (
+          <div className="mb-6">
+            <div className="border-b border-gray-200">
+              <nav className="-mb-px flex space-x-8">
+                <button
+                  onClick={() => setActiveTab('all')}
+                  className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                    activeTab === 'all'
+                      ? 'border-purple-500 text-purple-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+                >
+                  All Invoices ({invoices.length})
+                </button>
+                <button
+                  onClick={() => setActiveTab('stripe')}
+                  className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                    activeTab === 'stripe'
+                      ? 'border-purple-500 text-purple-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+                >
+                  Stripe ({invoices.filter(inv => inv.metadata?.gateway === 'stripe').length})
+                </button>
+                <button
+                  onClick={() => setActiveTab('square')}
+                  className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                    activeTab === 'square'
+                      ? 'border-purple-500 text-purple-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+                >
+                  Square ({invoices.filter(inv => inv.metadata?.gateway === 'square').length})
+                </button>
+              </nav>
+            </div>
+          </div>
+        )}
+
         {/* Summary Cards */}
         {!loading && invoices.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
@@ -287,14 +376,21 @@ export default function InvoicePage() {
         {/* Invoices List */}
         {!loading && !error && (
           <>
-            {invoices.length > 0 ? (
+            {getFilteredInvoices().length > 0 ? (
               <div className="bg-white rounded-lg border shadow-sm">
                 <div className="px-6 py-4 border-b border-gray-200">
-                  <h2 className="text-lg font-medium text-gray-900">Invoice History</h2>
+                  <h2 className="text-lg font-medium text-gray-900">
+                    Invoice History
+                    {activeTab !== 'all' && (
+                      <span className="ml-2 text-sm font-normal text-gray-500">
+                        ({activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} only)
+                      </span>
+                    )}
+                  </h2>
                 </div>
                 
                 <div className="divide-y divide-gray-200">
-                  {invoices.map((invoice) => (
+                  {getFilteredInvoices().map((invoice) => (
                     <div key={invoice.id} className="p-6 hover:bg-gray-50 transition-colors">
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-3">
@@ -320,6 +416,15 @@ export default function InvoicePage() {
                         </div>
                         
                         <div className="text-right">
+                          <div className="flex items-center justify-end gap-2 mb-1">
+                            <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                              invoice.metadata?.gateway === 'stripe' 
+                                ? 'bg-blue-100 text-blue-800'
+                                : 'bg-orange-100 text-orange-800'
+                            }`}>
+                              {invoice.metadata?.gateway === 'stripe' ? 'Stripe' : 'Square'}
+                            </span>
+                          </div>
                           <div className="text-lg font-semibold text-gray-900">
                             {formatAmount(invoice.amount, invoice.currency)}
                           </div>
