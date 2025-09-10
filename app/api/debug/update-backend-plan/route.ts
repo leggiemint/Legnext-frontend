@@ -46,13 +46,13 @@ export async function POST(req: NextRequest) {
       frontend: {
         processed: false,
         success: false,
-        error: null
+        error: null as string | null
       },
       backend: {
         processed: false,
         success: false,
-        error: null,
-        accountId: null
+        error: null as string | null,
+        accountId: null as number | null
       }
     };
 

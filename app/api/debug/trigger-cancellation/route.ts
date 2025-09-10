@@ -43,14 +43,14 @@ export async function POST(req: NextRequest) {
       userEmail: user.email,
       frontend: {
         processed: false,
-        subscription: null,
-        profileUpdate: null,
-        error: null
+        subscription: null as any,
+        profileUpdate: null as any,
+        error: null as string | null
       },
       backend: {
         processed: false,
-        plan: null,
-        error: null
+        plan: null as string | null,
+        error: null as string | null
       }
     };
 
@@ -123,7 +123,7 @@ export async function POST(req: NextRequest) {
           newPlan: "hobbyist"
         });
 
-        results.backend.plan = planResult;
+        results.backend.plan = planResult.success ? "hobbyist" : "downgrade_failed";
 
         if (planResult.success) {
           console.log(`✅ [DEBUG-CANCEL] Backend plan downgraded to hobbyist`);

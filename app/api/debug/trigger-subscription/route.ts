@@ -47,15 +47,15 @@ export async function POST(req: NextRequest) {
       userEmail: user.email,
       frontend: {
         processed: false,
-        subscription: null,
-        credits: null,
-        error: null
+        subscription: null as any,
+        credits: null as any,
+        error: null as string | null
       },
       backend: {
         processed: false,
-        plan: null,
-        creditPack: null,
-        error: null
+        plan: null as string | null,
+        creditPack: null as any,
+        error: null as string | null
       }
     };
 
@@ -133,7 +133,7 @@ export async function POST(req: NextRequest) {
           newPlan: "developer"
         });
 
-        results.backend.plan = planResult;
+        results.backend.plan = planResult.success ? "developer" : "upgrade_failed";
 
         if (planResult.success) {
           console.log(`✅ [DEBUG-TRIGGER] Backend plan updated to developer`);

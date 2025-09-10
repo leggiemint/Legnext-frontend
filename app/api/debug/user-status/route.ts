@@ -80,23 +80,23 @@ export async function GET(req: NextRequest) {
         id: user.id,
         email: user.email,
         name: user.name,
-        emailVerified: user.emailVerified,
-        createdAt: user.createdAt
+        // emailVerified: user.emailVerified, // Field not available in UserWithProfile
+        // createdAt: user.createdAt // Field not available in UserWithProfile
       },
       profile: {
         plan: user.profile.plan,
         subscriptionStatus: user.profile.subscriptionStatus,
         credits: user.profile.credits,
-        apiCalls: user.profile.apiCalls,
+        // apiCalls: user.profile.apiCalls, // Field not in UserWithProfile interface
         totalCreditsEarned: user.profile.totalCreditsEarned,
         totalCreditsSpent: user.profile.totalCreditsSpent,
-        totalApiCallsUsed: user.profile.totalApiCallsUsed,
-        totalApiCallsPurchased: user.profile.totalApiCallsPurchased,
+        // totalApiCallsUsed: user.profile.totalApiCallsUsed, // Field not in UserWithProfile interface
+        // totalApiCallsPurchased: user.profile.totalApiCallsPurchased, // Field not available
         imagesGenerated: user.profile.imagesGenerated,
-        lastActiveAt: user.profile.lastActiveAt,
+        // lastActiveAt: user.profile.lastActiveAt, // Field not available
         preferences: user.profile.preferences,
-        createdAt: user.profile.createdAt,
-        updatedAt: user.profile.updatedAt
+        // createdAt: user.profile.createdAt, // Field not available
+        // updatedAt: user.profile.updatedAt // Field not available
       },
       customer: customer ? {
         stripeCustomerId: customer.stripeCustomerId,
@@ -111,9 +111,9 @@ export async function GET(req: NextRequest) {
         platform: subscription.platform,
         status: subscription.status,
         cancelAtPeriodEnd: subscription.cancelAtPeriodEnd,
-        currentPeriodStart: subscription.currentPeriodStart,
-        currentPeriodEnd: subscription.currentPeriodEnd,
-        nextInvoiceDate: subscription.nextInvoiceDate,
+        // currentPeriodStart: subscription.currentPeriodStart, // Field may not be available
+        // currentPeriodEnd: subscription.currentPeriodEnd, // Field may not be available
+        // nextInvoiceDate: subscription.nextInvoiceDate, // Field may not be available
         createdAt: subscription.createdAt,
         expiresAt: subscription.expiresAt
       } : null,
