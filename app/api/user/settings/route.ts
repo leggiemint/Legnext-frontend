@@ -22,8 +22,6 @@ export async function GET() {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    console.log(`✅ User data fetched successfully: ${user.email}`);
-    console.log(`🔍 [DEBUG] Current frontend credits: ${user.profile.credits}`);
 
     // 🚀 获取后端系统的真实credits数据（单一数据源）
     let actualCredits = user.profile.credits; // 默认使用前端数据作为备用
@@ -32,39 +30,19 @@ export async function GET() {
     
     if (user.profile.preferences?.backendAccountId) {
       const backendAccountId = user.profile.preferences.backendAccountId;
-      console.log(`🔍 [DEBUG] Checking backend account: ${backendAccountId}`);
       
       try {
         // 🎯 使用新的credit_packs API获取详细数据
         const creditPacksResult = await getBackendCreditPacks(backendAccountId);
-        console.log(`🔍 [DEBUG] Credit packs API success: ${creditPacksResult.success}`);
         
         if (creditPacksResult.success && creditPacksResult.data) {
-          console.log(`🔍 [DEBUG] Full credit packs response:`, JSON.stringify(creditPacksResult.data, null, 2));
-          
           // 🎯 直接从API响应获取可用credits
           actualCredits = creditPacksResult.data.available_credits;
           backendCreditsAvailable = true;
           
-          const creditPacks = creditPacksResult.data.credit_packs || [];
-          console.log(`🔍 [DEBUG] Available credits: ${creditPacksResult.data.available_credits}`);
-          console.log(`🔍 [DEBUG] Total credits: ${creditPacksResult.data.total_credits}`);
-          console.log(`🔍 [DEBUG] Credit packs count: ${creditPacksResult.data.credit_packs_count}`);
-          console.log(`🔍 [DEBUG] Credit packs found: ${creditPacks.length}`);
-          if (Array.isArray(creditPacks)) {
-            creditPacks.forEach((pack: any, index: number) => {
-              const available = pack.capacity - pack.used;
-              console.log(`🔍 [DEBUG] Pack ${index + 1}: id=${pack.id}, capacity=${pack.capacity}, used=${pack.used}, available=${available}, active=${pack.active}, expired_at=${pack.expired_at}`);
-            });
-          }
-          console.log(`🔍 [DEBUG] Final available credits: ${actualCredits}`);
-          
           // 🔄 懒加载同步：如果后端数据与前端不一致，自动同步前端数据库
           if (actualCredits !== user.profile.credits) {
             const creditsDiff = actualCredits - user.profile.credits;
-            console.log(`🔍 [DEBUG] Credits mismatch detected!`);
-            console.log(`🔍 [DEBUG] Frontend: ${user.profile.credits}, Backend: ${actualCredits}, Diff: ${creditsDiff > 0 ? '+' : ''}${creditsDiff}`);
-            console.log(`🔄 [SYNC] Starting lazy sync for ${user.email}: ${user.profile.credits} → ${actualCredits}`);
             
             // 更新前端数据库并记录同步日志
             await prisma.$transaction(async (tx) => {
@@ -110,20 +88,13 @@ export async function GET() {
             });
             
             syncPerformed = true;
-            console.log(`✅ [SYNC] Lazy sync completed successfully for ${user.email}`);
-            console.log(`🔍 [DEBUG] Transaction record created with type: ${creditsDiff > 0 ? 'credit_sync_add' : 'credit_sync_deduct'}`);
-          } else {
-            console.log(`🔍 [DEBUG] Credits already in sync - no update needed`);
           }
         } else {
           console.log(`❌ [ERROR] Credit packs API failed: ${creditPacksResult.error}`);
         }
       } catch (error) {
         console.error(`❌ [ERROR] Failed to fetch backend credits for ${user.email}:`, error?.message);
-        console.log(`🔍 [DEBUG] Error details:`, error);
       }
-    } else {
-      console.log(`🔍 [DEBUG] No backend account configured for user: ${user.email}`);
     }
 
     return NextResponse.json({
@@ -153,14 +124,6 @@ export async function GET() {
           syncPerformed: syncPerformed,
           backendAvailable: backendCreditsAvailable
         }
-      },
-      // 🔍 [DEBUG] 在响应中添加调试信息
-      debug: {
-        frontendCredits: user.profile.credits,
-        backendCredits: backendCreditsAvailable ? actualCredits : null,
-        creditsDifference: backendCreditsAvailable ? actualCredits - user.profile.credits : null,
-        backendAccountId: user.profile.preferences?.backendAccountId || null,
-        syncTriggered: syncPerformed
       },
       planLimits: {
         creditsPerMonth: (user.profile.plan === "pro") ? 30000 : 0,

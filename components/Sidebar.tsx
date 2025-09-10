@@ -5,7 +5,8 @@ import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { KeyIcon, CreditCardIcon, CurrencyDollarIcon, DocumentTextIcon, ClipboardDocumentListIcon } from "@heroicons/react/24/outline";
 import Image from "next/image";
-import { useUser, usePlan, useCredits } from '@/contexts/UserContext';
+import { useUser, usePlan } from '@/contexts/UserContext';
+import { useState, useEffect } from 'react';
 
 const sidebarItems = [
   {
@@ -66,7 +67,37 @@ const Sidebar = () => {
   // 使用统一的用户状态管理
   const { userData, loading } = useUser();
   const { planDisplayName, isProUser } = usePlan();
-  const { balance } = useCredits();
+  
+  // 获取与credit-balance页面一致的数据
+  const [balanceData, setBalanceData] = useState<any>(null);
+  const [balanceLoading, setBalanceLoading] = useState(false);
+
+  useEffect(() => {
+    if (session?.user?.id) {
+      fetchBalanceData();
+    }
+  }, [session]);
+
+  const fetchBalanceData = async () => {
+    try {
+      setBalanceLoading(true);
+      const response = await fetch('/api/credit-balance');
+      if (response.ok) {
+        const data = await response.json();
+        setBalanceData(data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch balance data:', error);
+    } finally {
+      setBalanceLoading(false);
+    }
+  };
+
+  const displayBalance = balanceData?.credits?.totalAccountBalance 
+    ? balanceData.credits.totalAccountBalance.toFixed(2)
+    : balanceData?.credits?.balance 
+    ? (balanceData.credits.balance / 1000).toFixed(2)
+    : '0.00';
 
   return (
     <div className="bg-white w-64 fixed left-0 top-16 h-[calc(100vh-4rem)] flex flex-col z-40 border-r border-gray-200">
@@ -184,11 +215,17 @@ const Sidebar = () => {
                 </div>
               </div>
 
-              {/* Credits Display */}
+              {/* Balance Display */}
               <div className="space-y-1">
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-600">Credits</span>
-                  <span className="font-semibold text-gray-900">{balance}</span>
+                  <span className="text-gray-600">Balance</span>
+                  <span className="font-semibold text-gray-900">
+                    {loading || balanceLoading ? (
+                      <div className="w-8 h-4 bg-gray-200 animate-pulse rounded"></div>
+                    ) : (
+                      `$${displayBalance}`
+                    )}
+                  </span>
                 </div>
                 <div className="text-xs text-gray-500">
                   {planDisplayName} plan

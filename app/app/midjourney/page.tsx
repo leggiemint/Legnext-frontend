@@ -38,13 +38,13 @@ export default function CreatePage() {
     },
     {
       number: 2,
-      title: "Execute /imagine Command",
-      description: "Click \"Generate with /imagine\" to send your prompt to Midjourney API. The AI will process your request and create stunning images based on your description."
+      title: "Generate Images",
+      description: "Click \"Generate with /imagine\" to send your prompt to our Midjourney API. The AI will process your request and create 4 stunning image variations based on your description."
     },
     {
       number: 3,
-      title: "Review & Refine",
-      description: "Examine the generated images and choose your favorites. You can download high-resolution versions or refine your prompt to generate variations with different styles or compositions."
+      title: "Upscale & Download",
+      description: "Review the generated images and click \"Upscale\" on your favorite to enhance it to high resolution. The upscaled image will be ready for download and use in your projects."
     }
   ];
 
@@ -320,23 +320,18 @@ export default function CreatePage() {
         {/* Page Header */}
         <div className="text-center mb-8">
           <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-            Experience Midjourney API with /imagine Command
+            Midjourney API Demo
           </h1>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Create stunning AI-generated images using Midjourney&apos;s powerful /imagine command. No technical skills required &ndash; just describe your vision and watch it come to life.
+            Experience the power of Midjourney&apos;s /imagine command through our API. Generate 4 unique image variations from your text description, then upscale your favorites to high resolution.
           </p>
         </div>
-
-      {/* Page Title */}
-      <div className="text-center">
-        <h1 className="text-2xl font-bold">Midjourney API Demo</h1>
-      </div>
 
       {/* Step 1: Choose Input Method */}
       <div className="space-y-6 max-w-7xl mx-auto">
           <div className="card bg-white shadow-lg border-2 border-[#4f46e5]">
             <div className="card-body">
-              <h2 className="card-title mb-4">Try the /imagine Command</h2>
+              <h2 className="card-title mb-4">Create Your Masterpiece</h2>
               
               {/* Split Input Field */}
               <div className="form-control">
@@ -355,7 +350,7 @@ export default function CreatePage() {
                   <div className="flex-1">
                     <textarea 
                       className="textarea w-full h-32 resize-none bg-gray-100 border-0 px-4 py-3 text-base-content placeholder-base-content/60" 
-                      placeholder="Type your /imagine prompt here... e.g., 'a majestic dragon flying over a futuristic city, cinematic lighting, 8k resolution'"
+                      placeholder="Describe your image... e.g., 'a majestic dragon flying over a futuristic city, cinematic lighting, 8k resolution'"
                       value={textDescription}
                       onChange={(e) => setTextDescription(e.target.value)}
                     ></textarea>
@@ -380,14 +375,14 @@ export default function CreatePage() {
                       Generating with Midjourney...
                     </>
                   ) : (
-                    "Generate with /imagine"
+                    "Generate 4 Images"
                   )}
                 </button>
               </div>
 
               {/* Generated Images Section */}
               <div className="mt-8">
-                <h2 className="card-title mb-4 text-center">Generated Images</h2>
+                <h2 className="card-title mb-4 text-center">Your Image Variations</h2>
               
               {isGenerating ? (
                 <div className="flex flex-col items-center justify-center min-h-[400px] space-y-6">
@@ -462,7 +457,7 @@ export default function CreatePage() {
                     </svg>
                   </div>
                   <p className="text-lg text-gray-600">No images generated yet</p>
-                  <p className="text-sm text-gray-500">Enter a prompt above and click &quot;Generate with /imagine&quot; to create stunning AI images</p>
+                  <p className="text-sm text-gray-500">Enter a prompt above and click &quot;Generate 4 Images&quot; to create stunning AI images</p>
                 </div>
               )}
               </div>
@@ -477,7 +472,7 @@ export default function CreatePage() {
           What is Midjourney API
         </h2>
         <p className="text-lg text-gray-700 px-6">
-          Midjourney API provides programmatic access to Midjourney&apos;s powerful AI image generation capabilities. The /imagine command allows you to create stunning, high-quality images from text descriptions, making it perfect for artists, designers, and developers who want to integrate AI art generation into their applications.
+          Our Midjourney API provides seamless access to Midjourney&apos;s powerful AI image generation. Generate 4 unique image variations from any text description, then upscale your favorites to high resolution - perfect for artists, designers, and developers building creative applications.
         </p>
       </div>
 

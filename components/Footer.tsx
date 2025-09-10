@@ -8,19 +8,16 @@ const footerLinks = {
       { label: "Imagine", href: "/imagine" },
       { label: "Upscale", href: "/upscale" },
       { label: "Variation", href: "/variation" },
-      { label: "Describe", href: "/describe" },
-      { label: "Blend", href: "/blend" },
       { label: "Inpaint", href: "/inpaint" },
-      { label: "Zoom", href: "/zoom" },
       { label: "Pan", href: "/pan" },
     ]
   },
   supported_modes: {
     title: "Modes",
     links: [
-      { label: "Fast Mode", href: "/modes/fast" },
-      { label: "Turbo Mode", href: "/modes/turbo" },
-      { label: "Draft Mode", href: "/modes/draft" },
+      { label: "Fast Mode", href: "/fast" },
+      { label: "Turbo Mode", href: "/turbo" },
+      { label: "Draft Mode", href: "/draft" },
     ]
   },
   resources: {

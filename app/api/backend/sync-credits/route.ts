@@ -35,16 +35,11 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { forceSync = false } = body;
 
-    console.log(`🔄 [MANUAL-SYNC] Starting manual credits sync for user: ${user.email}${forceSync ? ' (forced)' : ''}`);
-    console.log(`🔍 [DEBUG] Current frontend credits: ${user.profile.credits}`);
-    console.log(`🔍 [DEBUG] Backend account ID: ${backendAccountId}`);
 
     // 🎯 使用专门的钱包API获取完整的credit_packs数据
     const walletResult = await getBackendWallet(backendAccountId);
-    console.log(`🔍 [DEBUG] Wallet API success: ${walletResult.success}`);
     
     if (!walletResult.success || !walletResult.wallet) {
-      console.log(`❌ [ERROR] Wallet API error: ${walletResult.error}`);
       return NextResponse.json(
         { error: "Failed to fetch backend wallet", details: walletResult.error },
         { status: 500 }
@@ -55,21 +50,9 @@ export async function POST(req: NextRequest) {
     const backendCredits = calculateAvailableCredits(walletResult.wallet);
     const currentFrontendCredits = user.profile.credits;
     
-    const creditPacks = walletResult.wallet.credit_packs || [];
-    console.log(`🔍 [DEBUG] Wallet API point_remain: ${walletResult.wallet.point_remain}`);
-    console.log(`🔍 [DEBUG] Credit packs found: ${creditPacks.length}`);
-    if (Array.isArray(creditPacks)) {
-      creditPacks.forEach((pack: any, index: number) => {
-        console.log(`🔍 [DEBUG] Pack ${index + 1}: capacity=${pack.capacity}, used=${pack.used}, available=${pack.capacity - pack.used}, active=${pack.active}`);
-      });
-    }
-    console.log(`🔍 [DEBUG] Calculated backend credits: ${backendCredits}`);
-    console.log(`🔍 [DEBUG] Frontend credits: ${currentFrontendCredits}`);
-    console.log(`🔍 [DEBUG] Credits difference: ${backendCredits - currentFrontendCredits}`);
     
     // 如果余额相同且非强制同步，跳过更新
     if (!forceSync && backendCredits === currentFrontendCredits) {
-      console.log(`🔍 [DEBUG] Credits already in sync, skipping update`);
       return NextResponse.json({
         message: "Credits already in sync",
         data: {
@@ -81,12 +64,9 @@ export async function POST(req: NextRequest) {
     }
 
     const creditsDiff = backendCredits - currentFrontendCredits;
-    
-    console.log(`🔄 [SYNC] Proceeding with sync: ${creditsDiff > 0 ? 'adding' : 'deducting'} ${Math.abs(creditsDiff)} credits`);
 
     // 更新前端credits
     await prisma.$transaction(async (tx) => {
-      console.log(`🔍 [DEBUG] Starting database transaction...`);
       await tx.userProfile.update({
         where: { userId: user.id },
         data: {
@@ -124,13 +104,8 @@ export async function POST(req: NextRequest) {
           }
         });
       }
-      
-      console.log(`🔍 [DEBUG] UserProfile updated successfully`);
-      console.log(`🔍 [DEBUG] Transaction record created with type: ${creditsDiff > 0 ? 'credit_sync_add' : 'credit_sync_deduct'}`);
     });
 
-    console.log(`✅ [MANUAL-SYNC] Manual sync completed successfully for ${user.email}`);
-    console.log(`🔍 [DEBUG] Final result: ${currentFrontendCredits} → ${backendCredits} (${creditsDiff > 0 ? '+' : ''}${creditsDiff})`);
 
     return NextResponse.json({
       message: "Credits synced successfully",

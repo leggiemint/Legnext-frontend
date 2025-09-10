@@ -166,11 +166,6 @@ export interface EnhancedWallet {
 // 获取后端管理系统URL
 function getBaseManagerUrl(): string {
   const url = process.env.BASE_MANAGER_URL || process.env.NEXT_PUBLIC_BASE_MANAGER_URL;
-  console.log(`🔍 [DEBUG] Backend URL check:`, {
-    BASE_MANAGER_URL: process.env.BASE_MANAGER_URL ? 'SET' : 'NOT_SET',
-    NEXT_PUBLIC_BASE_MANAGER_URL: process.env.NEXT_PUBLIC_BASE_MANAGER_URL ? 'SET' : 'NOT_SET',
-    resolvedUrl: url
-  });
   
   if (!url) {
     console.error('❌ [ERROR] BASE_MANAGER_URL environment variable is not configured');
@@ -196,10 +191,6 @@ function getAuthHeaders(): { [key: string]: string } {
     'API-KEY': getBackendApiKey()
   };
   
-  console.log(`🔍 [DEBUG] Generated headers:`, {
-    'Content-Type': headers['Content-Type'],
-    'API-KEY': headers['API-KEY'] ? `${headers['API-KEY'].substring(0, 6)}...` : 'NONE'
-  });
   
   return headers;
 }
@@ -245,14 +236,6 @@ export async function createBackendAccount(params: {
     mj_quota_remain: params.mjQuotaRemain || 100
   };
 
-  console.log(`🔗 [DEBUG] Creating backend account for ${params.email} at ${baseUrl}`);
-  console.log(`📤 [DEBUG] Request data:`, requestData);
-  console.log(`🔍 [DEBUG] Full request details:`, {
-    url: `${baseUrl}/api/account`,
-    method: 'POST',
-    headers: getAuthHeaders(),
-    bodySize: JSON.stringify(requestData).length
-  });
 
   try {
     const response = await fetch(`${baseUrl}/api/account`, {
@@ -261,12 +244,6 @@ export async function createBackendAccount(params: {
       body: JSON.stringify(requestData)
     });
 
-    console.log(`📥 [DEBUG] Backend response:`, {
-      status: response.status,
-      statusText: response.statusText,
-      headers: Object.fromEntries(response.headers.entries()),
-      url: response.url
-    });
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -280,7 +257,6 @@ export async function createBackendAccount(params: {
     }
 
     const result: BackendAccountResponse = await response.json();
-    console.log(`📥 [DEBUG] Backend response data:`, result);
     
     // 检查响应格式
     if (result.code !== 200) {
@@ -775,33 +751,25 @@ export async function getBackendCreditPacks(accountId: number): Promise<{ succes
 
 // 🎯 计算后端账户的可用credits余额
 export function calculateAvailableCredits(wallet: any): number {
-  console.log(`🔍 [DEBUG] calculateAvailableCredits called with:`, JSON.stringify(wallet, null, 2));
-  
   if (!wallet) {
-    console.log(`🔍 [DEBUG] Wallet is null/undefined`);
     return 0;
   }
   
   if (!wallet.credit_packs) {
-    console.log(`🔍 [DEBUG] wallet.credit_packs is null/undefined`);
     return 0;
   }
   
   const creditPacks = Array.isArray(wallet.credit_packs) ? wallet.credit_packs : [];
-  console.log(`🔍 [DEBUG] creditPacks array length: ${creditPacks.length}`);
   
   const totalCredits = creditPacks
     .filter((pack: any) => {
       const isActive = pack.active && !pack.deleted_at;
-      console.log(`🔍 [DEBUG] Pack ${pack.id}: active=${pack.active}, deleted_at=${pack.deleted_at}, isActive=${isActive}`);
       return isActive;
     })
     .reduce((sum: number, pack: any) => {
       const available = (pack.capacity || 0) - (pack.used || 0);
-      console.log(`🔍 [DEBUG] Pack ${pack.id}: capacity=${pack.capacity}, used=${pack.used}, available=${available}`);
       return sum + Math.max(0, available);
     }, 0);
     
-  console.log(`🔍 [DEBUG] Total calculated credits: ${totalCredits}`);
   return totalCredits;
 }

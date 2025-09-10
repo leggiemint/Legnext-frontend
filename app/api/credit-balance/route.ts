@@ -26,7 +26,6 @@ export async function GET() {
 
     // 🎯 如果没有后端账户，返回前端缓存数据
     if (!backendAccountId) {
-      console.log(`⚠️ No backend account for user ${user.email}, using frontend cache`);
       
       // 获取前端Transaction历史作为备用，排除技术性同步记录
       const transactions = await prisma.transaction.findMany({
@@ -63,8 +62,6 @@ export async function GET() {
     }
 
     // 🚀 直接从后端系统获取最新的credit packs数据
-    console.log(`🔍 Fetching real-time credit packs for backend account: ${backendAccountId}`);
-    
     const creditPacksResult = await getBackendCreditPacks(backendAccountId);
     
     // 同时获取钱包信息以获取 point_remain 数据
@@ -129,9 +126,6 @@ export async function GET() {
       take: 20
     });
 
-    console.log(`✅ Successfully fetched credit packs data for ${user.email}`);
-    console.log(`🔍 Backend data: available=${backendData.available_credits}, total=${backendData.total_credits}, packs=${backendData.credit_packs_count}`);
-    console.log(`🔍 Wallet data: remainPoints=${remainPoints}, remainCredits=${remainCredits}, totalBalance=$${totalAccountBalance}`);
 
     return NextResponse.json({
       source: "backend_realtime",
