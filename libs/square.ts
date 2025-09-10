@@ -3,7 +3,14 @@
 
 import { SquareClient, SquareEnvironment } from 'square';
 import { getPaymentConfig } from "@/config";
+import { prisma } from './prisma';
 import crypto from 'crypto';
+import {
+  createOrGetSquareCustomer,
+  createSquareSubscription as createRealSquareSubscription,
+  cancelSquareSubscription as cancelRealSquareSubscription,
+  getSquareSubscription as getRealSquareSubscription
+} from './square-subscriptions';
 
 // 初始化 Square 客户端
 const getSquareClient = () => {
@@ -223,133 +230,69 @@ export const createSquareCheckout = async (params: SquareCheckoutParams): Promis
 };
 
 
-// Square订阅管理功能 - 注意：Square订阅API相对复杂，需要Catalog API先创建计划
+// 使用真正的订阅系统功能 (已在文件顶部导入)
+
+// Square订阅管理功能 - 使用真正的 Subscriptions API
 export const createSquareSubscription = async (params: {
-  customerId: string;
+  customerId?: string;
   planId: string;
-  email?: string;
+  email: string;
+  userId: string;
+  name?: string;
 }): Promise<any> => {
   const startTime = Date.now();
 
   try {
-    console.log('🟦 Creating Square subscription:', {
-      customerId: params.customerId,
+    console.log('🟦 Creating Square subscription (real API):', {
       planId: params.planId,
       email: params.email,
+      userId: params.userId,
       timestamp: new Date().toISOString()
     });
 
     // 验证必需参数
-    if (!params.planId) {
-      console.error('❌ Missing required parameter: planId');
-      throw new Error('Plan ID is required for subscription creation');
+    if (!params.planId || !params.email || !params.userId) {
+      throw new Error('Plan ID, email, and user ID are required for subscription creation');
     }
 
-    if (!params.email) {
-      console.error('❌ Missing required parameter: email');
-      throw new Error('Email is required for subscription creation');
-    }
-
-    const client = getSquareClient();
-
-    // 从配置中查找计划信息
-    const squareConfig = getPaymentConfig();
-    const plan = squareConfig.plans.find(p => p.priceId === params.planId);
-
-    if (!plan) {
-      console.error(`❌ Unknown Square plan ID: ${params.planId}`, {
-        availablePlans: squareConfig.plans.map(p => ({ id: p.priceId, name: p.name, price: p.price }))
-      });
-      throw new Error(`Invalid plan ID: ${params.planId}`);
-    }
-
-    console.log('📋 Plan details:', {
-      name: plan.name,
-      price: plan.price,
-      credits: plan.credits
+    // 创建或获取 Square 客户
+    const squareCustomerId = await createOrGetSquareCustomer({
+      email: params.email,
+      name: params.name,
+      userId: params.userId
     });
 
-    // 先检查是否已存在Square客户
-    let squareCustomer;
-    try {
-      console.log('🔍 Searching for existing Square customer...');
-      // 尝试通过email查找现有客户
-      const customersResponse = await client.customers.search({
-        query: {
-          filter: {
-            emailAddress: {
-              exact: params.email
-            }
-          }
-        }
-      });
-      squareCustomer = customersResponse.customers?.[0];
-
-      if (squareCustomer) {
-        console.log('✅ Found existing Square customer:', squareCustomer.id);
-      } else {
-        console.log('ℹ️ No existing customer found, will create new one');
-      }
-    } catch (error) {
-      console.warn('⚠️ Customer search failed, will create new customer:', error.message);
-    }
-
-    // 如果没有找到客户，创建新客户
-    if (!squareCustomer) {
-      console.log('👤 Creating new Square customer...');
-      const customerResponse = await client.customers.create({
-        givenName: 'Customer',
-        emailAddress: params.email,
-        idempotencyKey: crypto.randomUUID()
-      });
-      squareCustomer = customerResponse.customer;
-      console.log('✅ Created new Square customer:', {
-        id: squareCustomer.id,
-        email: squareCustomer.emailAddress
-      });
-    }
-
-    if (!squareCustomer) {
-      console.error('❌ Could not find or create Square customer');
-      throw new Error('Failed to find or create Square customer');
-    }
-
-    // ⚠️ 注意：Square订阅需要先通过Catalog API创建计划variation
-    // 这里我们先创建一次性支付，然后模拟订阅逻辑
-    console.log('⚠️ Square subscription creation - using payment link approach');
-
-    // 创建支付链接而不是直接订阅（更稳定的方式）
-    const paymentLinkResponse = await client.checkout.paymentLinks.create({
-      idempotencyKey: crypto.randomUUID(),
-      description: `${plan.name} Subscription - ${plan.credits} credits/month`,
-      quickPay: {
-        name: `${plan.name} Subscription`,
-        priceMoney: {
-          amount: BigInt(plan.price * 100), // 转换为分
-          currency: "USD" as const
+    // 获取计划变体ID（假设使用月度计划）
+    const planVariation = await prisma.squarePlanVariation.findFirst({
+      where: {
+        plan: {
+          name: 'Pro Plan' // 根据配置中的 planId 映射
         },
-        locationId: process.env.SQUARE_LOCATION_ID!
-      },
-      checkoutOptions: {
-        redirectUrl: `${process.env.NEXTAUTH_URL}/api/square/webhook/subscription-created`,
-        askForShippingAddress: false,
-        merchantSupportEmail: process.env.SQUARE_SUPPORT_EMAIL || 'support@legnext.ai'
-      },
-      paymentNote: `Subscription for ${plan.name} - ${params.email}`
+        cadence: 'MONTHLY'
+      }
+    });
+
+    if (!planVariation) {
+      throw new Error('Subscription plan variation not found. Please run initialization first.');
+    }
+
+    // 创建真正的订阅
+    const subscription = await createRealSquareSubscription({
+      customerId: squareCustomerId,
+      planVariationId: planVariation.catalogObjectId,
+      userId: params.userId
     });
 
     const duration = Date.now() - startTime;
     const result = {
-      paymentLinkId: paymentLinkResponse.paymentLink?.id,
-      paymentUrl: paymentLinkResponse.paymentLink?.url,
-      customerId: squareCustomer.id,
-      planName: plan.name,
-      amount: plan.price,
-      credits: plan.credits,
-      note: 'Payment link created for subscription setup'
+      subscriptionId: subscription.subscriptionId,
+      status: subscription.status,
+      customerId: squareCustomerId,
+      planName: 'Pro Plan',
+      note: 'Real Square subscription created using Subscriptions API'
     };
 
-    console.log('✅ Square subscription setup payment link created:', {
+    console.log('✅ Square subscription created successfully:', {
       ...result,
       duration: `${duration}ms`,
       timestamp: new Date().toISOString()
@@ -373,33 +316,29 @@ export const createSquareSubscription = async (params: {
   }
 };
 
+// 订阅管理功能 (已在文件顶部导入)
+
 export const cancelSquareSubscription = async (subscriptionId: string): Promise<boolean> => {
   const startTime = Date.now();
 
   try {
-    console.log('🟦 Canceling Square subscription:', {
+    console.log('🟦 Canceling Square subscription (real API):', {
       subscriptionId: subscriptionId,
       timestamp: new Date().toISOString()
     });
 
     if (!subscriptionId) {
-      console.error('❌ Missing required parameter: subscriptionId');
       throw new Error('Subscription ID is required for cancellation');
     }
 
-    // ⚠️ 注意：由于我们使用支付链接方式，取消订阅需要通过用户状态管理
-    // 这里我们标记用户订阅为取消状态，但不调用Square API
-    console.log('⚠️ Square subscription cancellation - using status update approach');
-    console.log('📝 Subscription cancellation request processed:', {
-      subscriptionId: subscriptionId,
-      action: 'marked_for_cancellation',
-      note: 'User subscription status will be updated to canceled'
-    });
+    // 使用真正的 Square Subscriptions API 取消订阅
+    const result = await cancelRealSquareSubscription(subscriptionId);
 
     const duration = Date.now() - startTime;
-    console.log('✅ Square subscription cancellation processed:', {
-      subscriptionId: subscriptionId,
-      status: 'cancellation_requested',
+    console.log('✅ Square subscription canceled successfully:', {
+      subscriptionId: result.subscriptionId,
+      status: result.status,
+      canceledDate: result.canceledDate,
       duration: `${duration}ms`,
       timestamp: new Date().toISOString()
     });
@@ -416,7 +355,6 @@ export const cancelSquareSubscription = async (subscriptionId: string): Promise<
       timestamp: new Date().toISOString()
     });
 
-    // 重新抛出错误，让调用方处理
     throw error;
   }
 };
@@ -569,48 +507,33 @@ const mapInvoiceStatus = (status: string | undefined): string => {
   return statusMap[status] || status.toLowerCase();
 };
 
+// 订阅获取功能 (已在文件顶部导入)
+
 export const getSquareSubscription = async (subscriptionId: string): Promise<any> => {
   const startTime = Date.now();
 
   try {
-    console.log('🟦 Getting Square subscription:', {
+    console.log('🟦 Getting Square subscription (real API):', {
       subscriptionId: subscriptionId,
       timestamp: new Date().toISOString()
     });
 
     if (!subscriptionId) {
-      console.error('❌ Missing required parameter: subscriptionId');
       throw new Error('Subscription ID is required for retrieval');
     }
 
-    // ⚠️ 注意：由于我们使用支付链接方式，这里返回模拟的订阅信息
-    // 实际的订阅状态需要从用户数据库中获取
-    console.log('⚠️ Square subscription retrieval - using simulated approach');
-    console.log('🔍 Subscription information retrieved from local database');
+    // 使用真正的 Square Subscriptions API 获取订阅信息
+    const subscription = await getRealSquareSubscription(subscriptionId);
 
     const duration = Date.now() - startTime;
-    const result = {
-      subscriptionId: subscriptionId,
-      status: 'simulated_active', // 实际状态需要从数据库获取
-      customerId: 'simulated_customer_id',
-      startDate: new Date().toISOString(),
-      canceledDate: null as string | null,
-      phases: [{
-        ordinal: 0,
-        planName: 'Pro Plan',
-        price: 12.00
-      }],
-      locationId: process.env.SQUARE_LOCATION_ID,
-      note: 'This is a simulated subscription for payment link approach'
-    };
-
     console.log('✅ Square subscription information retrieved:', {
-      ...result,
+      subscriptionId: subscription.id,
+      status: subscription.status,
       duration: `${duration}ms`,
       timestamp: new Date().toISOString()
     });
 
-    return result;
+    return subscription;
 
   } catch (error) {
     const duration = Date.now() - startTime;
@@ -622,7 +545,6 @@ export const getSquareSubscription = async (subscriptionId: string): Promise<any
       timestamp: new Date().toISOString()
     });
 
-    // 重新抛出错误，让调用方处理
     throw error;
   }
 };

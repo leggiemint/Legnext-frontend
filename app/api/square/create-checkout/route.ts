@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/libs/next-auth";
 import { prisma } from "@/libs/prisma";
-import { createSquareCheckout } from "@/libs/square";
+import { createSquareCheckout, createSquareSubscription } from "@/libs/square";
 
 export async function POST(req: NextRequest) {
   try {
@@ -43,22 +43,48 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // Create Square checkout session
-    const checkoutUrl = await createSquareCheckout({
-      priceId,
-      mode,
-      successUrl,
-      cancelUrl,
-      clientReferenceId: user?.id || undefined,
-      user: user ? {
-        customerId: undefined, // TODO: Add Square customer ID support
-        email: user.email || undefined,
-      } : undefined,
-    });
+    // Handle different modes
+    if (mode === 'subscription') {
+      // Create real Square subscription
+      if (!user?.id || !user?.email) {
+        return NextResponse.json(
+          { error: "Authentication required for subscription" },
+          { status: 401 }
+        );
+      }
 
-    return NextResponse.json({ 
-      url: checkoutUrl 
-    });
+      const subscriptionResult = await createSquareSubscription({
+        planId: priceId,
+        email: user.email,
+        userId: user.id,
+        name: user.name || undefined
+      });
+
+      return NextResponse.json({
+        success: true,
+        subscriptionId: subscriptionResult.subscriptionId,
+        status: subscriptionResult.status,
+        message: 'Square subscription created successfully'
+      });
+
+    } else {
+      // Create Square payment link for one-time payments
+      const checkoutUrl = await createSquareCheckout({
+        priceId,
+        mode,
+        successUrl,
+        cancelUrl,
+        clientReferenceId: user?.id || undefined,
+        user: user ? {
+          customerId: undefined,
+          email: user.email || undefined,
+        } : undefined,
+      });
+
+      return NextResponse.json({ 
+        url: checkoutUrl 
+      });
+    }
 
   } catch (error: any) {
     console.error("Square checkout error:", error);

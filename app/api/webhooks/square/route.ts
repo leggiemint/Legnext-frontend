@@ -4,16 +4,22 @@ import { updateSubscription, getUserWithProfile } from "@/libs/user-service";
 import { verifySquareWebhook } from "@/libs/square";
 import { createBackendCreditPack, updateBackendAccountPlan } from "@/libs/backend-client";
 
-// Square webhook events we handle
+// Square webhook events we handle for true subscriptions
 const RELEVANT_EVENTS = new Set([
   'payment.completed',
-  'payment.created',  // 添加payment.created事件
-  'payment.updated',  // 添加payment.updated事件
+  'payment.created',
+  'payment.updated',
   'payment.failed',
   'subscription.created',
   'subscription.updated',
+  'subscription.paused',
+  'subscription.resumed',
   'subscription.canceled',
-  'invoice.payment_made'
+  'invoice.published',
+  'invoice.payment_made',
+  'invoice.payment_failed',
+  'invoice.canceled',
+  'invoice.completed'
 ]);
 
 export async function POST(req: NextRequest) {
@@ -260,6 +266,244 @@ export async function POST(req: NextRequest) {
       case 'payment.failed': {
         // Handle failed payment
         console.log('Payment failed:', event.data?.object?.id);
+        break;
+      }
+
+      case 'subscription.created': {
+        const subscription = event.data?.object?.subscription;
+        console.log('🎉 Subscription created:', {
+          subscriptionId: subscription?.id,
+          customerId: subscription?.customer_id,
+          status: subscription?.status,
+          startDate: subscription?.start_date
+        });
+
+        // Update local subscription record
+        if (subscription?.id) {
+          await prisma.subscription.updateMany({
+            where: { squareSubscriptionId: subscription.id },
+            data: {
+              status: subscription.status || 'active',
+              currentPeriodStart: subscription.start_date ? new Date(subscription.start_date) : undefined,
+              currentPeriodEnd: subscription.charged_through_date ? new Date(subscription.charged_through_date) : undefined,
+              nextInvoiceDate: subscription.invoice_request_method ? new Date(subscription.charged_through_date) : undefined
+            }
+          });
+
+          // Grant initial subscription credits
+          const subscriptionRecord = await prisma.subscription.findFirst({
+            where: { squareSubscriptionId: subscription.id },
+            include: { user: { include: { profile: true } } }
+          });
+
+          if (subscriptionRecord) {
+            console.log(`🎁 Granting initial subscription credits to user ${subscriptionRecord.userId}`);
+            // Grant 30,000 credits for Pro subscription
+            await updateSubscription(
+              subscriptionRecord.userId,
+              'pro',
+              'active',
+              subscription.customer_id,
+              subscription.plan_variation_id,
+              new Date(subscription.start_date),
+              subscription.charged_through_date ? new Date(subscription.charged_through_date) : undefined
+            );
+          }
+        }
+        break;
+      }
+
+      case 'subscription.updated': {
+        const subscription = event.data?.object?.subscription;
+        console.log('🔄 Subscription updated:', {
+          subscriptionId: subscription?.id,
+          status: subscription?.status,
+          chargedThroughDate: subscription?.charged_through_date
+        });
+
+        if (subscription?.id) {
+          await prisma.subscription.updateMany({
+            where: { squareSubscriptionId: subscription.id },
+            data: {
+              status: subscription.status || 'active',
+              currentPeriodEnd: subscription.charged_through_date ? new Date(subscription.charged_through_date) : undefined
+            }
+          });
+        }
+        break;
+      }
+
+      case 'subscription.paused': {
+        const subscription = event.data?.object?.subscription;
+        console.log('⏸️ Subscription paused:', {
+          subscriptionId: subscription?.id,
+          pauseEffectiveDate: subscription?.pause_effective_date
+        });
+
+        if (subscription?.id) {
+          await prisma.subscription.updateMany({
+            where: { squareSubscriptionId: subscription.id },
+            data: { status: 'paused' }
+          });
+
+          // Update user profile to reflect paused status
+          const subscriptionRecord = await prisma.subscription.findFirst({
+            where: { squareSubscriptionId: subscription.id }
+          });
+
+          if (subscriptionRecord) {
+            await updateSubscription(
+              subscriptionRecord.userId,
+              'free', // Downgrade to free plan
+              'paused'
+            );
+          }
+        }
+        break;
+      }
+
+      case 'subscription.resumed': {
+        const subscription = event.data?.object?.subscription;
+        console.log('▶️ Subscription resumed:', {
+          subscriptionId: subscription?.id,
+          resumeEffectiveDate: subscription?.resume_effective_date
+        });
+
+        if (subscription?.id) {
+          await prisma.subscription.updateMany({
+            where: { squareSubscriptionId: subscription.id },
+            data: { status: 'active' }
+          });
+
+          // Update user profile to reflect active status
+          const subscriptionRecord = await prisma.subscription.findFirst({
+            where: { squareSubscriptionId: subscription.id }
+          });
+
+          if (subscriptionRecord) {
+            await updateSubscription(
+              subscriptionRecord.userId,
+              'pro', // Restore to pro plan
+              'active'
+            );
+          }
+        }
+        break;
+      }
+
+      case 'subscription.canceled': {
+        const subscription = event.data?.object?.subscription;
+        console.log('❌ Subscription canceled:', {
+          subscriptionId: subscription?.id,
+          canceledDate: subscription?.canceled_date
+        });
+
+        if (subscription?.id) {
+          await prisma.subscription.updateMany({
+            where: { squareSubscriptionId: subscription.id },
+            data: { 
+              status: 'canceled',
+              cancelAtPeriodEnd: true
+            }
+          });
+
+          // Update user profile to reflect canceled status
+          const subscriptionRecord = await prisma.subscription.findFirst({
+            where: { squareSubscriptionId: subscription.id }
+          });
+
+          if (subscriptionRecord) {
+            await updateSubscription(
+              subscriptionRecord.userId,
+              'free', // Downgrade to free plan
+              'canceled'
+            );
+          }
+        }
+        break;
+      }
+
+      case 'invoice.published': {
+        const invoice = event.data?.object?.invoice;
+        console.log('📄 Invoice published:', {
+          invoiceId: invoice?.id,
+          subscriptionId: invoice?.subscription_id,
+          dueDate: invoice?.next_payment_amount_money
+        });
+        break;
+      }
+
+      case 'invoice.payment_made': {
+        const invoice = event.data?.object?.invoice;
+        console.log('💰 Invoice payment made:', {
+          invoiceId: invoice?.id,
+          subscriptionId: invoice?.subscription_id,
+          amount: invoice?.next_payment_amount_money?.amount
+        });
+
+        // This is a recurring subscription payment - grant monthly credits
+        if (invoice?.subscription_id) {
+          const subscriptionRecord = await prisma.subscription.findFirst({
+            where: { squareSubscriptionId: invoice.subscription_id }
+          });
+
+          if (subscriptionRecord) {
+            console.log(`💳 Processing recurring payment for subscription ${invoice.subscription_id}`);
+            // Grant monthly credits for Pro users (30,000 credits per month)
+            await updateSubscription(
+              subscriptionRecord.userId,
+              'pro',
+              'active'
+            );
+
+            // Sync to backend system
+            try {
+              const user = await getUserWithProfile(subscriptionRecord.userId);
+              const backendAccountId = user?.profile?.preferences?.backendAccountId;
+
+              if (backendAccountId) {
+                console.log(`🔄 Syncing recurring subscription payment to backend account: ${backendAccountId}`);
+                
+                const creditSyncResult = await createBackendCreditPack({
+                  accountId: backendAccountId,
+                  capacity: 30000,
+                  description: "Pro subscription - Monthly credit renewal (31 days expiry)",
+                  type: "subscription"
+                });
+
+                if (creditSyncResult.success) {
+                  console.log(`✅ Backend credit pack created for recurring payment: +30000 credits for account ${backendAccountId}`);
+                }
+              }
+            } catch (syncError) {
+              console.error(`❌ Backend sync error for recurring payment:`, syncError);
+            }
+          }
+        }
+        break;
+      }
+
+      case 'invoice.payment_failed': {
+        const invoice = event.data?.object?.invoice;
+        console.log('⚠️ Invoice payment failed:', {
+          invoiceId: invoice?.id,
+          subscriptionId: invoice?.subscription_id
+        });
+
+        // Mark subscription as past due
+        if (invoice?.subscription_id) {
+          const subscriptionRecord = await prisma.subscription.findFirst({
+            where: { squareSubscriptionId: invoice.subscription_id }
+          });
+
+          if (subscriptionRecord) {
+            await updateSubscription(
+              subscriptionRecord.userId,
+              subscriptionRecord.name === 'Pro Plan' ? 'pro' : 'free',
+              'past_due'
+            );
+          }
+        }
         break;
       }
 
