@@ -303,6 +303,50 @@ model RechargeSetting {
   @@index([autoRecharge])
 }
 
+// Square Subscription Plans stored in Catalog API
+model SquareSubscriptionPlan {
+  id                    String   @id @default(cuid())
+  catalogObjectId       String   @unique // Square catalog object ID
+  name                  String   // Plan name
+  description           String?  // Plan description
+  monthlyPriceAmount    BigInt   // Monthly price in cents
+  currency              String   @default("USD")
+  catalogVersion        BigInt?  // Square catalog version
+  isActive              Boolean  @default(true)
+  
+  // Plan variations
+  variations            SquarePlanVariation[]
+  
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@index([catalogObjectId])
+  @@index([isActive])
+}
+
+// Square Plan Variations
+model SquarePlanVariation {
+  id                    String   @id @default(cuid())
+  planId                String   // Reference to SquareSubscriptionPlan
+  catalogObjectId       String   @unique // Square variation catalog object ID
+  name                  String   // Variation name (e.g., "Monthly", "Annual")
+  cadence               String   // "MONTHLY" | "ANNUAL" | "WEEKLY" etc.
+  periods               Int      @default(1) // Number of periods
+  priceAmount           BigInt   // Price in cents
+  currency              String   @default("USD")
+  catalogVersion        BigInt?  // Square catalog version
+  isActive              Boolean  @default(true)
+  
+  plan                  SquareSubscriptionPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+  
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@index([catalogObjectId])
+  @@index([planId])
+  @@index([isActive])
+}
+
 // Enhanced Subscriptions based on reference
 model Subscription {
   id                  String    @id @default(cuid())
@@ -310,11 +354,20 @@ model Subscription {
   subscriptionId      String?   @unique // subscription_id from reference
   name                String?   // name from reference
   prices              Json?     // prices JSON from reference
-  platform            String?   // platform from reference
+  platform            String?   // platform from reference ("stripe" | "square")
   customerId          String?   // customer_id from reference
-  status              Boolean   @default(true) // status from reference
+  status              String    @default("active") // "active" | "paused" | "canceled" | "incomplete" | "past_due"
   cancelAtPeriodEnd   Boolean   @default(false) // cancel_at_period_end from reference
   invoiceUrl          String?   // invoice_url from reference
+  
+  // Square-specific fields
+  squareSubscriptionId String?  @unique // Square subscription ID
+  squarePlanVariationId String? // Square plan variation ID
+  squareLocationId    String?   // Square location ID
+  currentPeriodStart  DateTime? // Current billing period start
+  currentPeriodEnd    DateTime? // Current billing period end
+  nextInvoiceDate     DateTime? // Next invoice date
+  
   createdAt           DateTime  @default(now()) // created_at from reference
   expiresAt           DateTime? // expires_at from reference
   updatedAt           DateTime  @updatedAt
@@ -323,6 +376,7 @@ model Subscription {
 
   @@index([userId])
   @@index([subscriptionId])
+  @@index([squareSubscriptionId])
   @@index([platform])
   @@index([status])
 }

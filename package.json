@@ -44,7 +44,6 @@
     "react-syntax-highlighter": "^15.5.0",
     "react-tooltip": "^5.26.3",
     "resend": "^6.0.2",
-    "square": "^43.0.2",
     "stripe": "^13.11.0",
     "zod": "^3.22.4"
   },

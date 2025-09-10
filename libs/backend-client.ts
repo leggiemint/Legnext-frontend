@@ -382,29 +382,53 @@ export async function updateBackendAccountPlan(params: {
       throw new Error('Either accountId or email must be provided');
     }
 
-    console.log(`🔄 Updating backend account plan for account ${accountId} to ${planToUpdate}...`);
+    console.log(`🔄 [BACKEND-API] Updating backend account plan for account ${accountId} to ${planToUpdate}...`);
     
-    const response = await fetch(`${baseUrl}/api/account/${accountId}/plan`, {
+    const requestUrl = `${baseUrl}/api/account/${accountId}/plan`;
+    const requestBody = { plan: planToUpdate };
+    
+    console.log(`🔄 [BACKEND-API] Plan update request:`, {
+      url: requestUrl,
+      method: 'PATCH',
+      accountId: accountId,
+      plan: planToUpdate,
+      body: requestBody
+    });
+    
+    const response = await fetch(requestUrl, {
       method: 'PATCH',
       headers: getAuthHeaders(),
-      body: JSON.stringify({
-        plan: planToUpdate
-      })
+      body: JSON.stringify(requestBody)
+    });
+
+    console.log(`📡 [BACKEND-API] Plan update response:`, {
+      status: response.status,
+      statusText: response.statusText,
+      headers: Object.fromEntries(response.headers.entries()),
+      ok: response.ok
     });
 
     if (!response.ok) {
       const errorText = await response.text();
+      console.error(`❌ [BACKEND-API] Plan update failed:`, {
+        status: response.status,
+        statusText: response.statusText,
+        errorText: errorText
+      });
       throw new Error(`Backend API error: ${response.status} - ${errorText}`);
     }
 
     const result = await response.json();
     
+    console.log(`📡 [BACKEND-API] Plan update result:`, result);
+    
     // 检查响应格式
     if (result.code !== 200) {
+      console.error(`❌ [BACKEND-API] Plan update API error:`, result);
       throw new Error(`Backend API error: ${result.message || 'Unknown error'}`);
     }
 
-    console.log(`✅ Backend account plan updated to: ${params.plan}`);
+    console.log(`✅ Backend account plan updated to: ${planToUpdate}`);
     
     return {
       success: true,
@@ -636,10 +660,16 @@ export async function getBackendWallet(accountId: number): Promise<{ success: bo
 // 验证后端配置
 export function validateBackendConfig(): { isValid: boolean; error?: string } {
   try {
-    getBaseManagerUrl();
-    getBackendApiKey();
+    const baseUrl = getBaseManagerUrl();
+    const apiKey = getBackendApiKey();
+    console.log(`🔧 [BACKEND-CONFIG] Configuration validated:`, {
+      baseUrl: baseUrl,
+      hasApiKey: !!apiKey,
+      apiKeyLength: apiKey.length
+    });
     return { isValid: true };
   } catch (error) {
+    console.error(`❌ [BACKEND-CONFIG] Configuration validation failed:`, error);
     return { 
       isValid: false, 
       error: error instanceof Error ? error.message : 'Unknown error' 
@@ -679,14 +709,33 @@ export async function createBackendCreditPack(params: {
       expired_at = now.toISOString();
     }
 
-    const response = await fetch(`${baseUrl}/api/account/${params.accountId}/wallet/credit_pack?return_credit_pack=true`, {
+    const requestUrl = `${baseUrl}/api/account/${params.accountId}/wallet/credit_pack?return_credit_pack=true`;
+    const requestBody = {
+      capacity: params.capacity,
+      description: params.description,
+      expired_at: expired_at
+    };
+
+    console.log(`💰 [BACKEND-API] Creating credit pack:`, {
+      url: requestUrl,
+      method: 'POST',
+      accountId: params.accountId,
+      capacity: params.capacity,
+      type: params.type,
+      expired_at: expired_at,
+      body: requestBody
+    });
+
+    const response = await fetch(requestUrl, {
       method: 'POST',
       headers: getAuthHeaders(),
-      body: JSON.stringify({
-        capacity: params.capacity,
-        description: params.description,
-        expired_at: expired_at
-      })
+      body: JSON.stringify(requestBody)
+    });
+
+    console.log(`📡 [BACKEND-API] Credit pack response:`, {
+      status: response.status,
+      statusText: response.statusText,
+      ok: response.ok
     });
 
     if (!response.ok) {
