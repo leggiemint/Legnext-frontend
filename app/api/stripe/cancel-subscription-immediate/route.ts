@@ -52,12 +52,7 @@ export async function POST(req: NextRequest) {
         console.log(`✅ [CANCEL-IMMEDIATE] Found active subscription: ${subscription.id}`);
 
         // Cancel the subscription immediately
-        canceledSubscription = await stripe.subscriptions.cancel(subscription.id, {
-          metadata: {
-            cancellation_reason: reason || 'User requested immediate cancellation',
-            canceled_by: 'user'
-          }
-        });
+        canceledSubscription = await stripe.subscriptions.cancel(subscription.id);
 
         console.log(`✅ [CANCEL-IMMEDIATE] Stripe subscription canceled: ${subscription.id}`);
       } else {
