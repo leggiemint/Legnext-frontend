@@ -34,8 +34,8 @@ const config = {
         ],
       },
       {
-        // Pro subscription plan - Stripe sandbox Price ID
-        priceId: "price_1S5w2j3W9QrG6Tfe5g1OrDeq",
+        // Pro subscription plan - Price ID from environment variable
+        priceId: process.env.NEXT_PUBLIC_STRIPE_PRO_PRICE_ID || "price_1S5w2j3W9QrG6Tfe5g1OrDeq",
         isFeatured: true,
         name: "Pro",
         description: "Best Value",
