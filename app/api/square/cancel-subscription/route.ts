@@ -98,8 +98,10 @@ export async function POST(req: NextRequest) {
 
     // 同步到后端系统（从pro降级到free，即developer降级到hobbyist）
     try {
+      const backendAccountId = (user.profile.preferences as any)?.backendAccountId;
       const backendResult = await updateBackendAccountPlan({
-        email: user.email,
+        accountId: backendAccountId || undefined,
+        email: !backendAccountId ? user.email : undefined, // 只有没有accountId时才使用email
         newPlan: 'hobbyist' // 免费计划在后端是hobbyist
       });
 

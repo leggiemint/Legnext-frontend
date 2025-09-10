@@ -278,7 +278,7 @@ async function legacyDirectGrant(
 }
 
 /**
- * Update user subscription
+ * Update user subscription (optimized for Square payments only)
  */
 export async function updateSubscription(
   userId: string,
@@ -290,12 +290,12 @@ export async function updateSubscription(
   subscriptionEnd?: Date
 ): Promise<{ success: boolean; error?: string }> {
   try {
+    // 更新UserProfile
     await prisma.userProfile.upsert({
       where: { userId },
       update: {
         plan,
         subscriptionStatus: status,
-        ...(customerId && { stripeCustomerId: customerId }),
         ...(priceId && { currentPriceId: priceId }),
         ...(subscriptionStart && { subscriptionStart }),
         ...(subscriptionEnd && { subscriptionEnd }),
@@ -307,7 +307,6 @@ export async function updateSubscription(
         subscriptionStatus: status,
         credits: 100,
         totalCreditsEarned: 100,
-        ...(customerId && { stripeCustomerId: customerId }),
         ...(priceId && { currentPriceId: priceId }),
         ...(subscriptionStart && { subscriptionStart }),
         ...(subscriptionEnd && { subscriptionEnd }),
@@ -318,6 +317,18 @@ export async function updateSubscription(
         }
       }
     });
+
+    // 如果提供了customerId，存储到Customer表（使用stripeCustomerId字段存储Square customer ID）
+    if (customerId) {
+      await prisma.customer.upsert({
+        where: { userId },
+        update: { stripeCustomerId: customerId }, // 复用现有字段存储Square customer ID
+        create: {
+          userId,
+          stripeCustomerId: customerId
+        }
+      });
+    }
 
     return { success: true };
   } catch (error) {

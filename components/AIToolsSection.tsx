@@ -216,7 +216,7 @@ const AIToolsSection = () => {
                       </div>
                       
                       <div className="flex items-center p-2 md:p-3 bg-gray-50 rounded-lg">
-                        <span className="text-gray-700 text-xs md:text-sm font-medium">/faceswap</span>
+                        <span className="text-gray-700 text-xs md:text-sm font-medium">/pan</span>
                       </div>
                     </div>
 

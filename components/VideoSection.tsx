@@ -12,13 +12,14 @@ const VideoSection = () => {
             <span className="block mb-2">Create stunning videos with</span>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3 mt-4">
               <div className="bg-white border border-gray-200 rounded-full px-3 sm:px-4 py-2 flex items-center gap-2 shadow-lg">
-                <Image 
-                  src="/images/Midjourney_logo.png" 
-                  alt="Midjourney" 
-                  width={24}
-                  height={24}
-                  className="w-5 sm:w-6 h-5 sm:h-6" 
-                />
+                <svg 
+                  className="w-5 sm:w-6 h-5 sm:h-6 text-purple-600" 
+                  fill="currentColor" 
+                  viewBox="0 0 24 24"
+                >
+                  <path d="M3 18h18v2H3v-2zm16-4H5l-2-8h18l-2 8zM7 8l1.5-6h7L17 8H7z"/>
+                  <path d="M12 4l-1 4h2l-1-4z" fill="currentColor"/>
+                </svg>
                 <span className="text-gray-900 font-bold text-xl sm:text-2xl md:text-3xl">Midjourney</span>
               </div>
               <span className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900">, the latest Model for AI Videos.</span>
@@ -61,13 +62,14 @@ const VideoSection = () => {
                 onClick={() => window.location.href = '/app'}
                 className="relative flex h-11 w-full items-center justify-center px-6 before:absolute before:inset-0 before:rounded-full before:bg-gray-200 before:transition before:duration-300 hover:before:scale-105 active:duration-75 active:before:scale-95 cursor-pointer"
               >
-                <Image 
-                  src="/images/Midjourney_logo.png" 
-                  alt="Midjourney" 
-                  width={20}
-                  height={20}
-                  className="relative w-4 md:w-5 h-4 md:h-5 mr-2" 
-                />
+                <svg 
+                  className="relative w-4 md:w-5 h-4 md:h-5 mr-2 text-purple-600" 
+                  fill="currentColor" 
+                  viewBox="0 0 24 24"
+                >
+                  <path d="M3 18h18v2H3v-2zm16-4H5l-2-8h18l-2 8zM7 8l1.5-6h7L17 8H7z"/>
+                  <path d="M12 4l-1 4h2l-1-4z" fill="currentColor"/>
+                </svg>
                 <span className="relative text-sm md:text-base font-semibold text-black">Try Video API</span>
               </button>
               

@@ -47,7 +47,7 @@ export const defaultFAQList: FAQItemProps[] = [
   {
     id: "8",
     question: "How do I get support if I encounter issues?",
-    answer: "You can get help through our docs, Discord community, and direct support channels. Check our status page anytime for real-time API health and updates."
+    answer: "You can get help through our docs, Telegram community, and direct support email. Contact us at support@legnext.ai for immediate assistance with any issues."
   }
 ];
 

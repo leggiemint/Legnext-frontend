@@ -40,10 +40,10 @@ export async function POST(req: NextRequest) {
     }
 
     // Verify webhook signature
-    const webhookSecret = process.env.SQUARE_WEBHOOK_SECRET;
+    const webhookSecret = process.env.SQUARE_WEBHOOK_SIGNATURE_KEY || process.env.SQUARE_WEBHOOK_SECRET;
     if (!webhookSecret) {
-      console.error("❌ Missing SQUARE_WEBHOOK_SECRET");
-      return NextResponse.json({ error: "Missing webhook secret" }, { status: 500 });
+      console.error("❌ Missing SQUARE_WEBHOOK_SIGNATURE_KEY");
+      return NextResponse.json({ error: "Missing webhook signature key" }, { status: 500 });
     }
 
     console.log("🔐 Attempting to verify webhook signature...");
@@ -166,7 +166,9 @@ export async function POST(req: NextRequest) {
                 "pro",
                 "active",
                 payment.order_id,
-                "square-pro-subscription"
+                "square-pro-subscription",
+                new Date(), // subscriptionStart
+                undefined // subscriptionEnd
               );
 
               if (!updateResult.success) {
@@ -198,16 +200,16 @@ export async function POST(req: NextRequest) {
                     console.error(`⚠️ Failed to sync plan to backend: ${planSyncResult.error}`);
                   }
 
-                  // 2. 创建33000 credits pack到后端系统（订阅赠送，31天过期）
+                  // 2. 创建30000 credits pack到后端系统（订阅赠送，31天过期）
                   const creditSyncResult = await createBackendCreditPack({
                     accountId: backendAccountId,
-                    capacity: 33000,
-                    description: "Pro subscription - 33000 credits bonus (31 days expiry)",
+                    capacity: 30000,
+                    description: "Pro subscription - 30000 credits monthly (31 days expiry)",
                     type: "subscription" // 订阅类型，31天过期
                   });
 
                   if (creditSyncResult.success) {
-                    console.log(`✅ Backend credit pack created: +33000 credits (31 days) for account ${backendAccountId}`);
+                    console.log(`✅ Backend credit pack created: +30000 credits (31 days) for account ${backendAccountId}`);
                   } else {
                     console.error(`⚠️ Failed to create backend credit pack: ${creditSyncResult.error}`);
                   }
@@ -217,7 +219,7 @@ export async function POST(req: NextRequest) {
                     data: {
                       userId: userId,
                       type: "backend_sync",
-                      amount: 33000,
+                      amount: 30000,
                       description: "Pro subscription backend sync - plan + credit pack (31 days)",
                       status: "completed",
                       gateway: "square",

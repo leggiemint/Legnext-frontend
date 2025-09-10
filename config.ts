@@ -26,8 +26,8 @@ const config = {
         credits: 100, // 100 free API calls (keeping credits for compatibility)
         isFree: true,
         features: [
-          { name: "100 free API calls (one-time)" },
-          { name: "Basic image generation" },
+          { name: "100 free API points" },
+          { name: "Image generation" },
           { name: "Standard quality output" },
           { name: "Community support" },
           { name: "Rate limited requests" },
@@ -43,12 +43,11 @@ const config = {
         credits: 30000, // 30,000 credits per month (1$ = 1000 credits)
         priceAnchor: 99,
         features: [
-          { name: "30,000 API calls monthly" },
-          { name: "All Midjourney models (v5, v6, niji)" },
+          { name: "30,000 API points monthly" },
+          { name: "All Midjourney models (v6, v7, niji 6)" },
           { name: "Fast & Turbo generation modes" },
-          { name: "Image upscaling & variations" },
-          { name: "Style & character references" },
-          { name: "Commercial use license" },
+          { name: "support video generation" },
+          { name: "support Moodboard feature" },
           { name: "Priority support" },
         ],
       },
@@ -102,8 +101,8 @@ const config = {
         credits: 100,
         isFree: true,
         features: [
-          { name: "100 free API calls (one-time)" },
-          { name: "Basic image generation" },
+          { name: "200 free API points" },
+          { name: "Image generation" },
           { name: "Standard quality output" },
           { name: "Community support" },
           { name: "Rate limited requests" },
@@ -119,12 +118,11 @@ const config = {
         credits: 30000, // 30,000 credits per month (1$ = 1000 credits)
         priceAnchor: 99,
         features: [
-          { name: "30,000 API calls monthly" },
-          { name: "All Midjourney models (v5, v6, niji)" },
+          { name: "30,000 API points monthly" },
+          { name: "All Midjourney models (v6, v7, niji 6)" },
           { name: "Fast & Turbo generation modes" },
-          { name: "Image upscaling & variations" },
-          { name: "Style & character references" },
-          { name: "Commercial use license" },
+          { name: "support video generation" },
+          { name: "support Moodboard feature" },
           { name: "Priority support" },
         ],
       },

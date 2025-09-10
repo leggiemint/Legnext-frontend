@@ -101,7 +101,9 @@ export async function POST(req: NextRequest) {
             "pro",
             "active",
             payment.order_id, // 使用order ID作为客户引用
-            "square-pro-subscription"
+            "square-pro-subscription",
+            new Date(), // subscriptionStart
+            undefined // subscriptionEnd
           );
 
           if (!updateResult.success) {

@@ -4,6 +4,8 @@ import Stripe from "stripe";
 import { prisma } from "@/libs/prisma";
 import { updateSubscription, grantCredits } from "@/libs/user-service";
 
+// STRIPE PAYMENT GATEWAY IS CURRENTLY DISABLED - ONLY SQUARE PAYMENTS ARE PROCESSED
+// This webhook endpoint returns early to prevent any accidental Stripe processing
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2023-08-16",
@@ -62,6 +64,14 @@ async function processSubscriptionActivation(userId: string, customerId: string,
 }
 
 export async function POST(req: NextRequest) {
+  // Early return: Stripe payment gateway is disabled, only Square payments are processed
+  console.log("⚠️ Stripe webhook called but Stripe payment gateway is disabled - returning early");
+  return NextResponse.json({ 
+    received: true, 
+    message: "Stripe payment gateway is currently disabled. Only Square payments are processed." 
+  });
+  
+  /* STRIPE WEBHOOK PROCESSING DISABLED
   console.log("🔔 Stripe webhook received!");
   
   const body = await req.text();
@@ -199,7 +209,10 @@ export async function POST(req: NextRequest) {
           profile.userId,
           "free",
           "canceled",
-          subscription.customer as string
+          subscription.customer as string,
+          undefined,
+          undefined,
+          undefined
         );
         break;
       }
@@ -258,7 +271,11 @@ export async function POST(req: NextRequest) {
           await updateSubscription(
             profile.userId,
             profile.plan,
-            "past_due"
+            "past_due",
+            undefined,
+            undefined,
+            undefined,
+            undefined
           );
         }
         break;
@@ -299,4 +316,5 @@ export async function POST(req: NextRequest) {
       { status: 500 }
     );
   }
+  END OF STRIPE WEBHOOK PROCESSING DISABLED */
 }

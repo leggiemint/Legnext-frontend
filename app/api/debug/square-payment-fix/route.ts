@@ -27,7 +27,9 @@ export async function POST() {
       "pro",
       "active",
       `square_manual_fix_${Date.now()}`,
-      "square-pro-subscription"
+      "square-pro-subscription",
+      new Date(), // subscriptionStart
+      undefined // subscriptionEnd
     );
 
     if (!updateResult.success) {
