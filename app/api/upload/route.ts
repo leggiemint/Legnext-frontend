@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/libs/next-auth";
 import { uploadToR2, generateFileKey } from "@/libs/r2";
-import * as Sentry from "@sentry/nextjs";
 
 export async function POST(req: NextRequest) {
   try {
@@ -79,7 +78,7 @@ export async function POST(req: NextRequest) {
 
   } catch (error) {
     console.error("Upload error:", error);
-    Sentry.captureException(error);
+    console.error('Upload error:', error);
     return NextResponse.json(
       { error: "Internal server error" }, 
       { status: 500 }
@@ -134,7 +133,7 @@ export async function GET(req: NextRequest) {
 
   } catch (error) {
     console.error("Generate upload URL error:", error);
-    Sentry.captureException(error);
+    console.error('Upload error:', error);
     return NextResponse.json(
       { error: "Internal server error" }, 
       { status: 500 }

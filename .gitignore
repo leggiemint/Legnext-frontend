@@ -64,3 +64,22 @@ CLAUDE.md
 test-square-proxy.js
 SQUARE_PROXY_SETUP.md
 Legnext.postman_collection.json
+
+API_DOCUMENTATION.md
+
+# Test and debug scripts
+debug-*.js
+test-*.js
+check-*.js
+compare-*.js
+cleanup-*.js
+explain-*.js
+fix-*.js
+reactivate-*.js
+setup-*.js
+simulate-*.js
+
+# Temporary files
+*.tmp
+*.temp
+temp-*
