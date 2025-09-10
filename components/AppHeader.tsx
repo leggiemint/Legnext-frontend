@@ -114,13 +114,6 @@ const AppHeader = () => {
                   {/* Menu Items */}
                   <div className="py-2">
                     <Link 
-                      href="/app/settings" 
-                      className="block px-4 py-2 text-sm text-base-content hover:bg-base-200 transition-colors"
-                      onClick={() => setIsUserMenuOpen(false)}
-                    >
-                      Settings
-                    </Link>
-                    <Link 
                       href="/app" 
                       className="block px-4 py-2 text-sm text-base-content hover:bg-base-200 transition-colors"
                       onClick={() => setIsUserMenuOpen(false)}

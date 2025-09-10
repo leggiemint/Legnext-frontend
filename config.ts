@@ -19,8 +19,8 @@ const config = {
     // Credit-based pricing system (0.1$ = 1 credit)
     plans: [
       {
-        // Hobbyist plan - no priceId needed as it doesn't require payment
-        name: "Hobbyist",
+        // Free plan - no priceId needed as it doesn't require payment
+        name: "Free",
         description: "Get Started",
         price: 0,
         credits: 100, // 100 free API calls (keeping credits for compatibility)
@@ -34,10 +34,10 @@ const config = {
         ],
       },
       {
-        // Premium subscription plan - Stripe 硬编码 Price ID
+        // Pro subscription plan - Stripe 硬编码 Price ID
         priceId: "price_1S1qwI3W9QrG6TfeSztwI9lT",
         isFeatured: true,
-        name: "Premium",
+        name: "Pro",
         description: "Best Value",
         price: 30,
         credits: 30000, // 30,000 credits per month (1$ = 1000 credits)
@@ -95,8 +95,8 @@ const config = {
     // Square 独立配置
     plans: [
       {
-        // Hobbyist plan - 两个网关共享相同的免费计划逻辑
-        name: "Hobbyist",
+        // Free plan - 两个网关共享相同的免费计划逻辑
+        name: "Free",
         description: "Get Started", 
         price: 0,
         credits: 100,
@@ -110,10 +110,10 @@ const config = {
         ],
       },
       {
-        // Premium subscription plan - Square 专用价格标识
-        priceId: "premium-monthly-subscription", // Square 自定义标识
+        // Pro subscription plan - Square 专用价格标识
+        priceId: "pro-monthly-subscription", // Square 自定义标识
         isFeatured: true,
-        name: "Premium", 
+        name: "Pro", 
         description: "Best Value",
         price: 30, // 正常生产价格 $30/月
         credits: 30000, // 30,000 credits per month (1$ = 1000 credits)

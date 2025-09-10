@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/libs/next-auth";
 import { getUserWithProfile, grantCredits } from "@/libs/user-service";
-import { updateBackendAccountCredits } from "@/libs/backend-client";
+import { updateBackendAccountCredits, createBackendCreditPack } from "@/libs/backend-client";
 
 export const dynamic = 'force-dynamic';
 
@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { amount, description, syncToBackend = true, type = "manual" } = body;
+    const { amount, description, syncToBackend = true, type = "manual", packType = "topup" } = body;
 
     // 🔒 输入验证和安全限制
     if (!amount || amount <= 0) {
@@ -63,12 +63,16 @@ export async function POST(req: NextRequest) {
       ? "Welcome bonus for new user"
       : (description || "Credit addition");
     
+    // 设置过期时间：welcome credits 31天，其他180天（6个月）
+    const expiryDays = type === "welcome" ? 31 : 180;
+    
     const frontendResult = await grantCredits(
       session.user.id,
       amount,
       creditDescription,
       type === "welcome" ? "welcome_bonus" : "manual",
-      null
+      null,
+      expiryDays
     );
 
     if (!frontendResult.success) {
@@ -81,18 +85,20 @@ export async function POST(req: NextRequest) {
     let backendResult = null;
     const backendAccountId = user.profile.preferences?.backendAccountId;
 
-    // 同步到后端系统（如果已配置）
+    // 同步到后端系统（如果已配置）- 使用新的credit_pack逻辑
     if (syncToBackend && backendAccountId) {
-      console.log(`🔄 Syncing ${amount} credits to backend account: ${backendAccountId}`);
+      console.log(`🔄 Creating credit pack: ${amount} credits for backend account: ${backendAccountId}`);
       
-      backendResult = await updateBackendAccountCredits({
+      // 使用新的credit_pack接口替代旧的直接增加credits
+      backendResult = await createBackendCreditPack({
         accountId: backendAccountId,
-        amount: amount,
-        description: description || "Credit addition from frontend"
+        capacity: amount,
+        description: description || `Credit addition from frontend - ${type}`,
+        type: packType as 'topup' | 'subscription' // topup(6个月) 或 subscription(31天)
       });
 
       if (!backendResult.success) {
-        console.error(`⚠️ Failed to sync to backend: ${backendResult.error}`);
+        console.error(`⚠️ Failed to create credit pack: ${backendResult.error}`);
         // 不返回错误，因为前端已成功添加
       }
     }
@@ -108,7 +114,8 @@ export async function POST(req: NextRequest) {
           synced: backendResult?.success || false,
           accountId: backendAccountId,
           error: backendResult?.error || null,
-          wallet: backendResult?.wallet || null
+          creditPack: backendResult?.creditPack || null,
+          packType: packType
         } : {
           configured: false,
           message: "Backend integration not configured"

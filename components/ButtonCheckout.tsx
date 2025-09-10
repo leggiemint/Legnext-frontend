@@ -144,7 +144,7 @@ const ButtonCheckout = ({
                 <circle cx="12" cy="9" r="1.5" fill="white"/>
               </svg>
             )}
-            <span>{isFree ? "Try Hobbyist" : "Go Premium"}</span>
+            <span>{isFree ? "Try Free" : "Go Pro"}</span>
           </div>
         )}
       </button>

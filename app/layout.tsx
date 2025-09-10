@@ -5,6 +5,8 @@ import PlausibleProvider from "next-plausible";
 import { getSEOTags } from "@/libs/seo";
 import ClientLayout from "@/components/LayoutClient";
 import { AuthProvider } from "@/components/AuthProvider";
+import { UserProvider } from "@/contexts/UserContext";
+import PlanSyncChecker from "@/components/PlanSyncChecker";
 import config from "@/config";
 import "./globals.css";
 
@@ -64,7 +66,11 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         {/* ClientLayout contains all the client wrappers (Crisp chat support, toast messages, tooltips, etc.) */}
         <ClientLayout>
           <AuthProvider>
-            {children}
+            <UserProvider>
+              {/* Plan同步检查组件 - 全局监控用户plan状态 */}
+              <PlanSyncChecker syncInterval={5 * 60 * 1000} syncOnlyWhenVisible={true} />
+              {children}
+            </UserProvider>
           </AuthProvider>
         </ClientLayout>
       </body>

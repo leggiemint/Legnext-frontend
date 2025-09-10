@@ -37,7 +37,7 @@ export async function getUserWithProfile(userId: string): Promise<UserWithProfil
         const profile = await tx.userProfile.create({
           data: {
             userId: user.id,
-            plan: "hobbyist",
+            plan: "free",
             credits: 0, // Start with 0, welcome credits will be added through proper flow
             totalCreditsEarned: 0,
             preferences: {
@@ -56,7 +56,7 @@ export async function getUserWithProfile(userId: string): Promise<UserWithProfil
       // 🚀 自动创建后端账户（静默失败，不影响用户注册）
       if (user.email) {
         try {
-          await createUserBackendAccount(user.id, user.email, "hobbyist");
+          await createUserBackendAccount(user.id, user.email, "free");
         } catch (error) {
           // 静默记录错误，但不影响用户体验
           console.warn(`🔔 Auto backend account creation failed for ${user.email}:`, error?.message || error);
@@ -141,9 +141,92 @@ export async function consumeCredits(
 }
 
 /**
- * Grant credits to user account
+ * Grant credits to user account using credit pack model (统一架构)
  */
 export async function grantCredits(
+  userId: string,
+  amount: number,
+  description: string,
+  gateway?: string,
+  gatewayTxnId?: string,
+  expiryDays: number = 180 // 默认6个月过期
+): Promise<{ success: boolean; newBalance?: number; error?: string }> {
+  try {
+    // 获取用户profile以获取后端账户ID
+    const user = await getUserWithProfile(userId);
+    if (!user) {
+      return { success: false, error: "User not found" };
+    }
+
+    const backendAccountId = user.profile.preferences?.backendAccountId;
+    if (!backendAccountId) {
+      // 如果没有后端账户，回退到旧的直接方式（向后兼容）
+      console.warn(`⚠️ No backend account for user ${userId}, using legacy direct grant`);
+      return await legacyDirectGrant(userId, amount, description, gateway, gatewayTxnId);
+    }
+
+    // 🎯 统一使用credit pack模式
+    const { createBackendCreditPack } = require("@/libs/backend-client");
+    
+    // 计算过期时间
+    const expiry = new Date();
+    expiry.setDate(expiry.getDate() + expiryDays);
+    
+    const creditPackResult = await createBackendCreditPack({
+      accountId: backendAccountId,
+      capacity: amount,
+      description: `${description} (${expiryDays} days expiry)`,
+      expired_at: expiry.toISOString(),
+      type: "topup"
+    });
+
+    if (!creditPackResult.success) {
+      return { success: false, error: creditPackResult.error };
+    }
+
+    // 记录credit pack创建事务
+    await prisma.transaction.create({
+      data: {
+        userId,
+        type: "credit_pack_created",
+        amount,
+        description,
+        gateway,
+        gatewayTxnId,
+        status: "completed",
+        metadata: {
+          backendAccountId,
+          creditPackId: creditPackResult.creditPack?.id,
+          packType: "manual_grant",
+          expiryDays,
+          createdVia: "grant_credits_function"
+        }
+      }
+    });
+
+    console.log(`✅ Credit pack created for user ${userId}: ${amount} credits (${expiryDays} days)`);
+
+    // 返回当前可用余额（需要从后端获取最新数据）
+    const { getBackendCreditPacks } = require("@/libs/backend-client");
+    try {
+      const creditPacksResult = await getBackendCreditPacks(backendAccountId);
+      const newBalance = creditPacksResult.success ? creditPacksResult.data.available_credits : user.profile.credits;
+      return { success: true, newBalance };
+    } catch {
+      return { success: true, newBalance: user.profile.credits };
+    }
+
+  } catch (error) {
+    console.error("Error granting credits via credit pack:", error);
+    return { success: false, error: "Credit pack creation failed" };
+  }
+}
+
+/**
+ * Legacy direct grant function for backward compatibility
+ * @deprecated Use credit pack model via grantCredits
+ */
+async function legacyDirectGrant(
   userId: string,
   amount: number,
   description: string,
@@ -174,9 +257,9 @@ export async function grantCredits(
       await tx.transaction.create({
         data: {
           userId,
-          type: "credit_purchase",
+          type: "credit_purchase_legacy",
           amount,
-          description,
+          description: `${description} (Legacy direct grant)`,
           gateway,
           gatewayTxnId,
           status: "completed"
@@ -189,7 +272,7 @@ export async function grantCredits(
       };
     });
   } catch (error) {
-    console.error("Error granting credits:", error);
+    console.error("Error in legacy direct grant:", error);
     return { success: false, error: "Database error" };
   }
 }
@@ -361,24 +444,49 @@ export async function createUserBackendAccount(
 
     console.log(`✅ Backend account created successfully for ${email}: ID ${backendAccount.data.id}`);
 
-    // 🎯 同步100欢迎credits到前端数据库
+    // 🎯 创建100欢迎credits的credit pack (31天有效期)
     try {
-      console.log(`💰 Syncing 100 welcome credits to frontend for user: ${email}`);
-      const grantResult = await grantCredits(
-        userId,
-        100,
-        "Welcome bonus for new user",
-        "welcome_bonus",
-        null
-      );
+      console.log(`💰 Creating 100 welcome credits pack for user: ${email}`);
+      const { createBackendCreditPack } = require("@/libs/backend-client");
+      
+      // 计算31天后的过期时间
+      const welcomeExpiry = new Date();
+      welcomeExpiry.setDate(welcomeExpiry.getDate() + 31);
+      
+      const welcomePackResult = await createBackendCreditPack({
+        accountId: backendAccount.data.id,
+        capacity: 100,
+        description: "Welcome bonus - 100 credits (31 days expiry)",
+        expired_at: welcomeExpiry.toISOString(), // 明确设置31天过期
+        type: "topup"
+      });
 
-      if (grantResult.success) {
-        console.log(`✅ Welcome credits synced successfully: ${grantResult.newBalance} total credits`);
+      if (welcomePackResult.success) {
+        console.log(`✅ Welcome credit pack created successfully: ${welcomePackResult.creditPack?.id}`);
+        
+        // 记录credit pack创建日志
+        await prisma.transaction.create({
+          data: {
+            userId,
+            type: "credit_pack_created",
+            amount: 100,
+            description: "Welcome bonus credit pack (31 days)",
+            status: "completed",
+            gateway: "backend_system",
+            metadata: {
+              backendAccountId: backendAccount.data.id,
+              creditPackId: welcomePackResult.creditPack?.id,
+              packType: "welcome_bonus",
+              expiryDays: 31,
+              createdVia: "user_registration"
+            }
+          }
+        });
       } else {
-        console.error(`⚠️ Failed to sync welcome credits: ${grantResult.error}`);
+        console.error(`⚠️ Failed to create welcome credit pack: ${welcomePackResult.error}`);
       }
     } catch (syncError) {
-      console.error("⚠️ Error syncing welcome credits:", syncError?.message || syncError);
+      console.error("⚠️ Error creating welcome credit pack:", syncError?.message || syncError);
       // 不影响账户创建成功状态
     }
 

@@ -167,15 +167,6 @@ const HeaderContent = () => {
                 </div>
               </div>
             </div>
-            <div className="py-1">
-              <Link
-                href="/app/settings"
-                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-                onClick={() => setIsUserDropdownOpen(false)}
-              >
-                Settings
-              </Link>
-            </div>
             <div className="border-t border-gray-100">
               <button
                 onClick={async () => {
@@ -387,11 +378,6 @@ const HeaderContent = () => {
                   <Link href="/app/midjourney" className="w-full">
                     <button className="w-full inline-flex items-center justify-center px-4 py-2 bg-purple-600 text-white font-medium rounded-lg hover:bg-purple-600/90 transition-colors duration-200 shadow-sm">
                       Dashboard
-                    </button>
-                  </Link>
-                  <Link href="/app/settings" className="w-full">
-                    <button className="w-full inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-background bg-gray-100 text-gray-700 hover:bg-gray-200 h-9 px-3">
-                      Settings
                     </button>
                   </Link>
                   <button

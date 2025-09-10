@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/libs/next-auth";
 import { getUserWithProfile } from "@/libs/user-service";
 import { prisma } from "@/libs/prisma";
-import { getBackendWallet, calculateAvailableCredits } from "@/libs/backend-client";
+import { getBackendCreditPacks } from "@/libs/backend-client";
 
 export const dynamic = 'force-dynamic';
 
@@ -35,26 +35,29 @@ export async function GET() {
       console.log(`🔍 [DEBUG] Checking backend account: ${backendAccountId}`);
       
       try {
-        // 🎯 使用专门的钱包API获取完整的credit_packs数据
-        const walletResult = await getBackendWallet(backendAccountId);
-        console.log(`🔍 [DEBUG] Wallet API success: ${walletResult.success}`);
+        // 🎯 使用新的credit_packs API获取详细数据
+        const creditPacksResult = await getBackendCreditPacks(backendAccountId);
+        console.log(`🔍 [DEBUG] Credit packs API success: ${creditPacksResult.success}`);
         
-        if (walletResult.success && walletResult.wallet) {
-          console.log(`🔍 [DEBUG] Full wallet response:`, JSON.stringify(walletResult.wallet, null, 2));
+        if (creditPacksResult.success && creditPacksResult.data) {
+          console.log(`🔍 [DEBUG] Full credit packs response:`, JSON.stringify(creditPacksResult.data, null, 2));
           
-          // 🎯 正确计算credits：从credit_packs计算可用余额
-          actualCredits = calculateAvailableCredits(walletResult.wallet);
+          // 🎯 直接从API响应获取可用credits
+          actualCredits = creditPacksResult.data.available_credits;
           backendCreditsAvailable = true;
           
-          const creditPacks = walletResult.wallet.credit_packs || [];
-          console.log(`🔍 [DEBUG] Wallet API point_remain: ${walletResult.wallet.point_remain}`);
+          const creditPacks = creditPacksResult.data.credit_packs || [];
+          console.log(`🔍 [DEBUG] Available credits: ${creditPacksResult.data.available_credits}`);
+          console.log(`🔍 [DEBUG] Total credits: ${creditPacksResult.data.total_credits}`);
+          console.log(`🔍 [DEBUG] Credit packs count: ${creditPacksResult.data.credit_packs_count}`);
           console.log(`🔍 [DEBUG] Credit packs found: ${creditPacks.length}`);
           if (Array.isArray(creditPacks)) {
             creditPacks.forEach((pack: any, index: number) => {
-              console.log(`🔍 [DEBUG] Pack ${index + 1}: capacity=${pack.capacity}, used=${pack.used}, available=${pack.capacity - pack.used}, active=${pack.active}`);
+              const available = pack.capacity - pack.used;
+              console.log(`🔍 [DEBUG] Pack ${index + 1}: id=${pack.id}, capacity=${pack.capacity}, used=${pack.used}, available=${available}, active=${pack.active}, expired_at=${pack.expired_at}`);
             });
           }
-          console.log(`🔍 [DEBUG] Calculated total credits: ${actualCredits}`);
+          console.log(`🔍 [DEBUG] Final available credits: ${actualCredits}`);
           
           // 🔄 懒加载同步：如果后端数据与前端不一致，自动同步前端数据库
           if (actualCredits !== user.profile.credits) {
@@ -90,13 +93,16 @@ export async function GET() {
                   userId: user.id,
                   type: creditsDiff > 0 ? "credit_sync_add" : "credit_sync_deduct",
                   amount: creditsDiff,
-                  description: `Lazy sync from backend: ${user.profile.credits} → ${actualCredits}`,
+                  description: `Lazy sync from backend credit packs: ${user.profile.credits} → ${actualCredits}`,
                   status: "completed",
                   metadata: {
                     syncType: "lazy_sync",
                     backendAccountId: user.profile.preferences.backendAccountId,
                     previousCredits: user.profile.credits,
                     newCredits: actualCredits,
+                    creditPacksCount: creditPacksResult.data.credit_packs_count,
+                    totalCredits: creditPacksResult.data.total_credits,
+                    expiredCredits: creditPacksResult.data.expired_credits,
                     trigger: "user_settings_access"
                   }
                 }
@@ -110,7 +116,7 @@ export async function GET() {
             console.log(`🔍 [DEBUG] Credits already in sync - no update needed`);
           }
         } else {
-          console.log(`❌ [ERROR] Wallet API failed: ${walletResult.error}`);
+          console.log(`❌ [ERROR] Credit packs API failed: ${creditPacksResult.error}`);
         }
       } catch (error) {
         console.error(`❌ [ERROR] Failed to fetch backend credits for ${user.email}:`, error?.message);
@@ -157,11 +163,11 @@ export async function GET() {
         syncTriggered: syncPerformed
       },
       planLimits: {
-        creditsPerMonth: (user.profile.plan === "pro" || user.profile.plan === "premium") ? 30000 : 0,
-        animationsAllowed: (user.profile.plan === "pro" || user.profile.plan === "premium"),
-        hdExportsAllowed: (user.profile.plan === "pro" || user.profile.plan === "premium"),
-        watermarkFree: (user.profile.plan === "pro" || user.profile.plan === "premium"),
-        commercialUse: (user.profile.plan === "pro" || user.profile.plan === "premium"),
+        creditsPerMonth: (user.profile.plan === "pro") ? 30000 : 0,
+        animationsAllowed: (user.profile.plan === "pro"),
+        hdExportsAllowed: (user.profile.plan === "pro"),
+        watermarkFree: (user.profile.plan === "pro"),
+        commercialUse: (user.profile.plan === "pro"),
       },
       subscription: {
         isActive: user.profile.subscriptionStatus === "active",

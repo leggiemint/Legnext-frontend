@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/libs/prisma";
-import { updateSubscription, grantCredits } from "@/libs/user-service";
+import { updateSubscription, getUserWithProfile } from "@/libs/user-service";
 import { verifySquareWebhook } from "@/libs/square";
+import { createBackendCreditPack, updateBackendAccountPlan } from "@/libs/backend-client";
 
 // Square webhook events we handle
 const RELEVANT_EVENTS = new Set([
@@ -173,21 +174,74 @@ export async function POST(req: NextRequest) {
                 throw new Error(`Subscription update failed: ${updateResult.error}`);
               }
 
-              // Grant Pro plan credits (200 credits)
-              const creditResult = await grantCredits(
-                userId,
-                200,
-                "Square Pro subscription purchase",
-                "square",
-                payment.id
-              );
+              // 注意：Credits现在通过后端credit pack系统统一管理
+              // 不再需要前端直接授予credits，由后端同步逻辑处理
+              console.log(`✅ Square Pro subscription activated for user ${userId}`);
 
-              if (!creditResult.success) {
-                console.error(`❌ Failed to grant credits to user ${userId}:`, creditResult.error);
-                throw new Error(`Credit grant failed: ${creditResult.error}`);
+              // 🔄 后端系统同步
+              try {
+                const user = await getUserWithProfile(userId);
+                const backendAccountId = user?.profile?.preferences?.backendAccountId;
+
+                if (backendAccountId) {
+                  console.log(`🔄 Syncing subscription to backend account: ${backendAccountId}`);
+                  
+                  // 1. 更新后端plan为developer
+                  const planSyncResult = await updateBackendAccountPlan({
+                    accountId: backendAccountId,
+                    plan: "developer" // Pro plan映射到后端的developer
+                  });
+
+                  if (planSyncResult.success) {
+                    console.log(`✅ Backend plan updated to developer for account ${backendAccountId}`);
+                  } else {
+                    console.error(`⚠️ Failed to sync plan to backend: ${planSyncResult.error}`);
+                  }
+
+                  // 2. 创建33000 credits pack到后端系统（订阅赠送，31天过期）
+                  const creditSyncResult = await createBackendCreditPack({
+                    accountId: backendAccountId,
+                    capacity: 33000,
+                    description: "Pro subscription - 33000 credits bonus (31 days expiry)",
+                    type: "subscription" // 订阅类型，31天过期
+                  });
+
+                  if (creditSyncResult.success) {
+                    console.log(`✅ Backend credit pack created: +33000 credits (31 days) for account ${backendAccountId}`);
+                  } else {
+                    console.error(`⚠️ Failed to create backend credit pack: ${creditSyncResult.error}`);
+                  }
+
+                  // 记录同步状态
+                  await prisma.transaction.create({
+                    data: {
+                      userId: userId,
+                      type: "backend_sync",
+                      amount: 33000,
+                      description: "Pro subscription backend sync - plan + credit pack (31 days)",
+                      status: "completed",
+                      gateway: "square",
+                      gatewayTxnId: payment.id,
+                      metadata: {
+                        backendAccountId: backendAccountId,
+                        planSyncSuccess: planSyncResult.success,
+                        creditPackSyncSuccess: creditSyncResult.success,
+                        planSyncError: planSyncResult.error || null,
+                        creditPackSyncError: creditSyncResult.error || null,
+                        creditPackId: creditSyncResult.creditPack?.id || null,
+                        creditPackType: "subscription",
+                        creditPackExpiry: "31_days",
+                        syncType: "subscription_activation"
+                      }
+                    }
+                  });
+                } else {
+                  console.log(`⚠️ No backend account ID found for user ${userId}, skipping backend sync`);
+                }
+              } catch (syncError) {
+                console.error(`❌ Backend sync error for user ${userId}:`, syncError);
+                // 不抛出错误，因为前端操作已成功
               }
-
-              console.log(`✅ Square Pro subscription activated for user ${userId}, credits: ${creditResult.newBalance}`);
             } else {
               console.error('❌ Cannot process Square payment: no user identification found');
               console.error('Payment info:', {

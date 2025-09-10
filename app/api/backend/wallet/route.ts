@@ -67,6 +67,11 @@ export async function GET() {
     const totalFrozen = activePacks.reduce((sum: number, pack: any) => sum + pack.frozen, 0);
     const totalAvailable = totalCapacity - totalUsed - totalFrozen;
 
+    // 计算总余额公式: $账户总余额=(remainPoints + remainCredits)/1000
+    const remainPoints = wallet.point_remain || 0;
+    const remainCredits = totalAvailable; // 这是所有active credit packs的可用余额
+    const totalAccountBalance = (remainPoints + remainCredits) / 1000;
+
     // 按过期时间排序credit packs
     const sortedPacks = creditPacks
       .filter((pack: any) => pack.active)
@@ -102,6 +107,15 @@ export async function GET() {
           pointUsed: wallet.point_used,
           createdAt: wallet.created_at,
           updatedAt: wallet.updated_at
+        },
+
+        // 总余额信息 (新的计算公式)
+        balance: {
+          remainPoints,
+          remainCredits,
+          totalAccountBalance,
+          balanceFormula: "(remainPoints + remainCredits) / 1000",
+          balanceInUSD: totalAccountBalance
         },
         
         // Credit Packs详细信息

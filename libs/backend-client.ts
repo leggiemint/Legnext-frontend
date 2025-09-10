@@ -78,11 +78,55 @@ export interface CreateApiKeyRequest {
   name?: string;
 }
 
-// Credits操作接口
+// Credits操作接口 - 已弃用，使用CreateCreditPackRequest代替
 export interface UpdateCreditsRequest {
   type: "credit"; // 固定值
   amount: number; // 正数表示要增加的数量
   description?: string;
+}
+
+// 创建Credit Pack请求接口
+export interface CreateCreditPackRequest {
+  capacity: number; // credits数量
+  description: string; // 描述
+  expired_at?: string; // 过期时间，可选。格式: "2025-11-10T14:30:00Z"
+}
+
+// Credit Pack响应接口
+export interface CreditPackResponse {
+  code: number;
+  data: {
+    id: number;
+    created_at: string;
+    updated_at: string;
+    deleted_at: string | null;
+    wallet_id: number;
+    account_id: number;
+    active: boolean;
+    capacity: number;
+    frozen: number;
+    used: number;
+    effective_at: string;
+    expired_at: string;
+    description: string;
+  };
+  message: string;
+}
+
+// Credit Packs统计信息响应接口
+export interface CreditPacksInfoResponse {
+  code: number;
+  data: {
+    credit_packs_count: number;
+    total_credits: number;
+    frozen_credits: number;
+    used_credits: number;
+    expired_credits: number;
+    inactive_credits: number;
+    available_credits: number;
+    credit_packs: CreditPack[];
+  };
+  message: string;
 }
 
 // Credit Pack接口
@@ -135,18 +179,11 @@ function getBaseManagerUrl(): string {
   return url;
 }
 
-// 获取后端API密钥
+// 获取后端API密钥 - 仅服务端可用，绝不使用NEXT_PUBLIC_前缀
 function getBackendApiKey(): string {
-  const apiKey = process.env.BACKEND_API_KEY || process.env.NEXT_PUBLIC_BACKEND_API_KEY;
-  console.log(`🔍 [DEBUG] Backend API Key check:`, {
-    BACKEND_API_KEY: process.env.BACKEND_API_KEY ? 'SET' : 'NOT_SET',
-    NEXT_PUBLIC_BACKEND_API_KEY: process.env.NEXT_PUBLIC_BACKEND_API_KEY ? 'SET' : 'NOT_SET',
-    apiKeyLength: apiKey ? apiKey.length : 0,
-    apiKeyPrefix: apiKey ? apiKey.substring(0, 6) + '...' : 'NONE'
-  });
+  const apiKey = process.env.BACKEND_API_KEY;
   
   if (!apiKey) {
-    console.error('❌ [ERROR] BACKEND_API_KEY environment variable is not configured');
     throw new Error('BACKEND_API_KEY environment variable is not configured');
   }
   return apiKey;
@@ -183,17 +220,16 @@ export async function createBackendAccount(params: {
   let backendPlan: string;
   switch (params.plan) {
     case "hobbyist":
-      backendPlan = "hobbyist";
-      break;
-    case "premium":
-      backendPlan = "premium"; 
-      break;
-    // 保持向后兼容性
     case "free":
       backendPlan = "hobbyist";
       break;
+    case "developer":
     case "pro":
-      backendPlan = "premium";
+      backendPlan = "developer"; 
+      break;
+    // 保持向后兼容性
+    case "premium":
+      backendPlan = "developer"; // premium映射到developer
       break;
     default:
       backendPlan = "hobbyist"; // 默认使用hobbyist计划
@@ -204,7 +240,7 @@ export async function createBackendAccount(params: {
     account_group: "user", // 普通用户组，根据您的需要可改为 "superadmin"
     type: "ppu", // pay per use 按使用付费
     plan: backendPlan,
-    max_concurrent_task_count: (params.plan === "pro" || params.plan === "premium") ? 30 : 10, // 匹配示例中的并发数
+    max_concurrent_task_count: (params.plan === "pro" || params.plan === "premium" || params.plan === "developer") ? 30 : 10, // 匹配示例中的并发数
     credit_remain: params.creditRemain || 100, // 默认100 credits
     mj_quota_remain: params.mjQuotaRemain || 100
   };
@@ -292,6 +328,118 @@ export async function getBackendAccount(accountId: number): Promise<BackendAccou
   } catch (error) {
     console.error('❌ Failed to get backend account:', error);
     throw error;
+  }
+}
+
+// 基于email获取后端账户信息
+export async function getBackendAccountByEmail(email: string): Promise<{ success: boolean; account?: any; error?: string }> {
+  const baseUrl = getBaseManagerUrl();
+  
+  try {
+    console.log(`🔍 Looking up backend account by email: ${email}`);
+    
+    // 使用搜索API或直接查询（假设后端提供了基于email的查询）
+    const response = await fetch(`${baseUrl}/api/account?email=${encodeURIComponent(email)}`, {
+      method: 'GET',
+      headers: getAuthHeaders()
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Backend API error: ${response.status} - ${errorText}`);
+    }
+
+    const result = await response.json();
+    
+    // 检查响应格式
+    if (result.code !== 200) {
+      throw new Error(`Backend API error: ${result.message || 'Unknown error'}`);
+    }
+    
+    console.log(`✅ Found backend account for ${email}:`, result.data?.id);
+    
+    return {
+      success: true,
+      account: result.data
+    };
+  } catch (error: any) {
+    console.error(`❌ Failed to get backend account by email ${email}:`, error);
+    return {
+      success: false,
+      error: error.message || 'Failed to find account by email'
+    };
+  }
+}
+
+// 更新后端账户Plan - 支持email和accountId两种方式
+export async function updateBackendAccountPlan(params: {
+  email?: string;
+  accountId?: number;
+  plan?: string; // 旧参数名，保持兼容
+  newPlan?: string; // 新参数名
+}): Promise<{ success: boolean; account?: any; error?: string }> {
+  const baseUrl = getBaseManagerUrl();
+  
+  try {
+    let accountId = params.accountId;
+    const planToUpdate = params.newPlan || params.plan;
+    
+    if (!planToUpdate) {
+      throw new Error('Plan value is required (use newPlan or plan parameter)');
+    }
+
+    // 如果提供了email但没有accountId，通过email获取accountId
+    if (params.email && !accountId) {
+      console.log(`🔍 Looking up account ID for email: ${params.email}`);
+      
+      const account = await getBackendAccountByEmail(params.email);
+      
+      if (!account.success || !account.account?.id) {
+        throw new Error(`Failed to find backend account for email: ${params.email}`);
+      }
+      
+      accountId = account.account.id;
+      console.log(`✅ Found account ID: ${accountId} for email: ${params.email}`);
+    }
+
+    if (!accountId) {
+      throw new Error('Either accountId or email must be provided');
+    }
+
+    console.log(`🔄 Updating backend account plan for account ${accountId} to ${planToUpdate}...`);
+    
+    const response = await fetch(`${baseUrl}/api/account/${accountId}/plan`, {
+      method: 'PATCH',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({
+        plan: planToUpdate
+      })
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Backend API error: ${response.status} - ${errorText}`);
+    }
+
+    const result = await response.json();
+    
+    // 检查响应格式
+    if (result.code !== 200) {
+      throw new Error(`Backend API error: ${result.message || 'Unknown error'}`);
+    }
+
+    console.log(`✅ Backend account plan updated to: ${params.plan}`);
+    
+    return {
+      success: true,
+      account: result.data
+    };
+  } catch (error) {
+    console.error('❌ Failed to update backend account plan:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error'
+    };
   }
 }
 
@@ -518,6 +666,108 @@ export function validateBackendConfig(): { isValid: boolean; error?: string } {
   } catch (error) {
     return { 
       isValid: false, 
+      error: error instanceof Error ? error.message : 'Unknown error' 
+    };
+  }
+}
+
+// 创建Credit Pack (新的推荐方式)
+export async function createBackendCreditPack(params: {
+  accountId: number;
+  capacity: number; // credits数量
+  description: string;
+  expired_at?: string; // 过期时间，可选
+  type?: 'topup' | 'subscription'; // 类型：topup(默认6个月) 或 subscription(31天)
+}): Promise<{ success: boolean; creditPack?: any; error?: string }> {
+  const baseUrl = getBaseManagerUrl();
+  
+  if (params.capacity <= 0) {
+    return {
+      success: false,
+      error: "Capacity must be positive"
+    };
+  }
+  
+  try {
+    // 计算过期时间
+    let expired_at = params.expired_at;
+    if (!expired_at) {
+      const now = new Date();
+      if (params.type === 'subscription') {
+        // 订阅credits: 31天
+        now.setDate(now.getDate() + 31);
+      } else {
+        // 默认topup: 6个月
+        now.setMonth(now.getMonth() + 6);
+      }
+      expired_at = now.toISOString();
+    }
+
+    const response = await fetch(`${baseUrl}/api/account/${params.accountId}/wallet/credit_pack?return_credit_pack=true`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({
+        capacity: params.capacity,
+        description: params.description,
+        expired_at: expired_at
+      })
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Backend API error: ${response.status} - ${errorText}`);
+    }
+
+    const result: CreditPackResponse = await response.json();
+    
+    if (result.code !== 200) {
+      throw new Error(`Backend API error: ${result.message || 'Unknown error'}`);
+    }
+
+    console.log(`✅ Credit pack created successfully: +${params.capacity} credits`);
+    
+    return {
+      success: true,
+      creditPack: result.data
+    };
+  } catch (error) {
+    console.error('❌ Failed to create credit pack:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error'
+    };
+  }
+}
+
+// 获取Credit Packs信息
+export async function getBackendCreditPacks(accountId: number): Promise<{ success: boolean; data?: any; error?: string }> {
+  const baseUrl = getBaseManagerUrl();
+  
+  try {
+    const response = await fetch(`${baseUrl}/api/account/${accountId}/wallet/credit_packs`, {
+      method: 'GET',
+      headers: getAuthHeaders()
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Backend API error: ${response.status} - ${errorText}`);
+    }
+
+    const result: CreditPacksInfoResponse = await response.json();
+    
+    if (result.code !== 200) {
+      throw new Error(`Backend API error: ${result.message || 'Unknown error'}`);
+    }
+    
+    return { 
+      success: true, 
+      data: result.data 
+    };
+  } catch (error) {
+    console.error('❌ Failed to get credit packs:', error);
+    return { 
+      success: false, 
       error: error instanceof Error ? error.message : 'Unknown error' 
     };
   }

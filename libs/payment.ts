@@ -2,7 +2,7 @@
 // 通过环境变量 PAYMENT_GATEWAY=stripe|square 控制使用哪个网关
 
 import { createCheckout as createStripeCheckout, createCustomerPortal as createStripePortal } from "@/libs/stripe";
-import { createSquareCheckout, createSquarePortal } from "@/libs/square";
+import { createSquareCheckout } from "@/libs/square";
 
 // 支付网关类型
 type PaymentGateway = 'stripe' | 'square';
@@ -61,7 +61,9 @@ export async function createCustomerPortal(params: {
       return createStripePortal(params);
       
     case 'square':
-      return await createSquarePortal(params);
+      // Square portal功能已移除，用户可以通过subscription页面管理订阅
+      console.log('Square portal not implemented, redirecting to subscription page');
+      return `${process.env.NEXTAUTH_URL}/app/subscription`;
       
     default:
       console.error(`Unknown payment gateway: ${gateway}`);

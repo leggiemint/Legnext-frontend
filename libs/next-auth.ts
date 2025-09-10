@@ -66,28 +66,11 @@ export const authOptions: NextAuthOptions = {
             if (user.email && !preferences?.backendAccountId) {
               console.log(`🔍 Creating backend account for user: ${user.email}`);
               try {
-                const backendResult = await createUserBackendAccount(user.id, user.email, userWithProfile.profile.plan);
+                await createUserBackendAccount(user.id, user.email, userWithProfile.profile.plan);
                 console.log(`✅ Backend account created successfully for: ${user.email}`);
                 
-                // 🎁 授予新用户100欢迎credits (前端+后端同步)
-                if (backendResult.success && userWithProfile.profile.totalCreditsEarned === 0) {
-                  console.log(`🎁 Granting welcome credits for new user: ${user.email}`);
-                  const { grantCredits } = await import("./user-service");
-                  
-                  const welcomeResult = await grantCredits(
-                    user.id,
-                    100,
-                    "Welcome bonus for new user",
-                    "welcome_bonus",
-                    null
-                  );
-                  
-                  if (welcomeResult.success) {
-                    console.log(`✅ Welcome credits granted to: ${user.email}`);
-                  } else {
-                    console.warn(`⚠️ Failed to grant welcome credits:`, welcomeResult.error);
-                  }
-                }
+                // 注意：Welcome credits已经在createUserBackendAccount中作为credit pack创建了
+                // 这里不再需要额外的credits授予，避免重复发放
               } catch (error) {
                 console.warn(`🔔 Backend account creation failed for ${user.email}:`, error?.message || error);
               }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback, useEffect } from "react";
 import StepsSection from "@/components/StepsSection";
 import OCMakerExamples from "@/components/OCMakerExamples";
 import FAQ from "@/components/FAQ";
@@ -18,6 +18,10 @@ export default function CreatePage() {
   const [isUpscaling, setIsUpscaling] = useState(false);
   const [generatedImages, setGeneratedImages] = useState<string[]>([]);
   const [upscaledImage, setUpscaledImage] = useState<string | null>(null);
+  const [currentTaskId, setCurrentTaskId] = useState<string | null>(null);
+  const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
+  const [userApiKey, setUserApiKey] = useState<string | null>(null);
+  const [isLoadingApiKey, setIsLoadingApiKey] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [, setUploadedReference] = useState<{
     url: string;
@@ -44,9 +48,51 @@ export default function CreatePage() {
     }
   ];
 
+  // 获取用户API Key
+  useEffect(() => {
+    const fetchApiKey = async () => {
+      if (!isAuthenticated || isLoadingApiKey || userApiKey) return; // 如果已有API Key则跳过
+      
+      setIsLoadingApiKey(true);
+      try {
+        const response = await fetch('/api/user/api-keys', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch API keys');
+        }
+
+        const data = await response.json();
+        if (data.data && data.data.apiKeys && data.data.apiKeys.length > 0) {
+          // 使用第一个有效的API Key
+          const activeKey = data.data.apiKeys.find((key: any) => key.isActive);
+          if (activeKey) {
+            setUserApiKey(activeKey.goApiKey);
+            console.log(`✅ Loaded API key for user: ${activeKey.preview}`);
+          } else {
+            toast.error('No active API key found. Please create an API key in your dashboard.');
+          }
+        } else {
+          toast.error('No API keys found. Please create an API key in your dashboard.');
+        }
+      } catch (error: any) {
+        console.error('Error fetching API keys:', error);
+        toast.error('Failed to load API keys');
+      } finally {
+        setIsLoadingApiKey(false);
+      }
+    };
+
+    fetchApiKey();
+  }, [isAuthenticated]); // eslint-disable-line react-hooks/exhaustive-deps
 
 
-  const handleGenerate = () => {
+
+  const handleGenerate = async () => {
     // 检查用户是否已登录
     if (!isAuthenticated) {
       setShowLoginModal(true);
@@ -58,22 +104,150 @@ export default function CreatePage() {
       return;
     }
 
-    setIsGenerating(true);
-    
-    // 构建完整的/imagine命令
-    let fullPrompt = textDescription.trim();
-    
-    // 如果包含参考图片，添加图片URL到prompt中
-    if (fullPrompt.includes('@')) {
-      // 图片URL已经包含在prompt中
+    if (!userApiKey) {
+      toast.error('API key not available. Please wait or refresh the page.');
+      return;
     }
 
-    console.log('Sending /imagine command:', fullPrompt);
+    setIsGenerating(true);
+    setGeneratedImages([]);
+    setUpscaledImage(null);
+    setCurrentTaskId(null);
     
-    // TODO: 调用Midjourney API
-    // 这里应该调用Midjourney API的/imagine命令
-    // 进度条会在onComplete回调中处理结果
+    try {
+      // 构建完整的/imagine命令
+      let fullPrompt = textDescription.trim();
+      
+      console.log('Sending /imagine command to diffusion API:', fullPrompt);
+      
+      // 调用 Diffusion API
+      const response = await fetch('/api/v1/diffusion', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${userApiKey}`,
+        },
+        body: JSON.stringify({
+          text: fullPrompt,
+          // callback 在前端体验中可以忽略
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to generate images');
+      }
+
+      const result = await response.json();
+      setCurrentTaskId(result.job_id);
+      
+      toast.success('Generation started! Please wait...');
+      
+      // 开始轮询任务状态
+      pollTaskStatus(result.job_id);
+      
+    } catch (error: any) {
+      console.error('Error generating images:', error);
+      toast.error(error.message || 'Failed to generate images');
+      setIsGenerating(false);
+    }
   };
+
+  // 轮询任务状态
+  const pollTaskStatus = useCallback(async (taskId: string, taskType: 'diffusion' | 'upscale' = 'diffusion') => {
+    if (!userApiKey) {
+      console.error('No API key available for status polling');
+      toast.error('API key not available for status checking');
+      return;
+    }
+    const maxAttempts = 120; // 最多轮询2分钟 (每秒一次)
+    let attempts = 0;
+
+    const poll = async () => {
+      try {
+        const response = await fetch(`/api/v1/status/${taskId}`, {
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${userApiKey}`,
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to check task status');
+        }
+
+        const statusData = await response.json();
+        console.log('Task status:', statusData);
+
+        if (statusData.status === 'completed' && statusData.result) {
+          // 任务完成
+          if (taskType === 'diffusion') {
+            // 处理生成的图片
+            const images: string[] = [];
+            if (statusData.result.image_urls && statusData.result.image_urls.length > 0) {
+              // 使用后端返回的实际图片URL数组，过滤空字符串
+              statusData.result.image_urls.forEach((url: string) => {
+                if (url && url.trim() !== '') {
+                  images.push(url);
+                }
+              });
+            }
+            setGeneratedImages(images);
+            setIsGenerating(false);
+            toast.success(`Images generated successfully! Found ${images.length} images.`);
+          } else if (taskType === 'upscale') {
+            // 处理放大的图片
+            if (statusData.result.image_url) {
+              setUpscaledImage(statusData.result.image_url);
+            }
+            setIsUpscaling(false);
+            toast.success('Image upscaled successfully!');
+          }
+          return; // 停止轮询
+        } else if (statusData.status === 'failed') {
+          // 任务失败
+          const errorMessage = statusData.failure_reason || 'Task failed';
+          toast.error(errorMessage);
+          if (taskType === 'diffusion') {
+            setIsGenerating(false);
+          } else {
+            setIsUpscaling(false);
+          }
+          return; // 停止轮询
+        }
+
+        // 如果任务还在进行中，继续轮询
+        attempts++;
+        if (attempts < maxAttempts) {
+          setTimeout(poll, 1000); // 1秒后再次检查
+        } else {
+          // 超时
+          toast.error('Task timeout - please try again');
+          if (taskType === 'diffusion') {
+            setIsGenerating(false);
+          } else {
+            setIsUpscaling(false);
+          }
+        }
+      } catch (error: any) {
+        console.error('Error polling task status:', error);
+        if (attempts < maxAttempts) {
+          setTimeout(poll, 2000); // 错误时等待更长时间
+          attempts++;
+        } else {
+          toast.error('Failed to check task status');
+          if (taskType === 'diffusion') {
+            setIsGenerating(false);
+          } else {
+            setIsUpscaling(false);
+          }
+        }
+      }
+    };
+
+    // 开始轮询
+    poll();
+  }, [userApiKey]);
 
   const handleFileUploaded = (fileData: {
     url: string;
@@ -86,16 +260,59 @@ export default function CreatePage() {
     setTextDescription(prev => imagePrompt + prev);
   };
 
-  const handleUpscale = (imageUrl: string) => {
+  const handleUpscale = async (imageIndex: number) => {
     // 检查用户是否已登录
     if (!isAuthenticated) {
       setShowLoginModal(true);
       return;
     }
 
+    if (!currentTaskId) {
+      toast.error('No generation task found');
+      return;
+    }
+
+    if (!userApiKey) {
+      toast.error('API key not available. Please wait or refresh the page.');
+      return;
+    }
+
     setIsUpscaling(true);
-    // 模拟Upscale过程
-    // 进度条会在onComplete回调中处理结果
+    setSelectedImageIndex(imageIndex);
+    setUpscaledImage(null);
+    
+    try {
+      console.log('Sending upscale request for image index:', imageIndex);
+      
+      // 调用 Upscale API
+      const response = await fetch('/api/v1/upscale', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${userApiKey}`,
+        },
+        body: JSON.stringify({
+          job_id: currentTaskId,
+          index: imageIndex, // 0-3 对应4张图片
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to upscale image');
+      }
+
+      const result = await response.json();
+      toast.success('Upscale started! Please wait...');
+      
+      // 开始轮询upscale任务状态
+      pollTaskStatus(result.job_id, 'upscale');
+      
+    } catch (error: any) {
+      console.error('Error upscaling image:', error);
+      toast.error(error.message || 'Failed to upscale image');
+      setIsUpscaling(false);
+    }
   };
 
   return (
@@ -179,19 +396,11 @@ export default function CreatePage() {
                   <p className="text-lg text-gray-600">Generating your images with Midjourney...</p>
                   <ProgressBar 
                     isVisible={isGenerating}
-                    duration={10000}
-                    label="Generating images..."
+                    duration={60000}
+                    label="Generating images with Midjourney..."
                     onComplete={() => {
-                      setIsGenerating(false);
-                      // Simulate generated images for demo
-                      const mockImages = [
-                        "/api/placeholder/512/512?text=Generated+Image+1",
-                        "/api/placeholder/512/512?text=Generated+Image+2",
-                        "/api/placeholder/512/512?text=Generated+Image+3",
-                        "/api/placeholder/512/512?text=Generated+Image+4"
-                      ];
-                      setGeneratedImages(mockImages);
-                      toast.success('Images generated successfully!');
+                      // 进度条结束后，继续等待API返回结果
+                      // 实际的结果处理在pollTaskStatus中完成
                     }}
                   />
                 </div>
@@ -210,7 +419,7 @@ export default function CreatePage() {
                         <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                           <button 
                             className="btn btn-sm bg-[#4f46e5] hover:bg-[#4f46e5]/90 text-white border-none"
-                            onClick={() => handleUpscale(imageUrl)}
+                            onClick={() => handleUpscale(index)}
                           >
                             Upscale
                           </button>
@@ -226,14 +435,11 @@ export default function CreatePage() {
                       <p className="text-lg text-gray-600">Upscaling your image...</p>
                       <ProgressBar 
                         isVisible={isUpscaling}
-                        duration={10000}
-                        label="Upscaling image..."
+                        duration={60000}
+                        label="Upscaling image with Midjourney..."
                         onComplete={() => {
-                          // 模拟生成放大的图片
-                          const upscaledUrl = generatedImages[0]?.replace('512', '1024') || "/api/placeholder/1024/1024?text=Upscaled+Image";
-                          setUpscaledImage(upscaledUrl);
-                          setIsUpscaling(false);
-                          toast.success('Image upscaled successfully!');
+                          // 进度条结束后，继续等待API返回结果
+                          // 实际的结果处理在pollTaskStatus中完成
                         }}
                       />
                     </div>

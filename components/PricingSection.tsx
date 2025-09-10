@@ -3,43 +3,17 @@
 import config, { getPaymentConfig } from "@/config";
 import ButtonCheckout from "./ButtonCheckout";
 import { useSession } from "next-auth/react";
-import { useState, useEffect } from "react";
+import { useUser, usePlan } from "@/contexts/UserContext";
 
 const PricingSection = () => {
   const { data: session } = useSession();
-  const [userPlan, setUserPlan] = useState<string | null>(null);
-  const [subscriptionStatus, setSubscriptionStatus] = useState<any>(null);
+  
+  // 使用统一的用户状态管理
+  const { userData, loading } = useUser();
+  const { plan: userPlan, isProUser, hasActiveSubscription } = usePlan();
   
   // 获取当前支付网关配置
   const paymentConfig = getPaymentConfig();
-
-  useEffect(() => {
-    if (session?.user?.id) {
-      // 获取用户数据
-      fetch('/api/user/settings')
-        .then(res => res.json())
-        .then(data => {
-          // 从getUserDashboardData返回的结构中提取数据
-          const plan = data?.user?.plan || 'free';
-          const subscriptionStatus = data?.user?.subscriptionStatus || 'inactive';
-          const hasAccess = data?.user?.hasAccess || false;
-          
-          setUserPlan(plan);
-          
-          // 设置完整的订阅状态信息
-          setSubscriptionStatus({
-            subscriptionStatus,
-            isActive: subscriptionStatus === 'active' && hasAccess,
-            plan,
-            hasAccess
-          });
-        })
-        .catch(err => {
-          console.error('Failed to fetch user settings:', err);
-          setUserPlan('free'); // Fallback
-        });
-    }
-  }, [session?.user?.id]);
 
   return (
     <section className="py-20 md:py-24 bg-white" id="pricing">
@@ -132,65 +106,67 @@ const PricingSection = () => {
                   )}
                   
                   <div className="space-y-2">
-                    {/* 🎯 智能显示当前计划状态 - 基于完整状态验证 */}
-                    {session && userPlan === plan.name.toLowerCase() && 
-                     (plan.name.toLowerCase() === 'hobbyist' || plan.name.toLowerCase() === 'free' || 
-                      ((plan.name.toLowerCase() === 'premium' || plan.name.toLowerCase() === 'pro') && subscriptionStatus?.subscriptionStatus === 'active' && subscriptionStatus?.hasAccess)) ? (
-                      <div className="relative">
-                        {/* Current Plan Badge */}
-                        <div 
-                          className="btn btn-block text-white cursor-default flex items-center justify-center gap-2 font-semibold"
-                          style={{ backgroundColor: '#22c55e' }}
-                        >
-                          <svg 
-                            className="w-5 h-5" 
-                            fill="currentColor" 
-                            viewBox="0 0 20 20"
-                          >
-                            <path 
-                              fillRule="evenodd" 
-                              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" 
-                              clipRule="evenodd" 
-                            />
-                          </svg>
-                          Current Plan
-                        </div>
-                        
-                        {/* 额外状态信息 */}
-                        {subscriptionStatus && (plan.name.toLowerCase() === 'premium' || plan.name.toLowerCase() === 'pro') && (
-                          <div className="mt-2 text-xs text-center">
-                            {subscriptionStatus.subscriptionStatus === 'active' ? (
-                              <span className="text-green-600 font-medium">
-                                ✓ Active Subscription
-                                {subscriptionStatus.daysRemaining > 0 && (
-                                  <span className="text-gray-500 ml-1">
-                                    ({subscriptionStatus.daysRemaining} days left)
-                                  </span>
-                                )}
-                              </span>
-                            ) : (
-                              <span className="text-amber-600 font-medium">
-                                ⚠ Subscription {subscriptionStatus.subscriptionStatus}
-                              </span>
-                            )}
-                          </div>
-                        )}
+                    {/* Loading state */}
+                    {session && loading ? (
+                      <div className="btn btn-block bg-gray-200 animate-pulse cursor-default">
+                        <div className="h-4 bg-gray-300 rounded w-24 mx-auto"></div>
                       </div>
                     ) : (
-                      <div className="relative">
-                        {/* 🚫 Pro用户防重复订阅检查 */}
-                        {session && (userPlan === 'premium' || userPlan === 'pro') && subscriptionStatus?.subscriptionStatus === 'active' && (plan.name.toLowerCase() === 'premium' || plan.name.toLowerCase() === 'pro') ? (
-                          <div className="btn btn-block bg-gray-400 text-white cursor-not-allowed opacity-75">
-                            Already Subscribed
+                      /* Current plan or action buttons */
+                      session && !loading && userData && userPlan === plan.name.toLowerCase() && 
+                      (plan.name.toLowerCase() === 'free' || 
+                       (plan.name.toLowerCase() === 'pro' && hasActiveSubscription)) ? (
+                        <div className="relative">
+                          {/* Current Plan Badge */}
+                          <div 
+                            className="btn btn-block text-white cursor-default flex items-center justify-center gap-2 font-semibold"
+                            style={{ backgroundColor: '#22c55e' }}
+                          >
+                            <svg 
+                              className="w-5 h-5" 
+                              fill="currentColor" 
+                              viewBox="0 0 20 20"
+                            >
+                              <path 
+                                fillRule="evenodd" 
+                                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" 
+                                clipRule="evenodd" 
+                              />
+                            </svg>
+                            Current Plan
                           </div>
-                        ) : (
-                          <ButtonCheckout 
-                            priceId={plan.priceId} 
-                            isFree={plan.isFree}
-                            mode="subscription"
-                          />
-                        )}
-                      </div>
+                          
+                          {/* 额外状态信息 */}
+                          {plan.name.toLowerCase() === 'pro' && userData && (
+                            <div className="mt-2 text-xs text-center">
+                              {hasActiveSubscription ? (
+                                <span className="text-green-600 font-medium">
+                                  ✓ Active Subscription
+                                </span>
+                              ) : (
+                                <span className="text-amber-600 font-medium">
+                                  ⚠ Subscription {userData.subscriptionStatus}
+                                </span>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="relative">
+                          {/* 🚫 Pro用户防重复订阅检查 */}
+                          {session && !loading && isProUser && hasActiveSubscription && plan.name.toLowerCase() === 'pro' ? (
+                            <div className="btn btn-block bg-gray-400 text-white cursor-not-allowed opacity-75">
+                              Already Subscribed
+                            </div>
+                          ) : (
+                            <ButtonCheckout 
+                              priceId={plan.priceId} 
+                              isFree={plan.isFree}
+                              mode="subscription"
+                            />
+                          )}
+                        </div>
+                      )
                     )}
                     
                     <p className="flex items-center justify-center gap-2 text-sm text-center text-gray-500 font-medium relative">

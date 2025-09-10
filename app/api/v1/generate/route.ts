@@ -1,6 +1,6 @@
 // 对外API接口 - 使用API Key验证的图像生成接口
 import { NextRequest, NextResponse } from "next/server";
-import { validateApiKey, extractApiKeyFromRequest, consumeApiCall, getApiCallCost } from "@/libs/api-auth";
+import { validateApiKey, extractApiKeyFromRequest, consumeApiCall, getApiCallCost, checkCreditsBalance } from "@/libs/api-auth";
 import { prisma } from "@/libs/prisma";
 
 export const dynamic = 'force-dynamic';
@@ -110,16 +110,19 @@ export async function POST(req: NextRequest) {
     }
 
     // 计算API调用费用
-    const estimatedCost = getApiCallCost('generate', mode);
+    const estimatedCost = getApiCallCost('generate');
     
-    // 检查用户余额
-    if (user.profile.apiCalls < estimatedCost) {
+    // 检查用户余额（使用标准化的预检查机制）
+    const balanceCheck = await checkCreditsBalance(user.id, estimatedCost);
+    
+    if (!balanceCheck.sufficient) {
+      console.warn(`❌ Insufficient credits for user ${user.email}: need ${estimatedCost}, have ${balanceCheck.currentBalance}`);
       return NextResponse.json(
         { 
           error: "Insufficient API call balance", 
-          message: `This operation requires ${estimatedCost} API calls, but you only have ${user.profile.apiCalls} remaining.`,
+          message: `This operation requires ${estimatedCost} API calls, but you only have ${balanceCheck.currentBalance} remaining.`,
           required_credits: estimatedCost,
-          current_credits: user.profile.apiCalls
+          current_credits: balanceCheck.currentBalance
         },
         { status: 402 } // Payment Required
       );
