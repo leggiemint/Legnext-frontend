@@ -26,6 +26,7 @@ deployment-*.tar.gz
 *.zip
 *.rar
 
+
 # logs
 *.log
 /logs
