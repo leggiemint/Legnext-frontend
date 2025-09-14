@@ -1,6 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  output: 'standalone', // Enable standalone mode for Docker
   images: {
     domains: [
       // NextJS <Image> component needs to whitelist domains for src={}
