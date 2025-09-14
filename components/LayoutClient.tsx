@@ -10,6 +10,21 @@ import { Toaster } from "react-hot-toast";
 import { Tooltip } from "react-tooltip";
 import config from "@/config";
 
+// 防止水合错误的组件包装器
+const NoSSR = ({ children }: { children: ReactNode }) => {
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  if (!isClient) {
+    return null;
+  }
+
+  return <>{children}</>;
+};
+
 // Crisp customer chat support:
 // This component is separated from ClientLayout because it needs to be wrapped with <SessionProvider> to use useSession() hook
 const CrispChat = (): null => {
@@ -79,13 +94,17 @@ const ClientLayout = ({ children }: { children: ReactNode }) => {
         )}
 
         {/* Show tooltips if any JSX elements has these 2 attributes: data-tooltip-id="tooltip" data-tooltip-content="" */}
-        <Tooltip
-          id="tooltip"
-          className="z-[60] !opacity-100 max-w-sm shadow-lg"
-        />
+        <NoSSR>
+          <Tooltip
+            id="tooltip"
+            className="z-[60] !opacity-100 max-w-sm shadow-lg"
+          />
+        </NoSSR>
 
         {/* Set Crisp customer chat support */}
-        <CrispChat />
+        <NoSSR>
+          <CrispChat />
+        </NoSSR>
       </SessionProvider>
     </>
   );

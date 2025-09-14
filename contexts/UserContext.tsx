@@ -138,6 +138,12 @@ export function UserContextProvider({ children }: { children: React.ReactNode })
   const [isLoading, setIsLoading] = useState(true);
   const [isBalanceLoading, setIsBalanceLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isClient, setIsClient] = useState(false);
+
+  // 确保客户端渲染
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   // 获取用户基础信息
   const refreshUserInfo = useCallback(async () => {
@@ -248,6 +254,15 @@ export function UserContextProvider({ children }: { children: React.ReactNode })
     refreshBalance,
     refreshAll,
   };
+
+  // 服务器端渲染时返回基础 Provider
+  if (!isClient) {
+    return (
+      <UserContext.Provider value={contextValue}>
+        {children}
+      </UserContext.Provider>
+    );
+  }
 
   return (
     <UserContext.Provider value={contextValue}>
