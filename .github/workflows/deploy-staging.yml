@@ -1,0 +1,364 @@
+# Staging Deployment Workflow - Develop Branch
+name: 🧪 Staging Deployment
+
+on:
+  push:
+    branches: [ develop ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  DOCKER_IMAGE: legnext-midjourney-api-staging
+  NODE_VERSION: '18'
+  PNPM_VERSION: '8'
+
+jobs:
+  # Job 1: Code Quality Checks
+  quality-checks:
+    name: 🔍 Code Quality Checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: TypeScript Check
+        run: pnpm run lint
+
+      - name: Security Audit
+        run: pnpm audit --audit-level high
+        continue-on-error: true  # Don't fail staging for moderate security issues
+
+      - name: Check Prisma Schema
+        run: pnpm prisma validate
+
+  # Job 2: Build and Test
+  build-and-test:
+    name: 🏗️ Build & Test
+    runs-on: ubuntu-latest
+    needs: quality-checks
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma Client
+        run: pnpm prisma generate
+
+      - name: Build application
+        run: pnpm build
+        env:
+          # Build-time environment variables for staging
+          NEXTAUTH_URL: ${{ secrets.STAGING_NEXTAUTH_URL }}
+          NEXT_PUBLIC_STRIPE_PRO_PRICE_ID: ${{ secrets.STAGING_STRIPE_PRICE_ID }}
+
+      - name: Run tests (if available)
+        run: |
+          if [ -f "package.json" ] && grep -q '"test"' package.json; then
+            pnpm test
+          else
+            echo "No tests found, skipping test execution"
+          fi
+        continue-on-error: true
+
+  # Job 3: Docker Build (Staging)
+  docker-build:
+    name: 🐳 Docker Build
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    outputs:
+      image-tag: ${{ steps.meta.outputs.tags }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ secrets.DOCKER_USERNAME }}/${{ env.DOCKER_IMAGE }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=sha,prefix=staging-
+            type=raw,value=staging-latest,enable={{is_default_branch}}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          platforms: linux/amd64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            NODE_ENV=development
+
+  # Job 4: Deploy to Staging
+  deploy-staging:
+    name: 🚢 Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: docker-build
+    environment: staging
+    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
+    steps:
+      - name: Checkout deployment scripts
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            docs/scripts
+
+      - name: Setup SSH key
+        uses: webfactory/ssh-agent@v0.8.0
+        with:
+          ssh-private-key: ${{ secrets.STAGING_VPS_SSH_KEY }}
+
+      - name: Copy staging files to VPS
+        run: |
+          scp -o StrictHostKeyChecking=no docs/scripts/deploy-staging.sh ${{ secrets.STAGING_VPS_USERNAME }}@${{ secrets.STAGING_VPS_HOST }}:/opt/legnext-staging/scripts/
+
+      - name: Deploy to Staging VPS
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.STAGING_VPS_USERNAME }}@${{ secrets.STAGING_VPS_HOST }} << 'EOF'
+            cd /opt/legnext-staging
+            
+            # 环境变量文件已经在VPS上手动创建，跳过此步骤
+            echo "✅ 使用VPS上已有的 .env.staging 文件"
+            
+            # Pull latest staging image
+            docker pull ${{ needs.docker-build.outputs.image-tag }}
+            
+            # Execute staging deployment
+            chmod +x scripts/deploy-staging.sh
+            ./scripts/deploy-staging.sh ${{ needs.docker-build.outputs.image-tag }}
+          EOF
+
+  # Job 5: Database Migration (Staging)
+  staging-db-migration:
+    name: 🗄️ Staging DB Migration
+    runs-on: ubuntu-latest
+    needs: deploy-staging
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run staging database migrations
+        run: pnpm prisma migrate deploy
+        env:
+          DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
+          DIRECT_URL: ${{ secrets.STAGING_DIRECT_URL }}
+        continue-on-error: true  # Don't fail if migration has issues in staging
+
+  # Job 6: Staging Health Check
+  staging-health-check:
+    name: 🏥 Staging Health Check
+    runs-on: ubuntu-latest
+    needs: [deploy-staging, staging-db-migration]
+    if: always() && needs.deploy-staging.result == 'success'
+    steps:
+      - name: Wait for staging deployment
+        run: sleep 20
+
+      - name: Health check - Staging API
+        run: |
+          for i in {1..5}; do
+            if curl -f -s -o /dev/null https://${{ secrets.STAGING_DOMAIN }}/health; then
+              echo "✅ Staging health check passed"
+              exit 0
+            fi
+            echo "⏳ Attempt $i failed, retrying..."
+            sleep 5
+          done
+          echo "❌ Staging health check failed"
+          exit 1
+        continue-on-error: true
+
+      - name: Basic functionality test
+        run: |
+          # Test homepage
+          if curl -f -s https://${{ secrets.STAGING_DOMAIN }}/ > /dev/null; then
+            echo "✅ Staging homepage accessible"
+          else
+            echo "❌ Staging homepage not accessible"
+          fi
+          
+          # Test API endpoints
+          if curl -f -s https://${{ secrets.STAGING_DOMAIN }}/api/auth/session > /dev/null; then
+            echo "✅ Staging auth API accessible"
+          else
+            echo "❌ Staging auth API not accessible"
+          fi
+        continue-on-error: true
+
+  # Job 7: Performance and Security Testing
+  staging-tests:
+    name: 🧪 Staging Integration Tests
+    runs-on: ubuntu-latest
+    needs: staging-health-check
+    if: needs.staging-health-check.result == 'success'
+    steps:
+      - name: Lighthouse Performance Test
+        uses: treosh/lighthouse-ci-action@v10
+        with:
+          urls: |
+            https://${{ secrets.STAGING_DOMAIN }}
+          uploadArtifacts: true
+          temporaryPublicStorage: true
+        continue-on-error: true
+
+      - name: Security Headers Check
+        run: |
+          response=$(curl -s -I https://${{ secrets.STAGING_DOMAIN }})
+          
+          echo "🔍 Checking security headers..."
+          
+          if echo "$response" | grep -q "X-Frame-Options"; then
+            echo "✅ X-Frame-Options header present"
+          else
+            echo "❌ X-Frame-Options header missing"
+          fi
+          
+          if echo "$response" | grep -q "X-Content-Type-Options"; then
+            echo "✅ X-Content-Type-Options header present"
+          else
+            echo "❌ X-Content-Type-Options header missing"
+          fi
+        continue-on-error: true
+
+  # Job 8: PR Comment with Staging Info
+  pr-comment:
+    name: 📝 Update PR with Staging Info
+    runs-on: ubuntu-latest
+    needs: [staging-health-check, staging-tests]
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Comment PR with staging deployment info
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const comment = `## 🧪 Staging Deployment Status
+            
+            **🔗 Staging URL**: https://${{ secrets.STAGING_DOMAIN }}
+            **🏷️ Docker Image**: \`${{ needs.docker-build.outputs.image-tag }}\`
+            **🏥 Health Check**: ${{ needs.staging-health-check.result == 'success' && '✅ Passed' || '❌ Failed' }}
+            **🧪 Tests**: ${{ needs.staging-tests.result == 'success' && '✅ Passed' || needs.staging-tests.result == 'skipped' && '⏭️ Skipped' || '❌ Failed' }}
+            
+            ### 🧪 Test the staging environment:
+            - [ ] Login/Logout functionality
+            - [ ] API endpoints working
+            - [ ] Payment flow (test mode)
+            - [ ] Image generation functionality
+            - [ ] Database operations
+            
+            ### 🔗 Quick Links:
+            - [Staging Site](https://${{ secrets.STAGING_DOMAIN }})
+            - [Health Check](https://${{ secrets.STAGING_DOMAIN }}/health)
+            - [API Status](https://${{ secrets.STAGING_DOMAIN }}/api/auth/session)
+            
+            ---
+            *Auto-generated from GitHub Actions workflow*
+            `;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+
+  # Job 9: Slack Notification
+  notify:
+    name: 📢 Notify Staging Status
+    runs-on: ubuntu-latest
+    needs: [deploy-staging, staging-health-check]
+    if: always()
+    steps:
+      - name: Notify staging deployment
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          text: |
+            🧪 *Staging Deployment Complete*
+            
+            📋 Branch: `${{ github.ref_name }}`
+            🏷️ Image: `${{ needs.docker-build.outputs.image-tag }}`
+            🌐 URL: https://${{ secrets.STAGING_DOMAIN }}
+            ✅ Health: ${{ needs.staging-health-check.result == 'success' && '✅ Healthy' || '❌ Failed' }}
+            
+            ${{ github.event_name == 'pull_request' && format('🔗 PR: {0}', github.event.pull_request.html_url) || '' }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        if: env.SLACK_WEBHOOK_URL != ''
+
+  # Job 10: Cleanup Old Images
+  cleanup:
+    name: 🧹 Cleanup Old Images
+    runs-on: ubuntu-latest
+    needs: staging-health-check
+    if: always()
+    steps:
+      - name: Cleanup old staging images on VPS
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.STAGING_VPS_USERNAME }}@${{ secrets.STAGING_VPS_HOST }} << 'EOF'
+            # Keep only the latest 3 staging images
+            docker images --format "table {{.Repository}}:{{.Tag}} {{.CreatedAt}}" | \
+            grep legnext-midjourney-api-staging | \
+            sort -k2 -r | \
+            tail -n +4 | \
+            awk '{print $1}' | \
+            xargs -r docker rmi || true
+            
+            echo "✅ Cleaned up old staging images"
+          EOF
+        continue-on-error: true

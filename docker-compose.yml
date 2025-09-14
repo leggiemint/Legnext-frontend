@@ -2,9 +2,7 @@ version: '3.8'
 
 services:
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: ${DOCKER_IMAGE:-legnext/legnext-midjourney-api:latest}
     ports:
       - "3000:3000"
     env_file:

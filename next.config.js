@@ -1,6 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  output: 'standalone', // 启用standalone输出，Docker部署需要
   images: {
     domains: [
       // NextJS <Image> component needs to whitelist domains for src={}
@@ -10,6 +11,7 @@ const nextConfig = {
       "logos-world.net",
       "avatars.githubusercontent.com", // GitHub avatars
       "cdn.legnext.ai", // LegNext CDN for generated images
+      "staging-a93116.legnext.ai", // 测试环境域名
     ],
   },
 };

@@ -1,0 +1,349 @@
+# Production Deployment Workflow - Main Branch
+name: 🚀 Production Deployment
+
+on:
+  push:
+    branches: [ main ]
+  release:
+    types: [ published ]
+
+env:
+  DOCKER_IMAGE: legnext-midjourney-api
+  NODE_VERSION: '18'
+  PNPM_VERSION: '8'
+
+jobs:
+  # Job 1: Code Quality and Security Checks
+  quality-checks:
+    name: 🔍 Quality & Security Checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: TypeScript Check
+        run: pnpm run lint
+
+      - name: Security Audit
+        run: pnpm audit --audit-level moderate
+
+      - name: Check Prisma Schema
+        run: pnpm prisma validate
+
+  # Job 2: Build and Test
+  build-and-test:
+    name: 🏗️ Build & Test
+    runs-on: ubuntu-latest
+    needs: quality-checks
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma Client
+        run: pnpm prisma generate
+
+      - name: Build application
+        run: pnpm build
+        env:
+          # Build-time environment variables
+          NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL }}
+          NEXT_PUBLIC_STRIPE_PRO_PRICE_ID: ${{ secrets.NEXT_PUBLIC_STRIPE_PRO_PRICE_ID }}
+
+      - name: Cache build artifacts
+        uses: actions/cache@v3
+        with:
+          path: |
+            .next/cache
+            .next/static
+            .next/standalone
+          key: ${{ runner.os }}-nextjs-${{ hashFiles('**/pnpm-lock.yaml') }}-${{ hashFiles('**/*.js', '**/*.jsx', '**/*.ts', '**/*.tsx') }}
+
+  # Job 3: Docker Build and Push
+  docker-build:
+    name: 🐳 Docker Build & Push
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    outputs:
+      image-tag: ${{ steps.meta.outputs.tags }}
+      image-digest: ${{ steps.build.outputs.digest }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ secrets.DOCKER_USERNAME }}/${{ env.DOCKER_IMAGE }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+
+      - name: Build and push Docker image
+        id: build
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            NODE_ENV=production
+
+  # Job 4: Database Migration (Pre-deployment)
+  database-migration:
+    name: 🗄️ Database Migration
+    runs-on: ubuntu-latest
+    needs: docker-build
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run database migrations
+        run: pnpm prisma migrate deploy
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DIRECT_URL: ${{ secrets.DIRECT_URL }}
+
+      - name: Generate Prisma Client
+        run: pnpm prisma generate
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+  # Job 5: Deploy to Production
+  deploy:
+    name: 🚢 Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [docker-build, database-migration]
+    environment: production
+    steps:
+      - name: Checkout deployment scripts
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            docs/scripts
+            docker-compose.yml
+            nginx.conf
+
+      - name: Setup SSH key
+        uses: webfactory/ssh-agent@v0.8.0
+        with:
+          ssh-private-key: ${{ secrets.VPS_SSH_KEY }}
+
+      - name: Copy deployment files to VPS
+        run: |
+          scp -o StrictHostKeyChecking=no docker-compose.yml ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }}:/opt/legnext/
+          scp -o StrictHostKeyChecking=no nginx.conf ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }}:/opt/legnext/
+          scp -o StrictHostKeyChecking=no docs/scripts/deploy.sh ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }}:/opt/legnext/
+
+      - name: Deploy to VPS
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }} << 'EOF'
+            cd /opt/legnext
+            
+            # Create environment file
+            cat > .env.production << 'ENV_EOF'
+            NODE_ENV=production
+            DATABASE_URL=${{ secrets.DATABASE_URL }}
+            DIRECT_URL=${{ secrets.DIRECT_URL }}
+            NEXTAUTH_URL=${{ secrets.NEXTAUTH_URL }}
+            NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }}
+            GOOGLE_ID=${{ secrets.GOOGLE_ID }}
+            GOOGLE_SECRET=${{ secrets.GOOGLE_SECRET }}
+            STRIPE_SECRET_KEY=${{ secrets.STRIPE_SECRET_KEY }}
+            STRIPE_WEBHOOK_SECRET=${{ secrets.STRIPE_WEBHOOK_SECRET }}
+            NEXT_PUBLIC_STRIPE_PRO_PRICE_ID=${{ secrets.NEXT_PUBLIC_STRIPE_PRO_PRICE_ID }}
+            BACKEND_API_URL=${{ secrets.BACKEND_API_URL }}
+            BACKEND_API_KEY=${{ secrets.BACKEND_API_KEY }}
+            R2_ENDPOINT=${{ secrets.R2_ENDPOINT }}
+            R2_ACCESS_KEY_ID=${{ secrets.R2_ACCESS_KEY_ID }}
+            R2_SECRET_ACCESS_KEY=${{ secrets.R2_SECRET_ACCESS_KEY }}
+            R2_BUCKET_NAME=${{ secrets.R2_BUCKET_NAME }}
+            R2_PUBLIC_URL=${{ secrets.R2_PUBLIC_URL }}
+            ENV_EOF
+            
+            # Set correct permissions
+            chmod 600 .env.production
+            
+            # Pull latest image
+            docker pull ${{ needs.docker-build.outputs.image-tag }}
+            
+            # Execute deployment script
+            chmod +x deploy.sh
+            ./deploy.sh ${{ needs.docker-build.outputs.image-tag }}
+          EOF
+
+  # Job 6: Post-deployment Health Check
+  health-check:
+    name: 🏥 Health Check
+    runs-on: ubuntu-latest
+    needs: deploy
+    steps:
+      - name: Wait for deployment to stabilize
+        run: sleep 30
+
+      - name: Health check - API endpoint
+        run: |
+          for i in {1..10}; do
+            if curl -f -s -o /dev/null https://${{ secrets.PRODUCTION_DOMAIN }}/health; then
+              echo "✅ Health check passed"
+              exit 0
+            fi
+            echo "⏳ Attempt $i failed, waiting..."
+            sleep 10
+          done
+          echo "❌ Health check failed"
+          exit 1
+
+      - name: Smoke tests
+        run: |
+          # Test homepage
+          curl -f -s https://${{ secrets.PRODUCTION_DOMAIN }}/ > /dev/null
+          echo "✅ Homepage accessible"
+          
+          # Test API auth endpoint
+          curl -f -s https://${{ secrets.PRODUCTION_DOMAIN }}/api/auth/session > /dev/null
+          echo "✅ Auth API accessible"
+
+  # Job 7: Notification
+  notify:
+    name: 📢 Notify Deployment Status
+    runs-on: ubuntu-latest
+    needs: [deploy, health-check]
+    if: always()
+    steps:
+      - name: Notify success to Slack
+        if: needs.health-check.result == 'success'
+        uses: 8398a7/action-slack@v3
+        with:
+          status: success
+          text: |
+            🎉 *Production Deployment Successful!*
+            
+            🚀 Branch: `main`
+            🏷️ Version: `${{ needs.docker-build.outputs.image-tag }}`
+            🌐 URL: https://${{ secrets.PRODUCTION_DOMAIN }}
+            ⏱️ Duration: ${{ steps.deploy-time.outputs.duration }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+      - name: Notify failure to Slack
+        if: failure()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: failure
+          text: |
+            🚨 *Production Deployment Failed!*
+            
+            ❌ Branch: `main`
+            🔗 Check logs: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+            
+            Please investigate and fix the deployment issue.
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  # Job 8: Automatic Rollback (if health check fails)
+  rollback:
+    name: 🔄 Automatic Rollback
+    runs-on: ubuntu-latest
+    needs: [deploy, health-check]
+    if: needs.health-check.result == 'failure'
+    steps:
+      - name: Rollback deployment
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }} << 'EOF'
+            cd /opt/legnext
+            
+            echo "🔄 Rolling back to previous version..."
+            
+            # Get previous image tag
+            PREVIOUS_IMAGE=$(docker images --format "table {{.Repository}}:{{.Tag}}" | grep legnext-midjourney-api | sed -n '2p' | tr -d ' ')
+            
+            if [ ! -z "$PREVIOUS_IMAGE" ]; then
+              # Update docker-compose to use previous image
+              sed -i "s|image: .*|image: $PREVIOUS_IMAGE|" docker-compose.yml
+              
+              # Restart services
+              docker-compose down
+              docker-compose up -d
+              
+              echo "✅ Rollback completed to: $PREVIOUS_IMAGE"
+            else
+              echo "❌ No previous image found for rollback"
+              exit 1
+            fi
+          EOF
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USERNAME: ${{ secrets.VPS_USERNAME }}
+
+      - name: Notify rollback to Slack
+        uses: 8398a7/action-slack@v3
+        with:
+          status: warning
+          text: |
+            🔄 *Automatic Rollback Executed*
+            
+            ⚠️ Production deployment failed health checks
+            🔄 Automatically rolled back to previous version
+            🔗 Check logs: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
