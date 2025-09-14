@@ -229,10 +229,17 @@ jobs:
         with:
           images: ${{ secrets.DOCKER_USERNAME }}/${{ env.DOCKER_IMAGE }}
           tags: |
-            type=ref,event=branch
-            type=ref,event=pr
+            type=raw,value=staging-latest
             type=sha,prefix=staging-
-            type=raw,value=staging-latest,enable={{is_default_branch}}
+          flavor: |
+            latest=false
+
+      - name: Debug metadata output
+        run: |
+          echo "🔍 Metadata outputs:"
+          echo "Tags: ${{ steps.meta.outputs.tags }}"
+          echo "Labels: ${{ steps.meta.outputs.labels }}"
+          echo "JSON: ${{ steps.meta.outputs.json }}"
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
@@ -270,10 +277,13 @@ jobs:
 
       - name: Deploy to Staging VPS (Inline Script)
         run: |
-          # Extract first image tag (metadata-action outputs multiple tags)
-          IMAGE_TAG=$(echo "${{ needs.docker-build.outputs.image-tag }}" | head -n1)
+          # Use staging-latest tag for deployment (always prefer this stable tag)
+          STAGING_LATEST_TAG="${{ secrets.DOCKER_USERNAME }}/${{ env.DOCKER_IMAGE }}:staging-latest"
+
           echo "🔍 Available tags: ${{ needs.docker-build.outputs.image-tag }}"
-          echo "🎯 Selected tag: $IMAGE_TAG"
+          echo "🎯 Using deployment tag: $STAGING_LATEST_TAG"
+
+          IMAGE_TAG="$STAGING_LATEST_TAG"
 
           # Create deployment script
           cat > /tmp/staging-deploy.sh << 'DEPLOY_SCRIPT'
