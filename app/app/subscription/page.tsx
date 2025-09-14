@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { toast } from "react-hot-toast";
 import { PlusIcon, CheckCircleIcon, XCircleIcon, ExclamationTriangleIcon, XMarkIcon } from "@heroicons/react/24/outline";
@@ -31,7 +31,7 @@ export default function SubscriptionPage() {
   const hasActiveSubscription = isProUser; // Simplified for now
 
   // Get subscription status from backend
-  const fetchSubscriptions = async () => {
+  const fetchSubscriptions = useCallback(async () => {
     if (!session?.user) return;
     
     try {
@@ -47,7 +47,7 @@ export default function SubscriptionPage() {
     } finally {
       setSubscriptionLoading(false);
     }
-  };
+  }, [session?.user]);
 
   // Get current active subscription
   const activeSubscription = subscriptions.find(sub => 
@@ -62,7 +62,7 @@ export default function SubscriptionPage() {
     if (session?.user) {
       fetchSubscriptions();
     }
-  }, [session?.user]);
+  }, [session?.user, fetchSubscriptions]);
 
   const handleCancelSubscription = async () => {
     setCanceling(true);

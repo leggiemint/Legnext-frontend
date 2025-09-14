@@ -66,7 +66,7 @@ function SitePasswordForm() {
             </h1>
             
             <p className="text-gray-600 text-sm">
-              We're currently upgrading our services. The system will be back online in approximately 1 hour. Please enter the password to access the maintenance portal.
+              We&apos;re currently upgrading our services. The system will be back online in approximately 1 hour. Please enter the password to access the maintenance portal.
             </p>
           </div>
         </div>

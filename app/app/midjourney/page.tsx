@@ -293,16 +293,6 @@ export default function CreatePage() {
     poll();
   }, [userApiKey]);
 
-  const handleFileUploaded = (fileData: {
-    url: string;
-    fileKey: string;
-    fileName: string;
-  }) => {
-    setUploadedReference(fileData);
-    // 将图片URL添加到文本描述中
-    const imagePrompt = `@${fileData.url} `;
-    setTextDescription(prev => imagePrompt + prev);
-  };
 
   const handleUpscale = async (imageIndex: number) => {
     // 检查用户是否已登录
