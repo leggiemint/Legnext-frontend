@@ -269,7 +269,8 @@ export function useUser() {
         isBalanceLoading: false,
         error: null as string | null,
         refreshUserInfo: () => Promise.resolve(),
-        refreshBalance: () => Promise.resolve()
+        refreshBalance: () => Promise.resolve(),
+        refreshAll: () => Promise.resolve()
       };
     }
     throw new Error('useUser must be used within a UserContextProvider');

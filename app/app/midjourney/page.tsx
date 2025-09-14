@@ -25,11 +25,7 @@ export default function CreatePage() {
   const [userApiKey, setUserApiKey] = useState<string | null>(null);
   const [isLoadingApiKey, setIsLoadingApiKey] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
-  const [, setUploadedReference] = useState<{
-    url: string;
-    fileKey: string;
-    fileName: string;
-  } | null>(null);
+  // Note: uploadedReference state removed as it was unused
 
   // Steps data for the StepsSection component
   const createSteps = [
