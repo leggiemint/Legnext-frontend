@@ -19,7 +19,9 @@ interface GeneratedImage {
 }
 
 export default function ImagesPage() {
-  const { data: session, status } = useSession();
+  const sessionResponse = useSession();
+  const session = sessionResponse?.data;
+  const status = sessionResponse?.status;
   const [images, setImages] = useState<GeneratedImage[]>([]);
   const [selectedImages, setSelectedImages] = useState<string[]>([]);
   const [isSelecting, setIsSelecting] = useState(false);

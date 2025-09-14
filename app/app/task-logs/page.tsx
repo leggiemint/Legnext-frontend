@@ -15,7 +15,8 @@ import {
 import { useBackendTaskHistories } from "@/hooks/useBackendAccount";
 
 export default function TaskLogsPage() {
-  const { data: session } = useSession();
+  const sessionResponse = useSession();
+  const session = sessionResponse?.data;
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
 

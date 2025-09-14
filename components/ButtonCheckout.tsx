@@ -28,7 +28,8 @@ const ButtonCheckout = ({
     isOpen: false,
     error: null,
   });
-  const { data: session } = useSession();
+  const sessionResponse = useSession();
+  const session = sessionResponse?.data;
 
   const handleAction = async () => {
     setIsLoading(true);

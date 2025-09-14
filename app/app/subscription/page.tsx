@@ -10,7 +10,8 @@ import TopUpModal from "../../../components/TopUpModal";
 import { useUser, useUserPlan } from "@/contexts/UserContext";
 
 export default function SubscriptionPage() {
-  const { data: session } = useSession();
+  const sessionResponse = useSession();
+  const session = sessionResponse?.data;
   const [showTopUp, setShowTopUp] = useState(false);
   const [canceling, setCanceling] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);

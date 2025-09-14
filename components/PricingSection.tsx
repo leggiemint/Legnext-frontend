@@ -6,7 +6,8 @@ import { useSession } from "next-auth/react";
 import { useUser, useUserPlan } from "@/contexts/UserContext";
 
 const PricingSection = () => {
-  const { data: session } = useSession();
+  const sessionResponse = useSession();
+  const session = sessionResponse?.data;
   
   // 使用统一的用户状态管理
   const { user, isLoading } = useUser();

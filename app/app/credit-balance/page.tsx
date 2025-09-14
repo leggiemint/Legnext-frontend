@@ -11,7 +11,8 @@ import useSWR from "swr";
 import { log } from "@/libs/logger";
 
 function CreditBalanceContent() {
-  const { data: session } = useSession();
+  const sessionResponse = useSession();
+  const session = sessionResponse?.data;
   const searchParams = useSearchParams();
   const [showTopUp, setShowTopUp] = useState(false);
   const [showRedeem, setShowRedeem] = useState(false);
