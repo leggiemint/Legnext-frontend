@@ -7,8 +7,8 @@ FROM base AS deps
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
-# Install pnpm
-RUN npm install -g pnpm
+# Install pnpm (指定版本确保兼容性)
+RUN npm install -g pnpm@8.15.1
 
 # Copy package files
 COPY package.json pnpm-lock.yaml* ./
@@ -22,8 +22,8 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Install pnpm
-RUN npm install -g pnpm
+# Install pnpm (指定版本确保兼容性)
+RUN npm install -g pnpm@8.15.1
 
 # Generate Prisma client
 RUN pnpm prisma generate
@@ -35,15 +35,15 @@ RUN pnpm run build
 FROM base AS runner
 WORKDIR /app
 
-ENV NODE_ENV production
+ENV NODE_ENV=production
 # Uncomment the following line in case you want to disable telemetry during runtime.
 # ENV NEXT_TELEMETRY_DISABLED 1
 
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-# Install pnpm
-RUN npm install -g pnpm
+# Install pnpm (指定版本确保兼容性)
+RUN npm install -g pnpm@8.15.1
 
 # Copy necessary files
 COPY --from=builder /app/public ./public
@@ -66,8 +66,8 @@ USER nextjs
 
 EXPOSE 3000
 
-ENV PORT 3000
-ENV HOSTNAME "0.0.0.0"
+ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
 
 # Start the application
 CMD ["node", "server.js"]
