@@ -5,6 +5,8 @@ import { getUserWithProfile } from '@/libs/user-helpers';
 import { backendApiClient } from '@/libs/backend-api-client';
 import { log } from '@/libs/logger';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(
   request: NextRequest,
   { params }: { params: { keyId: string } }

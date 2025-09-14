@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { backendApiClient } from '@/libs/backend-api-client';
 import { getUserApiKey } from '@/libs/auth-helpers';
-
 import { log } from '@/libs/logger';
+
 export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {

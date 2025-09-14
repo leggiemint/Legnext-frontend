@@ -4,6 +4,8 @@ import { authOptions } from '@/libs/next-auth';
 import { resumeSubscription } from '@/libs/stripe-client';
 import { getUserWithProfile } from '@/libs/user-helpers';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST() {
   try {
     // 验证用户认证

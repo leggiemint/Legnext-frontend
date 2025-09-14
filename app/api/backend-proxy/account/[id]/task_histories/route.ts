@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { backendApiClient } from '@/libs/backend-api-client';
 import { withAuth, validateParams, validateQuery, CommonSchemas, createErrorResponse } from '@/libs/backend-proxy-auth';
 
+
+export const dynamic = 'force-dynamic';
+
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }

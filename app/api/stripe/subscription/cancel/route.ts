@@ -5,6 +5,8 @@ import { cancelSubscription, cancelSubscriptionImmediately, getActiveSubscriptio
 import { getUserWithProfile, updateUserPlan } from '@/libs/user-helpers';
 import { backendApiClient } from '@/libs/backend-api-client';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
   try {
     // 验证用户认证

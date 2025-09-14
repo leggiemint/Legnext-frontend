@@ -3,6 +3,8 @@ import { backendApiClient } from '@/libs/backend-api-client';
 import { createErrorResponse } from '@/libs/backend-proxy-auth';
 import { z } from 'zod';
 
+export const dynamic = 'force-dynamic';
+
 const RedeemCodeSchema = z.object({
   code: z.string().min(1, 'Code is required').max(100, 'Code is too long'),
 });

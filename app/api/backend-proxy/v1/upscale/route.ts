@@ -3,6 +3,8 @@ import { backendApiClient } from '@/libs/backend-api-client';
 import { createErrorResponse } from '@/libs/backend-proxy-auth';
 import { z } from 'zod';
 
+export const dynamic = 'force-dynamic';
+
 const UpscaleSchema = z.object({
   jobId: z.string().min(1, 'Job ID is required'),
   imageNo: z.number().int().min(0).max(3, 'Image number must be between 0 and 3'),

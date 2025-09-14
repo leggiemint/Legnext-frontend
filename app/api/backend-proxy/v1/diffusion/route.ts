@@ -3,6 +3,8 @@ import { backendApiClient } from '@/libs/backend-api-client';
 import { createErrorResponse } from '@/libs/backend-proxy-auth';
 import { z } from 'zod';
 
+export const dynamic = 'force-dynamic';
+
 const DiffusionSchema = z.object({
   text: z.string().min(1, 'Text prompt is required').max(1000, 'Text prompt is too long'),
   callback: z.string().url('Invalid callback URL').optional(),

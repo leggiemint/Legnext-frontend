@@ -4,6 +4,8 @@ import { authOptions } from '@/libs/next-auth';
 import { getInvoiceDetails } from '@/libs/stripe-client';
 import { getUserWithProfile } from '@/libs/user-helpers';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(
   request: NextRequest,
   { params }: { params: { invoiceId: string } }

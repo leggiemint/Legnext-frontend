@@ -3,8 +3,8 @@ import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/libs/next-auth';
 import { backendApiClient } from '@/libs/backend-api-client';
 import { getUserWithProfile } from '@/libs/user-helpers';
-
 import { log } from '@/libs/logger';
+
 export const dynamic = 'force-dynamic';
 
 // Get current user's backend account ID

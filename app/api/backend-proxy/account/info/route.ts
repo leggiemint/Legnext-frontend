@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { backendApiClient } from '@/libs/backend-api-client';
 import { createErrorResponse } from '@/libs/backend-proxy-auth';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
     // Get the API key from the X-API-KEY header

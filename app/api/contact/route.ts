@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { sendContactFormEmail } from "@/libs/resend";
 
 import { log } from '@/libs/logger';
+
+export const dynamic = 'force-dynamic';
+
 export async function POST(req: NextRequest) {
   try {
     // 检查是否配置了 RESEND_API_KEY

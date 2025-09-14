@@ -7,6 +7,8 @@ import { prisma } from '@/libs/prisma';
 import { log } from '@/libs/logger';
 import Stripe from 'stripe';
 
+export const dynamic = 'force-dynamic';
+
 // Webhook事件处理器映射
 const eventHandlers = {
   'checkout.session.completed': handleCheckoutSessionCompleted,

@@ -4,6 +4,8 @@ import { authOptions } from '@/libs/next-auth';
 import { backendApiClient } from '@/libs/backend-api-client';
 import { getUserWithProfile } from '@/libs/user-helpers';
 
+export const dynamic = 'force-dynamic';
+
 // Get current user's backend account ID
 async function getBackendAccountId(): Promise<number | null> {
   const session = await getServerSession(authOptions);

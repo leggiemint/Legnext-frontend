@@ -5,6 +5,7 @@ import { getCustomerInvoices } from '@/libs/stripe-client';
 import { getUserWithProfile } from '@/libs/user-helpers';
 
 import { log } from '@/libs/logger';
+
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {

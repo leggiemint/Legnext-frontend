@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { backendApiClient } from '@/libs/backend-api-client';
 
+export const dynamic = 'force-dynamic';
+
 export async function PATCH(
   request: NextRequest,
   { params }: { params: { id: string } }

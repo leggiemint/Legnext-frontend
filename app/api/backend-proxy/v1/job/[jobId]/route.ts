@@ -3,6 +3,8 @@ import { backendApiClient } from '@/libs/backend-api-client';
 import { validateParams, createErrorResponse } from '@/libs/backend-proxy-auth';
 import { z } from 'zod';
 
+export const dynamic = 'force-dynamic';
+
 const ParamsSchema = z.object({
   jobId: z.string().min(1, 'Job ID is required'),
 });

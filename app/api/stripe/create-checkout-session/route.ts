@@ -4,6 +4,8 @@ import { authOptions } from '@/libs/next-auth';
 import { createSubscriptionCheckoutSession, getOrCreateStripeCustomer, STRIPE_CONFIG } from '@/libs/stripe-client';
 import { getUserWithProfile, updateStripeCustomerId } from '@/libs/user-helpers';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
   try {
     console.log('🛒 Creating checkout session...');

@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { backendApiClient } from '@/libs/backend-api-client';
 import { getUserApiKey } from '@/libs/auth-helpers';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(
   request: NextRequest,
   { params }: { params: { jobId: string } }
