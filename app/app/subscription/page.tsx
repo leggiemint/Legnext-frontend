@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { toast } from "react-hot-toast";
 import { PlusIcon, CheckCircleIcon, XCircleIcon, ExclamationTriangleIcon, XMarkIcon } from "@heroicons/react/24/outline";
@@ -15,8 +15,11 @@ export default function SubscriptionPage() {
   const [canceling, setCanceling] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [, setCancelReason] = useState("");
-  const [subscriptionCanceled, setSubscriptionCanceled] = useState(false);
   const [reactivating, setReactivating] = useState(false);
+  
+  // Subscription state management
+  const [subscriptions, setSubscriptions] = useState<any[]>([]);
+  const [subscriptionLoading, setSubscriptionLoading] = useState(false);
   
   // Use unified user state management with backend data
   const { user, isLoading, refreshAll } = useUser();
@@ -26,6 +29,40 @@ export default function SubscriptionPage() {
   const isProUser = plan === 'pro';
   const planDisplayName = plan === 'pro' ? 'Pro' : 'Free';
   const hasActiveSubscription = isProUser; // Simplified for now
+
+  // Get subscription status from backend
+  const fetchSubscriptions = async () => {
+    if (!session?.user) return;
+    
+    try {
+      setSubscriptionLoading(true);
+      const response = await fetch('/api/stripe/subscription');
+      if (!response.ok) {
+        throw new Error('Failed to fetch subscriptions');
+      }
+      const data = await response.json();
+      setSubscriptions(data.subscriptions || []);
+    } catch (error) {
+      console.error('Error fetching subscriptions:', error);
+    } finally {
+      setSubscriptionLoading(false);
+    }
+  };
+
+  // Get current active subscription
+  const activeSubscription = subscriptions.find(sub => 
+    sub.status === 'active' || sub.status === 'trialing'
+  );
+
+  // Check if subscription is set to cancel at period end
+  const subscriptionCanceled = activeSubscription?.cancel_at_period_end || false;
+
+  // Load subscriptions when component mounts or user changes
+  useEffect(() => {
+    if (session?.user) {
+      fetchSubscriptions();
+    }
+  }, [session?.user]);
 
   const handleCancelSubscription = async () => {
     setCanceling(true);
@@ -64,8 +101,9 @@ export default function SubscriptionPage() {
       // Close modal and refresh user data
       setShowCancelModal(false);
       setCancelReason("");
-      setSubscriptionCanceled(true); // 标记订阅已设置为取消
       await refreshAll();
+      // Refresh subscription status
+      await fetchSubscriptions();
 
     } catch (error: any) {
       console.error("❌ Subscription cancellation failed:", error);
@@ -102,10 +140,10 @@ export default function SubscriptionPage() {
       console.log("✅ Subscription reactivated successfully:", result);
       
       toast.success("Subscription reactivated! Your subscription will continue as normal.");
-      setSubscriptionCanceled(false);
       
-      // 刷新用户数据
+      // 刷新用户数据和订阅状态
       await refreshAll();
+      await fetchSubscriptions();
       
     } catch (error: any) {
       console.error("❌ Subscription reactivation failed:", error);
@@ -150,7 +188,7 @@ export default function SubscriptionPage() {
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Subscription</h1>
         
         {/* Loading State */}
-        {session && isLoading && (
+        {session && (isLoading || subscriptionLoading) && (
           <div className="bg-gray-50 rounded-lg p-4 mb-6">
             <div className="animate-pulse">
               <div className="flex items-center gap-4">
@@ -163,7 +201,7 @@ export default function SubscriptionPage() {
         )}
 
         {/* Current Plan Status Bar */}
-        {session && !isLoading && user && (
+        {session && !isLoading && !subscriptionLoading && user && (
           <div className="bg-gray-50 rounded-lg p-4 mb-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
@@ -198,7 +236,7 @@ export default function SubscriptionPage() {
               )}
               
               {/* Cancel subscription button - for subscribed users */}
-              {hasActiveSubscription && (
+              {hasActiveSubscription && activeSubscription && (
                 <div className="flex flex-col gap-2">
                   {subscriptionCanceled ? (
                     <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
@@ -217,7 +255,14 @@ export default function SubscriptionPage() {
                         <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                           <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.725-1.36 3.49 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                         </svg>
-                        <span className="text-sm font-medium whitespace-nowrap">Subscription will be canceled at period end</span>
+                        <span className="text-sm font-medium whitespace-nowrap">
+                          Subscription will be canceled at period end
+                          {activeSubscription.current_period_end && (
+                            <span className="block text-xs text-yellow-600 mt-1">
+                              Until {new Date(activeSubscription.current_period_end * 1000).toLocaleDateString()}
+                            </span>
+                          )}
+                        </span>
                       </div>
                     </div>
                   ) : (

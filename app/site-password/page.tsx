@@ -57,16 +57,16 @@ function SitePasswordForm() {
           </div>
           
           <div className="space-y-2">
-            <div className="inline-flex items-center px-3 py-1 rounded-full bg-amber-100 border border-amber-200">
-              <span className="text-sm font-medium text-amber-800">🚧 Under Development</span>
+            <div className="inline-flex items-center px-3 py-1 rounded-full bg-blue-100 border border-blue-200">
+              <span className="text-sm font-medium text-blue-800">🔧 System Maintenance</span>
             </div>
             
             <h1 className="text-2xl font-bold text-gray-900">
-              Site Access Required
+              Service Temporarily Unavailable
             </h1>
             
             <p className="text-gray-600 text-sm">
-              This site is currently under development. Please enter the password to continue.
+              We're currently upgrading our services. The system will be back online in approximately 1 hour. Please enter the password to access the maintenance portal.
             </p>
           </div>
         </div>
@@ -118,7 +118,7 @@ function SitePasswordForm() {
         {/* Footer */}
         <div className="text-center mt-6">
           <p className="text-xs text-gray-500">
-            Powered by {config.appName} • Development Mode
+            Powered by {config.appName} • Maintenance Mode
           </p>
         </div>
       </div>

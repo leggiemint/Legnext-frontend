@@ -46,8 +46,7 @@ package-lock.json
 yarn.lock
 
 # local env files
-.env*.local
-.env
+.env*
 
 # vercel
 .vercel
@@ -90,4 +89,3 @@ simulate-*.js
 temp-*
 
 EXTERNAL_BACKEND_API_ENDPOINTS.md
-.env.production
