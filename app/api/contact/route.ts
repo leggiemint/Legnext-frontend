@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sendContactFormEmail } from "@/libs/resend";
 
+// 告诉Next.js这个API路由是动态的，不要在构建时预渲染
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 import { log } from '@/libs/logger';
 export async function POST(req: NextRequest) {
   try {
