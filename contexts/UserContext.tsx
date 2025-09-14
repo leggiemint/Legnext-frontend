@@ -270,7 +270,7 @@ export function useUser() {
         error: null as string | null,
         refreshUserInfo: async () => {},
         refreshBalance: async () => {},
-        updateUserPlan: async () => {},
+        refreshAll: async () => {},
       };
     }
     throw new Error('useUser must be used within a UserContextProvider');
