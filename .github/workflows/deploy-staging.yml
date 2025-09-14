@@ -372,6 +372,51 @@ jobs:
           echo "📋 应用日志 (最近20行):"
           docker-compose logs --tail=20 app
 
+          # 测试网络连接到外部服务
+          echo "🌐 测试网络连接:"
+          docker-compose exec -T app sh -c "
+            echo 'Testing external network connectivity...'
+            # Test DNS resolution
+            if nslookup google.com > /dev/null 2>&1; then
+              echo '✅ DNS resolution works'
+            else
+              echo '❌ DNS resolution failed'
+            fi
+
+            # Test HTTPS connectivity
+            if wget -q --spider https://www.google.com; then
+              echo '✅ HTTPS connectivity works'
+            else
+              echo '❌ HTTPS connectivity failed'
+            fi
+          " || echo "⚠️ 网络测试失败"
+
+          # 测试数据库连接
+          echo "🗄️ 测试数据库连接:"
+          docker-compose exec -T app sh -c "
+            echo 'Testing database connection...'
+            echo 'DATABASE_URL format:' \${DATABASE_URL:0:30}...
+            if node -e '
+              const { PrismaClient } = require(\"@prisma/client\");
+              const prisma = new PrismaClient({
+                log: [\"error\", \"warn\", \"info\"]
+              });
+              prisma.\$queryRaw\`SELECT 1\`.then(() => {
+                console.log(\"✅ Database connection successful\");
+                process.exit(0);
+              }).catch((e) => {
+                console.error(\"❌ Database connection failed:\", e.message);
+                console.error(\"Error code:\", e.code);
+                console.error(\"Error meta:\", e.meta);
+                process.exit(1);
+              });
+            '; then
+              echo '✅ 数据库连接正常'
+            else
+              echo '❌ 数据库连接失败'
+            fi
+          " || echo "⚠️ 无法执行数据库连接测试"
+
           # 检查端口是否开放
           echo "🌐 检查端口连接:"
           netstat -tlnp | grep :3000 || echo "端口 3000 未监听"

@@ -12,10 +12,14 @@ export async function GET() {
     // Try database connectivity (skip if DATABASE_URL is missing)
     if (process.env.DATABASE_URL) {
       try {
+        const startTime = Date.now();
         await prisma.$queryRaw`SELECT 1`;
+        const connectTime = Date.now() - startTime;
+        databaseStatus = `connected_${connectTime}ms`;
+        console.log(`Database connected successfully in ${connectTime}ms`);
       } catch (error) {
-        console.warn('Database connection failed:', error);
-        databaseStatus = 'disconnected';
+        console.error('Database connection failed:', error);
+        databaseStatus = `disconnected_${error instanceof Error ? error.message : 'unknown_error'}`;
       }
     } else {
       databaseStatus = 'not_configured';
