@@ -19,17 +19,35 @@ RUN pnpm install --frozen-lockfile
 # Rebuild the source code only when needed
 FROM base AS builder
 WORKDIR /app
+
+# 声明构建时必需的环境变量，但不持久化到镜像
+ARG DATABASE_URL
+ARG DIRECT_URL
+ARG BACKEND_API_KEY
+ARG STRIPE_SECRET_KEY
+ARG RESEND_API_KEY
+ARG NEXTAUTH_SECRET
+
+# 临时设置环境变量，仅用于构建过程
+# 这些变量不会出现在最终的运行时镜像中
+
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
 # Install pnpm (指定版本确保兼容性)
 RUN npm install -g pnpm@8.15.1
 
-# Generate Prisma client
-RUN pnpm prisma generate
+# Generate Prisma client (使用构建时参数)
+RUN DATABASE_URL="$DATABASE_URL" DIRECT_URL="$DIRECT_URL" pnpm prisma generate
 
-# Build the application
-RUN pnpm run build
+# Build the application (使用构建时参数，不持久化到镜像)
+RUN DATABASE_URL="$DATABASE_URL" \
+    DIRECT_URL="$DIRECT_URL" \
+    BACKEND_API_KEY="$BACKEND_API_KEY" \
+    STRIPE_SECRET_KEY="$STRIPE_SECRET_KEY" \
+    RESEND_API_KEY="$RESEND_API_KEY" \
+    NEXTAUTH_SECRET="$NEXTAUTH_SECRET" \
+    pnpm run build
 
 # Production image, copy all the files and run next
 FROM base AS runner

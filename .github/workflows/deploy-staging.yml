@@ -154,7 +154,12 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           build-args: |
-            NODE_ENV=development
+            DATABASE_URL=${{ secrets.STAGING_DATABASE_URL }}
+            DIRECT_URL=${{ secrets.STAGING_DIRECT_URL }}
+            BACKEND_API_KEY=${{ secrets.STAGING_BACKEND_API_KEY }}
+            STRIPE_SECRET_KEY=${{ secrets.STRIPE_SECRET_KEY }}
+            RESEND_API_KEY=${{ secrets.RESEND_API_KEY }}
+            NEXTAUTH_SECRET=${{ secrets.STAGING_NEXTAUTH_SECRET }}
 
   # Job 4: Deploy to Staging
   deploy-staging:

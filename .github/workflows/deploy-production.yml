@@ -167,7 +167,12 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           build-args: |
-            NODE_ENV=production
+            DATABASE_URL=${{ secrets.DATABASE_URL }}
+            DIRECT_URL=${{ secrets.DIRECT_URL }}
+            BACKEND_API_KEY=${{ secrets.BACKEND_API_KEY }}
+            STRIPE_SECRET_KEY=${{ secrets.STRIPE_SECRET_KEY }}
+            RESEND_API_KEY=${{ secrets.RESEND_API_KEY }}
+            NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }}
 
   # Job 4: Database Migration (Pre-deployment)
   database-migration:
