@@ -34,7 +34,7 @@ export default function PlanSyncChecker({
     // 立即进行一次同步检查
     const performSync = async () => {
       // 如果设置了只在页面可见时同步，检查页面可见性
-      if (syncOnlyWhenVisible && document.hidden) {
+      if (syncOnlyWhenVisible && typeof document !== 'undefined' && document.hidden) {
         return;
       }
 

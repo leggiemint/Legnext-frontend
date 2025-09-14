@@ -260,6 +260,18 @@ export function UserContextProvider({ children }: { children: React.ReactNode })
 export function useUser() {
   const context = useContext(UserContext);
   if (context === undefined) {
+    // During SSR, return safe defaults instead of throwing
+    if (typeof window === 'undefined') {
+      return {
+        user: null as UserInfo | null,
+        balance: null as BalanceInfo | null,
+        isLoading: true,
+        isBalanceLoading: false,
+        error: null as string | null,
+        refreshUserInfo: () => Promise.resolve(),
+        refreshBalance: () => Promise.resolve()
+      };
+    }
     throw new Error('useUser must be used within a UserContextProvider');
   }
   return context;

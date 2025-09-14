@@ -18,6 +18,14 @@ const AuthContext = createContext<AuthContextType>({
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
+    // During SSR, return safe defaults instead of throwing
+    if (typeof window === 'undefined') {
+      return {
+        isAuthenticated: false,
+        isLoading: true,
+        user: null
+      };
+    }
     throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
