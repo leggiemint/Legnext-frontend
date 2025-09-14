@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 
+// 告诉Next.js这个API路由是动态的，不要在构建时预渲染
 export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 
 // 获取后端管理API密钥 - 仅服务端可用
 function getBackendApiKey(): string {

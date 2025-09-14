@@ -5,6 +5,10 @@ import { cancelSubscription, cancelSubscriptionImmediately, getActiveSubscriptio
 import { getUserWithProfile, updateUserPlan } from '@/libs/user-helpers';
 import { backendApiClient } from '@/libs/backend-api-client';
 
+// 告诉Next.js这个API路由是动态的，不要在构建时预渲染
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 export async function POST(request: NextRequest) {
   try {
     // 验证用户认证

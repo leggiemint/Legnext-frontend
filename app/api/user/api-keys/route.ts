@@ -1,12 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/libs/next-auth';
-
-export const dynamic = 'force-dynamic';
 import { getUserWithProfile } from '@/libs/user-helpers';
 import { backendApiClient } from '@/libs/backend-api-client';
 
 import { log } from '@/libs/logger';
+
+// 告诉Next.js这个API路由是动态的，不要在构建时预渲染
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);

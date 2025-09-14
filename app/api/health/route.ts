@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/libs/prisma";
 
+// 告诉Next.js这个API路由是动态的，不要在构建时预渲染
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 export async function GET() {
   try {
     let databaseStatus = 'connected';

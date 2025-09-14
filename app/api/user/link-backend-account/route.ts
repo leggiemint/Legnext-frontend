@@ -3,6 +3,10 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/libs/next-auth';
 import { linkExistingBackendAccount } from '@/libs/user-helpers';
 
+// 告诉Next.js这个API路由是动态的，不要在构建时预渲染
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);

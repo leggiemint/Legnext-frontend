@@ -7,6 +7,10 @@ import { prisma } from '@/libs/prisma';
 import { log } from '@/libs/logger';
 import Stripe from 'stripe';
 
+// 告诉Next.js这个API路由是动态的，不要在构建时预渲染
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 // Webhook事件处理器映射
 const eventHandlers = {
   'checkout.session.completed': handleCheckoutSessionCompleted,
