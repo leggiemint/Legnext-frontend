@@ -258,6 +258,7 @@ jobs:
             STRIPE_SECRET_KEY=${{ secrets.STRIPE_SECRET_KEY }}
             RESEND_API_KEY=${{ secrets.RESEND_API_KEY }}
             NEXTAUTH_SECRET=${{ secrets.STAGING_NEXTAUTH_SECRET }}
+            NEXTAUTH_URL=${{ secrets.STAGING_NEXTAUTH_URL }}
 
   # Job 5: Deploy to Staging
   deploy-staging:
@@ -350,8 +351,49 @@ jobs:
 
           # 9. 健康检查
           echo "🏥 执行健康检查..."
+
+          # 首先检查应用是否在运行
+          echo "📊 当前容器状态:"
+          docker-compose ps
+
+          # 检查环境变量文件
+          echo "🔧 检查环境变量配置:"
+          if [ -f .env.staging ]; then
+              echo "✅ .env.staging 文件存在"
+              echo "环境变量数量: $(wc -l < .env.staging)"
+              # 显示非敏感的环境变量
+              echo "非敏感环境变量:"
+              grep -E "^(NODE_ENV|NEXTAUTH_URL|DATABASE_URL)" .env.staging | sed 's/=.*/=***/' || echo "未找到关键环境变量"
+          else
+              echo "❌ .env.staging 文件不存在"
+          fi
+
+          # 检查应用日志
+          echo "📋 应用日志 (最近20行):"
+          docker-compose logs --tail=20 app
+
+          # 检查端口是否开放
+          echo "🌐 检查端口连接:"
+          netstat -tlnp | grep :3000 || echo "端口 3000 未监听"
+
           for i in {1..10}; do
-              if curl -f http://localhost:3000/health > /dev/null 2>&1; then
+              echo "🔍 健康检查尝试 $i/10..."
+
+              # 先测试基本连接
+              if nc -z localhost 3000; then
+                  echo "✅ 端口 3000 可访问"
+              else
+                  echo "❌ 端口 3000 不可访问"
+              fi
+
+              # 详细的健康检查
+              response=$(curl -s http://localhost:3000/health 2>&1) || true
+              status_code=$(curl -s -w "%{http_code}" -o /dev/null http://localhost:3000/health 2>&1) || true
+
+              echo "HTTP状态码: $status_code"
+              echo "响应内容: $response"
+
+              if [ "$status_code" = "200" ]; then
                   echo "✅ ClawCloud 测试环境部署成功！"
 
                   # 10. 重新加载Nginx
