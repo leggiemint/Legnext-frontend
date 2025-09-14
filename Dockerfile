@@ -50,6 +50,9 @@ RUN DATABASE_URL="$DATABASE_URL" \
     SKIP_BUILD_STATIC_GENERATION=true \
     pnpm run build
 
+# Verify Prisma client generation
+RUN ls -la node_modules/.prisma/ || echo "Prisma client not found in expected location"
+
 # Production image, copy all the files and run next
 FROM base AS runner
 WORKDIR /app
@@ -76,8 +79,6 @@ COPY --from=builder /app/tailwind.config.js ./tailwind.config.js
 
 # Copy Prisma files
 COPY --from=builder /app/prisma ./prisma
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
-COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 
 # Automatically leverage output traces to reduce image size
 # https://nextjs.org/docs/advanced-features/output-file-tracing
