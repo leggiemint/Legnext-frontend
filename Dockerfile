@@ -4,7 +4,7 @@ FROM node:18-alpine AS base
 # Install dependencies only when needed
 FROM base AS deps
 # Check https://github.com/nodejs/docker-node/tree/b4117f9333da4138b03a546ec926ef50a31506c3#nodealpine to understand why libc6-compat might be needed.
-RUN apk add --no-cache libc6-compat
+RUN apk add --no-cache libc6-compat openssl1.1-compat
 WORKDIR /app
 
 # Install pnpm (指定版本确保兼容性)
@@ -47,11 +47,15 @@ RUN DATABASE_URL="$DATABASE_URL" \
     STRIPE_SECRET_KEY="$STRIPE_SECRET_KEY" \
     RESEND_API_KEY="$RESEND_API_KEY" \
     NEXTAUTH_SECRET="$NEXTAUTH_SECRET" \
+    SKIP_BUILD_STATIC_GENERATION=true \
     pnpm run build
 
 # Production image, copy all the files and run next
 FROM base AS runner
 WORKDIR /app
+
+# 安装运行时需要的依赖
+RUN apk add --no-cache libc6-compat openssl1.1-compat
 
 ENV NODE_ENV=production
 # Uncomment the following line in case you want to disable telemetry during runtime.

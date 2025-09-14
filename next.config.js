@@ -14,6 +14,13 @@ const nextConfig = {
       "staging-a93116.legnext.ai", // 测试环境域名
     ],
   },
+  // 禁用静态优化，避免构建时 useSession 问题
+  experimental: {
+    forceSwcTransforms: true,
+  },
+  // 跳过构建时静态生成
+  trailingSlash: false,
+  generateBuildId: () => 'build',
 };
 
 module.exports = nextConfig;
