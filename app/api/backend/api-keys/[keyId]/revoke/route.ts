@@ -4,6 +4,10 @@ import { authOptions } from '@/libs/next-auth';
 import { backendApiClient } from '@/libs/backend-api-client';
 import { getUserWithProfile } from '@/libs/user-helpers';
 
+// 告诉Next.js这个API路由是动态的，不要在构建时预渲染
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 // Get current user's backend account ID
 async function getBackendAccountId(): Promise<number | null> {
   const session = await getServerSession(authOptions);
