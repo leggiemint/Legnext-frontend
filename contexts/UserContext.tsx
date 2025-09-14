@@ -130,7 +130,9 @@ export function calculateBalance(backendAccount: BackendAccount): BalanceInfo {
 
 // UserContext Provider组件
 export function UserContextProvider({ children }: { children: React.ReactNode }) {
-  const { data: session, status } = useSession();
+  const sessionData = useSession();
+  const session = sessionData?.data;
+  const status = sessionData?.status;
   const [user, setUser] = useState<UserInfo | null>(null);
   const [balance, setBalance] = useState<BalanceInfo | null>(null);
   const [isLoading, setIsLoading] = useState(true);

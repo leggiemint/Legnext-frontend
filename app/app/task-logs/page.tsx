@@ -17,7 +17,8 @@ import { useBackendTaskHistories } from "@/hooks/useBackendAccount";
 export const dynamic = 'force-dynamic';
 
 export default function TaskLogsPage() {
-  const { data: session } = useSession();
+  const sessionData = useSession();
+  const session = sessionData?.data;
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
 

@@ -20,7 +20,8 @@ export default function PlanSyncChecker({
   syncInterval = 5 * 60 * 1000, // 默认5分钟同步一次
   syncOnlyWhenVisible = true 
 }: PlanSyncCheckerProps): null {
-  const { data: session } = useSession();
+  const sessionData = useSession();
+  const session = sessionData?.data;
   const { user, refreshUserInfo, isLoading } = useUser();
 
   useEffect(() => {

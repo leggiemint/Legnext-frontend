@@ -40,7 +40,8 @@ interface InvoiceData {
  * Stripe订阅Hook
  */
 export function useStripeSubscription() {
-  const { data: session } = useSession();
+  const sessionData = useSession();
+  const session = sessionData?.data;
   const [subscriptions, setSubscriptions] = useState<SubscriptionData[]>([]);
   const [hasActiveSubscription, setHasActiveSubscription] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -159,7 +160,8 @@ export function useStripeSubscription() {
  * Stripe发票Hook
  */
 export function useStripeInvoices(limit: number = 10) {
-  const { data: session } = useSession();
+  const sessionData = useSession();
+  const session = sessionData?.data;
   const [invoices, setInvoices] = useState<InvoiceData[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

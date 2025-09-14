@@ -19,7 +19,9 @@ interface BackendApiKey {
 }
 
 const ApiKeysPage = () => {
-  const { data: session, status } = useSession();
+  const sessionData = useSession();
+  const session = sessionData?.data;
+  const status = sessionData?.status;
   const [creating, setCreating] = useState(false);
   const [showNewKey, setShowNewKey] = useState<string | null>(null);
   const [copied, setCopied] = useState<{ [key: string]: boolean }>({});

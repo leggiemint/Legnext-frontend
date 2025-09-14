@@ -12,7 +12,8 @@ import { useUser, useUserPlan } from "@/contexts/UserContext";
 export const dynamic = 'force-dynamic';
 
 export default function SubscriptionPage() {
-  const { data: session } = useSession();
+  const sessionData = useSession();
+  const session = sessionData?.data;
   const [showTopUp, setShowTopUp] = useState(false);
   const [canceling, setCanceling] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);

@@ -25,7 +25,8 @@ interface Invoice {
 
 
 export default function InvoicePage() {
-  const { data: session } = useSession();
+  const sessionData = useSession();
+  const session = sessionData?.data;
   useUser();
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);

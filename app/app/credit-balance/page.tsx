@@ -13,7 +13,8 @@ import { log } from "@/libs/logger";
 export const dynamic = 'force-dynamic';
 
 function CreditBalanceContent() {
-  const { data: session } = useSession();
+  const sessionData = useSession();
+  const session = sessionData?.data;
   const searchParams = useSearchParams();
   const [showTopUp, setShowTopUp] = useState(false);
   const [showRedeem, setShowRedeem] = useState(false);
