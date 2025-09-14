@@ -13,10 +13,64 @@ env:
   PNPM_VERSION: '8'
 
 jobs:
-  # Job 1: Code Quality Checks
+  # Job 1: Setup Dependencies (Shared)
+  setup:
+    name: 🛠️ Setup Dependencies
+    runs-on: ubuntu-latest
+    outputs:
+      cache-key: ${{ steps.cache-key.outputs.key }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Generate cache key
+        id: cache-key
+        run: |
+          echo "key=node-${{ env.NODE_VERSION }}-pnpm-${{ env.PNPM_VERSION }}-${{ hashFiles('pnpm-lock.yaml') }}" >> $GITHUB_OUTPUT
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Cache node_modules
+        uses: actions/cache@v3
+        id: cache-deps
+        with:
+          path: |
+            node_modules
+            ~/.pnpm-store
+          key: ${{ steps.cache-key.outputs.key }}
+          restore-keys: |
+            node-${{ env.NODE_VERSION }}-pnpm-${{ env.PNPM_VERSION }}-
+
+      - name: Install dependencies
+        if: steps.cache-deps.outputs.cache-hit != 'true'
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma Client
+        run: pnpm prisma generate
+        env:
+          DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
+          DIRECT_URL: ${{ secrets.STAGING_DIRECT_URL }}
+
+      - name: Cache Prisma Client
+        uses: actions/cache@v3
+        with:
+          path: node_modules/.prisma
+          key: prisma-${{ hashFiles('prisma/schema.prisma') }}
+
+  # Job 2: Code Quality Checks
   quality-checks:
     name: 🔍 Code Quality Checks
     runs-on: ubuntu-latest
+    needs: setup
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -32,8 +86,21 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'pnpm'
 
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+      - name: Restore dependencies cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            node_modules
+            ~/.pnpm-store
+          key: ${{ needs.setup.outputs.cache-key }}
+          restore-keys: |
+            node-${{ env.NODE_VERSION }}-pnpm-${{ env.PNPM_VERSION }}-
+
+      - name: Restore Prisma Client
+        uses: actions/cache@v3
+        with:
+          path: node_modules/.prisma
+          key: prisma-${{ hashFiles('prisma/schema.prisma') }}
 
       - name: TypeScript Check
         run: pnpm run lint
@@ -48,11 +115,14 @@ jobs:
           DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
           DIRECT_URL: ${{ secrets.STAGING_DIRECT_URL }}
 
-  # Job 2: Build and Test
+  # Job 3: Build and Test
   build-and-test:
     name: 🏗️ Build & Test
     runs-on: ubuntu-latest
-    needs: quality-checks
+    needs: [setup]
+    # Note: Can run in parallel with quality-checks for faster pipeline
+    outputs:
+      build-cache-key: ${{ steps.build-cache.outputs.key }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -68,14 +138,34 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'pnpm'
 
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+      - name: Restore dependencies cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            node_modules
+            ~/.pnpm-store
+          key: ${{ needs.setup.outputs.cache-key }}
 
-      - name: Generate Prisma Client
-        run: pnpm prisma generate
-        env:
-          DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
-          DIRECT_URL: ${{ secrets.STAGING_DIRECT_URL }}
+      - name: Restore Prisma Client
+        uses: actions/cache@v3
+        with:
+          path: node_modules/.prisma
+          key: prisma-${{ hashFiles('prisma/schema.prisma') }}
+
+      - name: Generate build cache key
+        id: build-cache
+        run: |
+          echo "key=build-${{ github.sha }}-${{ hashFiles('**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx', 'next.config.js', 'tailwind.config.js') }}" >> $GITHUB_OUTPUT
+
+      - name: Cache Next.js build
+        uses: actions/cache@v3
+        with:
+          path: |
+            .next/cache
+          key: ${{ steps.build-cache.outputs.key }}
+          restore-keys: |
+            build-${{ github.sha }}-
+            build-
 
       - name: Build application
         run: pnpm build
@@ -112,11 +202,12 @@ jobs:
           fi
         continue-on-error: true
 
-  # Job 3: Docker Build (Staging)
+  # Job 4: Docker Build (Staging)
   docker-build:
     name: 🐳 Docker Build
     runs-on: ubuntu-latest
-    needs: build-and-test
+    needs: [build-and-test, quality-checks]
+    # Wait for both build and quality checks to complete
     outputs:
       image-tag: ${{ steps.meta.outputs.tags }}
     steps:
@@ -161,7 +252,7 @@ jobs:
             RESEND_API_KEY=${{ secrets.RESEND_API_KEY }}
             NEXTAUTH_SECRET=${{ secrets.STAGING_NEXTAUTH_SECRET }}
 
-  # Job 4: Deploy to Staging
+  # Job 5: Deploy to Staging
   deploy-staging:
     name: 🚢 Deploy to Staging
     runs-on: ubuntu-latest
@@ -184,92 +275,105 @@ jobs:
           echo "🔍 Available tags: ${{ needs.docker-build.outputs.image-tag }}"
           echo "🎯 Selected tag: $IMAGE_TAG"
 
-          ssh -o StrictHostKeyChecking=no ${{ secrets.STAGING_VPS_USERNAME }}@${{ secrets.STAGING_VPS_HOST }} << EOF
-            echo "🚀 开始 ClawCloud VPS 测试环境部署..."
+          # Create deployment script
+          cat > /tmp/staging-deploy.sh << 'DEPLOY_SCRIPT'
+          #!/bin/bash
+          set -e
 
-            # 获取传入的镜像标签
-            IMAGE_TAG="$IMAGE_TAG"
-            echo "🔍 调试信息: IMAGE_TAG = '$IMAGE_TAG'"
+          echo "🚀 开始 ClawCloud VPS 测试环境部署..."
+          echo "🔍 调试信息: IMAGE_TAG = $1"
 
-            # 1. 进入项目目录
-            cd /opt/legnext-staging
+          IMAGE_TAG="$1"
 
-            # 2. 检查并备份当前配置
-            echo "📁 当前目录内容:"
-            ls -la
+          # 1. 进入项目目录
+          cd /opt/legnext-staging
 
-            if [ -f docker-compose.yml ]; then
-                echo "📋 备份 docker-compose.yml"
-                cp docker-compose.yml docker-compose.yml.backup
-                echo "🔍 当前 docker-compose.yml 内容:"
-                cat docker-compose.yml
-            else
-                echo "❌ docker-compose.yml 文件不存在"
-                exit 1
-            fi
+          # 2. 检查并备份当前配置
+          echo "📁 当前目录内容:"
+          ls -la
 
-            # 3. 停止现有服务
-            echo "⏹️ 停止现有服务..."
-            docker-compose down || true
+          if [ -f docker-compose.yml ]; then
+              echo "📋 备份 docker-compose.yml"
+              cp docker-compose.yml docker-compose.yml.backup
+              echo "🔍 当前 docker-compose.yml 内容:"
+              cat docker-compose.yml
+          else
+              echo "❌ docker-compose.yml 文件不存在"
+              exit 1
+          fi
 
-            # 4. 拉取最新镜像
-            echo "📥 拉取最新镜像: $IMAGE_TAG"
-            if [ -z "$IMAGE_TAG" ]; then
-                echo "❌ IMAGE_TAG 为空，无法拉取镜像"
-                exit 1
-            fi
-            docker pull "$IMAGE_TAG"
+          # 3. 停止现有服务
+          echo "⏹️ 停止现有服务..."
+          docker-compose down || true
 
-            # 5. 更新 docker-compose.yml 中的镜像标签
-            echo "🔄 更新 docker-compose.yml 中的镜像标签..."
-            sed -i "s|image: .*|image: $IMAGE_TAG|" docker-compose.yml
-            echo "✅ 更新后的 docker-compose.yml:"
-            cat docker-compose.yml
+          # 4. 拉取最新镜像
+          echo "📥 拉取最新镜像: $IMAGE_TAG"
+          if [ -z "$IMAGE_TAG" ]; then
+              echo "❌ IMAGE_TAG 为空，无法拉取镜像"
+              exit 1
+          fi
+          docker pull "$IMAGE_TAG"
 
-            # 6. 清理旧镜像和容器
-            echo "🧹 清理旧资源..."
-            docker system prune -f
+          # 5. 更新 docker-compose.yml 中的镜像标签
+          echo "🔄 更新 docker-compose.yml 中的镜像标签..."
 
-            # 7. 启动服务
-            echo "🚀 启动服务..."
-            docker-compose up -d
+          # 更新 app 服务的镜像
+          sed -i "/services:/,/app:/{/image:/s|image:.*|image: $IMAGE_TAG|}" docker-compose.yml
 
-            # 8. 等待服务启动
-            echo "⏳ 等待服务启动..."
-            sleep 15
+          # 如果 Redis 镜像也是空的，设置默认值
+          sed -i "/redis:/,/container_name:/{/image:.*\$/s|image:.*|image: redis:7-alpine|}" docker-compose.yml
 
-            # 9. 健康检查
-            echo "🏥 执行健康检查..."
-            for i in {1..10}; do
-                if curl -f http://localhost:3000/health > /dev/null 2>&1; then
-                    echo "✅ ClawCloud 测试环境部署成功！"
+          echo "✅ 更新后的 docker-compose.yml:"
+          cat docker-compose.yml
 
-                    # 10. 重新加载Nginx
-                    sudo systemctl reload nginx
+          # 6. 清理旧镜像和容器
+          echo "🧹 清理旧资源..."
+          docker system prune -f
 
-                    # 11. 显示服务状态
-                    echo "📊 服务状态:"
-                    docker-compose ps
+          # 7. 启动服务
+          echo "🚀 启动服务..."
+          docker-compose up -d
 
-                    echo "🎉 部署完成！访问地址: https://staging-a93116.legnext.ai"
-                    exit 0
-                fi
-                echo "⏳ 健康检查尝试 $i/10..."
-                sleep 3
-            done
+          # 8. 等待服务启动
+          echo "⏳ 等待服务启动..."
+          sleep 15
 
-            echo "❌ 健康检查失败，部署可能有问题"
-            echo "📝 查看日志:"
-            docker-compose logs --tail=50
+          # 9. 健康检查
+          echo "🏥 执行健康检查..."
+          for i in {1..10}; do
+              if curl -f http://localhost:3000/health > /dev/null 2>&1; then
+                  echo "✅ ClawCloud 测试环境部署成功！"
 
-            exit 1
-          EOF
+                  # 10. 重新加载Nginx
+                  sudo systemctl reload nginx
 
-  # Job 5: Database Migration (Staging)
+                  # 11. 显示服务状态
+                  echo "📊 服务状态:"
+                  docker-compose ps
+
+                  echo "🎉 部署完成！访问地址: https://staging-a93116.legnext.ai"
+                  exit 0
+              fi
+              echo "⏳ 健康检查尝试 $i/10..."
+              sleep 3
+          done
+
+          echo "❌ 健康检查失败，部署可能有问题"
+          echo "📝 查看日志:"
+          docker-compose logs --tail=50
+
+          exit 1
+          DEPLOY_SCRIPT
+
+          # Transfer and execute the script
+          scp -o StrictHostKeyChecking=no /tmp/staging-deploy.sh ${{ secrets.STAGING_VPS_USERNAME }}@${{ secrets.STAGING_VPS_HOST }}:/tmp/
+          ssh -o StrictHostKeyChecking=no ${{ secrets.STAGING_VPS_USERNAME }}@${{ secrets.STAGING_VPS_HOST }} "chmod +x /tmp/staging-deploy.sh && /tmp/staging-deploy.sh '$IMAGE_TAG'"
+
+  # Job 6: Database Migration (Staging)
   staging-db-migration:
     name: 🗄️ Staging DB Migration
     runs-on: ubuntu-latest
-    needs: deploy-staging
+    needs: [setup, deploy-staging]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -285,8 +389,19 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'pnpm'
 
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+      - name: Restore dependencies cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            node_modules
+            ~/.pnpm-store
+          key: ${{ needs.setup.outputs.cache-key }}
+
+      - name: Install Prisma CLI only (if cache miss)
+        run: |
+          if [ ! -d "node_modules" ] || [ ! -d "node_modules/.bin" ]; then
+            pnpm add -D prisma
+          fi
 
       - name: Run staging database migrations
         run: pnpm prisma migrate deploy
@@ -295,7 +410,7 @@ jobs:
           DIRECT_URL: ${{ secrets.STAGING_DIRECT_URL }}
         continue-on-error: true  # Don't fail if migration has issues in staging
 
-  # Job 6: Staging Health Check
+  # Job 7: Staging Health Check
   staging-health-check:
     name: 🏥 Staging Health Check
     runs-on: ubuntu-latest
@@ -336,7 +451,7 @@ jobs:
           fi
         continue-on-error: true
 
-  # Job 7: Performance and Security Testing
+  # Job 8: Performance and Security Testing
   staging-tests:
     name: 🧪 Staging Integration Tests
     runs-on: ubuntu-latest
@@ -371,7 +486,7 @@ jobs:
           fi
         continue-on-error: true
 
-  # Job 8: PR Comment with Staging Info
+  # Job 9: PR Comment with Staging Info
   pr-comment:
     name: 📝 Update PR with Staging Info
     runs-on: ubuntu-latest
@@ -412,7 +527,7 @@ jobs:
               body: comment
             });
 
-  # Job 9: Slack Notification
+  # Job 10: Slack Notification
   notify:
     name: 📢 Notify Staging Status
     runs-on: ubuntu-latest
@@ -436,12 +551,13 @@ jobs:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         if: env.SLACK_WEBHOOK_URL != ''
 
-  # Job 10: Cleanup Old Images
+  # Job 11: Cleanup Old Images
   cleanup:
     name: 🧹 Cleanup Old Images
     runs-on: ubuntu-latest
     needs: staging-health-check
     if: always()
+    # Runs cleanup regardless of other job outcomes
     steps:
       - name: Cleanup old staging images on VPS
         run: |
