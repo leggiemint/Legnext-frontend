@@ -260,20 +260,24 @@ export function UserContextProvider({ children }: { children: React.ReactNode })
 export function useUser() {
   const context = useContext(UserContext);
   if (context === undefined) {
-    // 在服务器端渲染时返回默认值，而不是抛出错误
-    if (typeof window === 'undefined') {
-      return {
-        user: null as UserInfo | null,
-        balance: null as BalanceInfo | null,
-        isLoading: true,
-        isBalanceLoading: false,
-        error: null as string | null,
-        refreshUserInfo: async () => {},
-        refreshBalance: async () => {},
-        refreshAll: async () => {},
-      };
-    }
-    throw new Error('useUser must be used within a UserContextProvider');
+    // 返回默认值而不是抛出错误，避免破坏应用
+    console.warn('useUser was called outside of UserContextProvider, returning default values');
+    return {
+      user: null as UserInfo | null,
+      balance: null as BalanceInfo | null,
+      isLoading: true,
+      isBalanceLoading: false,
+      error: null as string | null,
+      refreshUserInfo: async () => {
+        console.warn('refreshUserInfo called outside UserContextProvider');
+      },
+      refreshBalance: async () => {
+        console.warn('refreshBalance called outside UserContextProvider');
+      },
+      refreshAll: async () => {
+        console.warn('refreshAll called outside UserContextProvider');
+      },
+    };
   }
   return context;
 }
