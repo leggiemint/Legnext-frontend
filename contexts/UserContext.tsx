@@ -260,6 +260,19 @@ export function UserContextProvider({ children }: { children: React.ReactNode })
 export function useUser() {
   const context = useContext(UserContext);
   if (context === undefined) {
+    // 在服务器端渲染时返回默认值，而不是抛出错误
+    if (typeof window === 'undefined') {
+      return {
+        user: null as UserInfo | null,
+        balance: null as BalanceInfo | null,
+        isLoading: true,
+        isBalanceLoading: false,
+        error: null as string | null,
+        refreshUserInfo: async () => {},
+        refreshBalance: async () => {},
+        updateUserPlan: async () => {},
+      };
+    }
     throw new Error('useUser must be used within a UserContextProvider');
   }
   return context;
