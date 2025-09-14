@@ -6,6 +6,7 @@ import ClientLayout from "@/components/LayoutClient";
 import { AuthProvider } from "@/components/AuthProvider";
 import { UserContextProvider } from "@/contexts/UserContext";
 import PlanSyncChecker from "@/components/PlanSyncChecker";
+import ClientOnly from "@/components/ClientOnly";
 import config from "@/config";
 import "./globals.css";
 
@@ -61,7 +62,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           <AuthProvider>
             <UserContextProvider>
               {/* Plan同步检查组件 - 全局监控用户plan状态 */}
-              <PlanSyncChecker syncInterval={5 * 60 * 1000} syncOnlyWhenVisible={true} />
+              <ClientOnly>
+                <PlanSyncChecker syncInterval={5 * 60 * 1000} syncOnlyWhenVisible={true} />
+              </ClientOnly>
               {children}
             </UserContextProvider>
           </AuthProvider>

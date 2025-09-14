@@ -16,9 +16,9 @@ interface PlanSyncCheckerProps {
  * 负责定期从后端同步用户plan状态到前端缓存数据库
  * 确保整个应用的plan显示保持一致
  */
-export default function PlanSyncChecker({ 
+export default function PlanSyncChecker({
   syncInterval = 5 * 60 * 1000, // 默认5分钟同步一次
-  syncOnlyWhenVisible = true 
+  syncOnlyWhenVisible = true
 }: PlanSyncCheckerProps): null {
   const sessionData = useSession();
   const session = sessionData?.data;

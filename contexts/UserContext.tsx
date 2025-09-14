@@ -276,7 +276,7 @@ export function useUser() {
   const context = useContext(UserContext);
   if (context === undefined) {
     // 返回默认值而不是抛出错误，避免破坏应用
-    console.warn('useUser was called outside of UserContextProvider, returning default values');
+    // console.warn('useUser was called outside of UserContextProvider, returning default values');
     return {
       user: null as UserInfo | null,
       balance: null as BalanceInfo | null,
@@ -284,13 +284,13 @@ export function useUser() {
       isBalanceLoading: false,
       error: null as string | null,
       refreshUserInfo: async () => {
-        console.warn('refreshUserInfo called outside UserContextProvider');
+        // Silent no-op when called outside provider
       },
       refreshBalance: async () => {
-        console.warn('refreshBalance called outside UserContextProvider');
+        // Silent no-op when called outside provider
       },
       refreshAll: async () => {
-        console.warn('refreshAll called outside UserContextProvider');
+        // Silent no-op when called outside provider
       },
     };
   }
