@@ -3,6 +3,10 @@ import { backendApiClient } from '@/libs/backend-api-client';
 import { createErrorResponse } from '@/libs/backend-proxy-auth';
 import { z } from 'zod';
 
+// 告诉Next.js这个API路由是动态的，不要在构建时预渲染
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 const UpscaleSchema = z.object({
   jobId: z.string().min(1, 'Job ID is required'),
   imageNo: z.number().int().min(0).max(3, 'Image number must be between 0 and 3'),

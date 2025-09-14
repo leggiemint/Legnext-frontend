@@ -4,6 +4,9 @@ import { authOptions } from '@/libs/next-auth';
 import { createSubscriptionCheckoutSession, getOrCreateStripeCustomer, STRIPE_CONFIG } from '@/libs/stripe-client';
 import { getUserWithProfile, updateStripeCustomerId } from '@/libs/user-helpers';
 
+// 告诉Next.js这个API路由是动态的，不要在构建时预渲染
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
   try {
     console.log('🛒 Creating checkout session...');

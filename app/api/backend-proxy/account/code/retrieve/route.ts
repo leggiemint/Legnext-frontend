@@ -3,6 +3,10 @@ import { backendApiClient } from '@/libs/backend-api-client';
 import { createErrorResponse } from '@/libs/backend-proxy-auth';
 import { z } from 'zod';
 
+// 告诉Next.js这个API路由是动态的，不要在构建时预渲染
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 const RedeemCodeSchema = z.object({
   code: z.string().min(1, 'Code is required').max(100, 'Code is too long'),
 });
