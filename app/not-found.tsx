@@ -1,5 +1,7 @@
 import Link from "next/link";
 
+export const dynamic = 'force-dynamic';
+
 // Simple 404 page with a button to go home and a button to contact support
 export default function Custom404() {
   return (

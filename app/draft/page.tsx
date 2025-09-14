@@ -1,6 +1,8 @@
 import MainLayout from "@/components/MainLayout";
 import { getSEOTags } from "@/libs/seo";
 
+export const dynamic = 'force-dynamic';
+
 export const metadata = getSEOTags({
   title: "Midjourney Draft Mode | Fast AI Image Generation",
   description: "Learn about Midjourney's draft mode for ultra-fast image prototyping with half GPU usage and how to use it with our API.",

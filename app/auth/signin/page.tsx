@@ -6,6 +6,8 @@ import { useSearchParams } from "next/navigation";
 import config from "@/config";
 import Image from "next/image";
 
+export const dynamic = 'force-dynamic';
+
 const SigninPage = () => {
   return (
     <Suspense fallback={<div>Loading...</div>}>

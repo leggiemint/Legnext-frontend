@@ -10,6 +10,8 @@ import { useUser, useUserPlan } from "@/contexts/UserContext";
 import useSWR from "swr";
 import { log } from "@/libs/logger";
 
+export const dynamic = 'force-dynamic';
+
 function CreditBalanceContent() {
   const { data: session } = useSession();
   const searchParams = useSearchParams();

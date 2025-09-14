@@ -11,6 +11,8 @@ import ProgressBar from "@/components/ProgressBar";
 import { useAuth } from "@/components/AuthProvider";
 import { toast } from "react-hot-toast";
 
+export const dynamic = 'force-dynamic';
+
 export default function VideoPage() {
   const { isAuthenticated } = useAuth();
   const [textDescription, setTextDescription] = useState("");

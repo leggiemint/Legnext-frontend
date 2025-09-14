@@ -5,6 +5,8 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import config from '@/config';
 
+export const dynamic = 'force-dynamic';
+
 function SitePasswordForm() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');

@@ -1,5 +1,6 @@
 import MainLayout from "@/components/MainLayout";
 import { getSEOTags } from "@/libs/seo";
+export const dynamic = 'force-dynamic';
 
 export const metadata = getSEOTags({
   title: "Midjourney Inpaint | AI Image Editing API",

@@ -1,6 +1,9 @@
 import MainLayout from "@/components/MainLayout";
 import { getSEOTags } from "@/libs/seo";
 
+export const dynamic = 'force-dynamic';
+
+
 export const metadata = getSEOTags({
   title: "Terms of Service | Legnext - Service Terms and Conditions",
   description: "Legnext Terms of Service - Learn about our service terms, usage policies, and user responsibilities for our AI API platform.",

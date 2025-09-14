@@ -11,6 +11,8 @@ import TelegramCommunity from "@/components/DiscordCommunity";
 import MainLayout from "@/components/MainLayout";
 import ImageShowcase from "@/components/ImageShowcase"
 
+export const dynamic = 'force-dynamic';
+
 export default function HomePage() {
   return (
     <MainLayout>

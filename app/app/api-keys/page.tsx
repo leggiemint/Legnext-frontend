@@ -5,6 +5,8 @@ import { useSession } from 'next-auth/react';
 import { redirect } from 'next/navigation';
 import { useBackendApiKeys } from '@/hooks/useBackendSWR';
 
+export const dynamic = 'force-dynamic';
+
 interface BackendApiKey {
   id: number;
   name: string;

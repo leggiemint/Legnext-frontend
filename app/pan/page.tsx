@@ -1,6 +1,8 @@
 import MainLayout from "@/components/MainLayout";
 import { getSEOTags } from "@/libs/seo";
 
+export const dynamic = 'force-dynamic';
+
 export const metadata = getSEOTags({
   title: "Midjourney Pan | AI Image Extension API",
   description: "Learn about Midjourney's pan functionality and how to use our /pan API to extend images in specific directions.",

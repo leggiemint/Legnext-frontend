@@ -1,6 +1,8 @@
 import MainLayout from "@/components/MainLayout";
 import { getSEOTags } from "@/libs/seo";
 
+export const dynamic = 'force-dynamic';
+
 export const metadata = getSEOTags({
   title: "Midjourney Turbo Mode | Ultra-Fast AI Image Generation",
   description: "Learn about Midjourney's turbo mode for ultra-fast image generation with 4x speed of fast mode using high-performance GPU pools.",

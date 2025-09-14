@@ -2,6 +2,8 @@ import MainLayout from "@/components/MainLayout";
 import { getSEOTags } from "@/libs/seo";
 import PricingSection from "@/components/PricingSection";
 
+export const dynamic = 'force-dynamic';
+
 export const metadata = getSEOTags({
   title: "Legnext Midjourney API Pricing | Professional AI Image Generation",
   description: "Choose the perfect plan for your AI image generation needs. Free tier for testing, Pro plan for developers and businesses. Start using Midjourney API today.",

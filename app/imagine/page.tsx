@@ -1,6 +1,8 @@
 import MainLayout from "@/components/MainLayout";
 import { getSEOTags } from "@/libs/seo";
 
+export const dynamic = 'force-dynamic';
+
 export const metadata = getSEOTags({
   title: "Midjourney /imagine Command | AI Image Generation API",
   description: "Learn about Midjourney's /imagine command and how to use our /diffusion API to generate stunning AI images.",

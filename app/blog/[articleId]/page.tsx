@@ -6,6 +6,8 @@ import Avatar from "../_assets/components/Avatar";
 import { getSEOTags } from "@/libs/seo";
 import config from "@/config";
 
+export const dynamic = 'force-dynamic';
+
 export async function generateMetadata({
   params,
 }: {

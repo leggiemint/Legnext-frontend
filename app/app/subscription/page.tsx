@@ -9,6 +9,8 @@ import PricingSection from "@/components/PricingSection";
 import TopUpModal from "../../../components/TopUpModal";
 import { useUser, useUserPlan } from "@/contexts/UserContext";
 
+export const dynamic = 'force-dynamic';
+
 export default function SubscriptionPage() {
   const { data: session } = useSession();
   const [showTopUp, setShowTopUp] = useState(false);

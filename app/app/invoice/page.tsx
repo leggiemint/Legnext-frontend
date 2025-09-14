@@ -5,6 +5,8 @@ import { useState, useEffect } from "react";
 import { DocumentTextIcon, CheckCircleIcon, ClockIcon, ExclamationCircleIcon, InformationCircleIcon } from "@heroicons/react/24/outline";
 import { useUser } from "@/contexts/UserContext";
 
+export const dynamic = 'force-dynamic';
+
 interface Invoice {
   id: string;
   amount_paid: number;

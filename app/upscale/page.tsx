@@ -1,6 +1,8 @@
 import MainLayout from "@/components/MainLayout";
 import { getSEOTags } from "@/libs/seo";
 
+export const dynamic = 'force-dynamic';
+
 export const metadata = getSEOTags({
   title: "Midjourney Upscale | AI Image Enhancement API",
   description: "Learn about Midjourney's upscale functionality and how to use our /upscale API to enhance and enlarge AI-generated images.",

@@ -13,6 +13,8 @@ import { useAuth } from "@/components/AuthProvider";
 import { toast } from "react-hot-toast";
 import { log } from "@/libs/logger";
 
+export const dynamic = 'force-dynamic';
+
 export default function CreatePage() {
   const { isAuthenticated } = useAuth();
   const [textDescription, setTextDescription] = useState("");

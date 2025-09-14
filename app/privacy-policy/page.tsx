@@ -1,6 +1,8 @@
 import MainLayout from "@/components/MainLayout";
 import { getSEOTags } from "@/libs/seo";
 
+export const dynamic = 'force-dynamic';
+
 export const metadata = getSEOTags({
   title: "Privacy Policy | Legnext - AI API Privacy & Data Protection",
   description: "Legnext Privacy Policy - Learn how we collect, use, and protect your personal information when using our AI API integration platform.",

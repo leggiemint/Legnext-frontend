@@ -1,6 +1,8 @@
 import MainLayout from "@/components/MainLayout";
 import { getSEOTags } from "@/libs/seo";
 
+export const dynamic = 'force-dynamic';
+
 export const metadata = getSEOTags({
   title: "Midjourney Variation | AI Image Variation API",
   description: "Learn about Midjourney's variation functionality and how to use our /variation API to generate image variations.",
