@@ -171,9 +171,6 @@ jobs:
     steps:
       - name: Checkout deployment scripts
         uses: actions/checkout@v4
-        with:
-          sparse-checkout: |
-            docs/scripts
 
       - name: Setup SSH key
         uses: webfactory/ssh-agent@v0.8.0
