@@ -179,18 +179,33 @@ jobs:
 
       - name: Deploy to Staging VPS (Inline Script)
         run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.STAGING_VPS_USERNAME }}@${{ secrets.STAGING_VPS_HOST }} << 'EOF'
+          # Extract first image tag (metadata-action outputs multiple tags)
+          IMAGE_TAG=$(echo "${{ needs.docker-build.outputs.image-tag }}" | head -n1)
+          echo "🔍 Available tags: ${{ needs.docker-build.outputs.image-tag }}"
+          echo "🎯 Selected tag: $IMAGE_TAG"
+
+          ssh -o StrictHostKeyChecking=no ${{ secrets.STAGING_VPS_USERNAME }}@${{ secrets.STAGING_VPS_HOST }} << EOF
             echo "🚀 开始 ClawCloud VPS 测试环境部署..."
 
             # 获取传入的镜像标签
-            IMAGE_TAG="${{ needs.docker-build.outputs.image-tag }}"
+            IMAGE_TAG="$IMAGE_TAG"
+            echo "🔍 调试信息: IMAGE_TAG = '$IMAGE_TAG'"
 
             # 1. 进入项目目录
             cd /opt/legnext-staging
 
-            # 2. 备份当前配置
+            # 2. 检查并备份当前配置
+            echo "📁 当前目录内容:"
+            ls -la
+
             if [ -f docker-compose.yml ]; then
+                echo "📋 备份 docker-compose.yml"
                 cp docker-compose.yml docker-compose.yml.backup
+                echo "🔍 当前 docker-compose.yml 内容:"
+                cat docker-compose.yml
+            else
+                echo "❌ docker-compose.yml 文件不存在"
+                exit 1
             fi
 
             # 3. 停止现有服务
@@ -199,10 +214,17 @@ jobs:
 
             # 4. 拉取最新镜像
             echo "📥 拉取最新镜像: $IMAGE_TAG"
-            docker pull $IMAGE_TAG
+            if [ -z "$IMAGE_TAG" ]; then
+                echo "❌ IMAGE_TAG 为空，无法拉取镜像"
+                exit 1
+            fi
+            docker pull "$IMAGE_TAG"
 
             # 5. 更新 docker-compose.yml 中的镜像标签
+            echo "🔄 更新 docker-compose.yml 中的镜像标签..."
             sed -i "s|image: .*|image: $IMAGE_TAG|" docker-compose.yml
+            echo "✅ 更新后的 docker-compose.yml:"
+            cat docker-compose.yml
 
             # 6. 清理旧镜像和容器
             echo "🧹 清理旧资源..."
