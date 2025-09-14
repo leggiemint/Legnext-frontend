@@ -79,9 +79,38 @@ jobs:
       - name: Build application
         run: pnpm build
         env:
-          # Build-time environment variables
+          # Build-time environment variables for production
           NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL }}
+          NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
           NEXT_PUBLIC_STRIPE_PRO_PRICE_ID: ${{ secrets.NEXT_PUBLIC_STRIPE_PRO_PRICE_ID }}
+          # Backend API 配置
+          BACKEND_API_URL: ${{ secrets.BACKEND_API_URL }}
+          BACKEND_API_KEY: ${{ secrets.BACKEND_API_KEY }}
+          # 数据库配置（构建时也需要）
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DIRECT_URL: ${{ secrets.DIRECT_URL }}
+          # Stripe 配置
+          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+          STRIPE_PUBLIC_KEY: ${{ secrets.STRIPE_PUBLIC_KEY }}
+          # Resend 邮件服务
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          # R2 存储配置
+          R2_ENDPOINT: ${{ secrets.R2_ENDPOINT }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          R2_BUCKET_NAME: ${{ secrets.R2_BUCKET_NAME }}
+          R2_PUBLIC_URL: ${{ secrets.R2_PUBLIC_URL }}
+          # Google OAuth
+          GOOGLE_ID: ${{ secrets.GOOGLE_ID }}
+          GOOGLE_SECRET: ${{ secrets.GOOGLE_SECRET }}
+          # GitHub OAuth
+          AUTH_GITHUB_ID: ${{ secrets.AUTH_GITHUB_ID }}
+          AUTH_GITHUB_SECRET: ${{ secrets.AUTH_GITHUB_SECRET }}
+          # 其他配置
+          NODE_ENV: ${{ secrets.NODE_ENV }}
+          PAYMENT_GATEWAY: ${{ secrets.PAYMENT_GATEWAY }}
+          LOG_LEVEL: ${{ secrets.LOG_LEVEL }}
+          ENABLE_CONSOLE_LOGS: ${{ secrets.ENABLE_CONSOLE_LOGS }}
 
       - name: Cache build artifacts
         uses: actions/cache@v3

@@ -111,7 +111,7 @@ DATABASE_URL="postgresql://..."
 DIRECT_URL="postgresql://..."
 
 # Backend System
-BASE_MANAGER_URL="https://api.legnext.ai"
+BACKEND_API_URL="https://api.legnext.ai"
 BACKEND_API_KEY="your-backend-api-key"
 
 # Stripe

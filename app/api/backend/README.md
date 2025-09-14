@@ -1,10 +1,10 @@
 # Backend API Endpoints
 
-This directory contains all backend API proxy endpoints that communicate with the external backend system at `BASE_MANAGER_URL`.
+This directory contains all backend API proxy endpoints that communicate with the external backend system at `BACKEND_API_URL`.
 
 ## Environment Variables Required
 
-- `BASE_MANAGER_URL`: Backend API base URL (e.g., "https://api.legnext.ai")
+- `BACKEND_API_URL`: Backend API base URL (e.g., "https://api.legnext.ai")
 - `BACKEND_API_KEY`: Manager API key for administrative operations
 
 ## Authentication Types

@@ -1,6 +1,6 @@
 import { validateAndWarnBackendEndpoint } from './backend-api-validator';
 
-const BASE_MANAGER_URL = process.env.BACKEND_API_URL || process.env.BASE_MANAGER_URL || 'https://api.legnext.ai';
+const BACKEND_API_URL = process.env.BACKEND_API_URL || process.env.BACKEND_API_URL || 'https://api.legnext.ai';
 const BACKEND_API_KEY = process.env.BACKEND_API_KEY;
 
 if (!BACKEND_API_KEY) {
@@ -175,7 +175,7 @@ class BackendApiClient {
   private apiKey: string;
 
   constructor() {
-    this.baseUrl = BASE_MANAGER_URL;
+    this.baseUrl = BACKEND_API_URL;
     this.apiKey = BACKEND_API_KEY;
   }
 

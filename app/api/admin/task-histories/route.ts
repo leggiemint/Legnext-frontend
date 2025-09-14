@@ -15,9 +15,9 @@ function getBackendApiKey(): string {
 
 // 获取后端管理系统URL
 function getBaseManagerUrl(): string {
-  const url = process.env.BASE_MANAGER_URL || process.env.NEXT_PUBLIC_BASE_MANAGER_URL;
+  const url = process.env.BACKEND_API_URL || process.env.NEXT_PUBLIC_BACKEND_API_URL;
   if (!url) {
-    throw new Error('BASE_MANAGER_URL environment variable is not configured');
+    throw new Error('BACKEND_API_URL environment variable is not configured');
   }
   return url;
 }
