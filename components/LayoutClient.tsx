@@ -14,7 +14,8 @@ import config from "@/config";
 // This component is separated from ClientLayout because it needs to be wrapped with <SessionProvider> to use useSession() hook
 const CrispChat = (): null => {
   const pathname = usePathname();
-  const { data } = useSession();
+  const session = useSession();
+  const data = session?.data;
 
   useEffect(() => {
     if (config?.crisp?.id) {

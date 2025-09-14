@@ -1,5 +1,5 @@
-# Use the official Node.js 18 image
-FROM node:18-alpine AS base
+# Use the official Node.js 18 image with Alpine 3.17 for Prisma compatibility
+FROM node:18-alpine3.17 AS base
 
 # Install dependencies only when needed
 FROM base AS deps

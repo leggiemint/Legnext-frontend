@@ -9,7 +9,8 @@ import ButtonSignin from "./ButtonSignin";
 import UserAvatar from "./UserAvatar";
 
 const AppHeader = () => {
-  const { data: session } = useSession();
+  const sessionResponse = useSession();
+  const session = sessionResponse?.data;
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   
   const isAuthenticated = !!session;

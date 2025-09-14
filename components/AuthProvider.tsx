@@ -28,7 +28,9 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
-  const { data: session, status } = useSession();
+  const sessionResponse = useSession();
+  const session = sessionResponse?.data;
+  const status = sessionResponse?.status;
 
   const value = {
     isAuthenticated: status === "authenticated",
