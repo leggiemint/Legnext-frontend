@@ -177,24 +177,70 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.STAGING_VPS_SSH_KEY }}
 
-      - name: Copy staging files to VPS
-        run: |
-          scp -o StrictHostKeyChecking=no docs/scripts/deploy-staging.sh ${{ secrets.STAGING_VPS_USERNAME }}@${{ secrets.STAGING_VPS_HOST }}:/opt/legnext-staging/scripts/
-
-      - name: Deploy to Staging VPS
+      - name: Deploy to Staging VPS (Inline Script)
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.STAGING_VPS_USERNAME }}@${{ secrets.STAGING_VPS_HOST }} << 'EOF'
-            cd /opt/legnext-staging
-            
-            # 环境变量文件已经在VPS上手动创建，跳过此步骤
-            echo "✅ 使用VPS上已有的 .env.staging 文件"
-            
-            # Pull latest staging image
-            docker pull ${{ needs.docker-build.outputs.image-tag }}
+            echo "🚀 开始 ClawCloud VPS 测试环境部署..."
 
-            # Execute staging deployment
-            chmod +x scripts/deploy-staging.sh
-            ./scripts/deploy-staging.sh ${{ needs.docker-build.outputs.image-tag }}
+            # 获取传入的镜像标签
+            IMAGE_TAG="${{ needs.docker-build.outputs.image-tag }}"
+
+            # 1. 进入项目目录
+            cd /opt/legnext-staging
+
+            # 2. 备份当前配置
+            if [ -f docker-compose.yml ]; then
+                cp docker-compose.yml docker-compose.yml.backup
+            fi
+
+            # 3. 停止现有服务
+            echo "⏹️ 停止现有服务..."
+            docker-compose down || true
+
+            # 4. 拉取最新镜像
+            echo "📥 拉取最新镜像: $IMAGE_TAG"
+            docker pull $IMAGE_TAG
+
+            # 5. 更新 docker-compose.yml 中的镜像标签
+            sed -i "s|image: .*|image: $IMAGE_TAG|" docker-compose.yml
+
+            # 6. 清理旧镜像和容器
+            echo "🧹 清理旧资源..."
+            docker system prune -f
+
+            # 7. 启动服务
+            echo "🚀 启动服务..."
+            docker-compose up -d
+
+            # 8. 等待服务启动
+            echo "⏳ 等待服务启动..."
+            sleep 15
+
+            # 9. 健康检查
+            echo "🏥 执行健康检查..."
+            for i in {1..10}; do
+                if curl -f http://localhost:3000/health > /dev/null 2>&1; then
+                    echo "✅ ClawCloud 测试环境部署成功！"
+
+                    # 10. 重新加载Nginx
+                    sudo systemctl reload nginx
+
+                    # 11. 显示服务状态
+                    echo "📊 服务状态:"
+                    docker-compose ps
+
+                    echo "🎉 部署完成！访问地址: https://staging-a93116.legnext.ai"
+                    exit 0
+                fi
+                echo "⏳ 健康检查尝试 $i/10..."
+                sleep 3
+            done
+
+            echo "❌ 健康检查失败，部署可能有问题"
+            echo "📝 查看日志:"
+            docker-compose logs --tail=50
+
+            exit 1
           EOF
 
   # Job 5: Database Migration (Staging)
