@@ -387,8 +387,8 @@ jobs:
               fi
 
               # 详细的健康检查
-              response=$(curl -s http://localhost:3000/health 2>&1) || true
-              status_code=$(curl -s -w "%{http_code}" -o /dev/null http://localhost:3000/health 2>&1) || true
+              response=$(curl -s http://localhost:3000/api/health 2>&1) || true
+              status_code=$(curl -s -w "%{http_code}" -o /dev/null http://localhost:3000/api/health 2>&1) || true
 
               echo "HTTP状态码: $status_code"
               echo "响应内容: $response"
@@ -475,7 +475,7 @@ jobs:
       - name: Health check - Staging API
         run: |
           for i in {1..5}; do
-            if curl -f -s -o /dev/null https://${{ secrets.STAGING_DOMAIN }}/health; then
+            if curl -f -s -o /dev/null https://${{ secrets.STAGING_DOMAIN }}/api/health; then
               echo "✅ Staging health check passed"
               exit 0
             fi
@@ -565,7 +565,7 @@ jobs:
             
             ### 🔗 Quick Links:
             - [Staging Site](https://${{ secrets.STAGING_DOMAIN }})
-            - [Health Check](https://${{ secrets.STAGING_DOMAIN }}/health)
+            - [Health Check](https://${{ secrets.STAGING_DOMAIN }}/api/health)
             - [API Status](https://${{ secrets.STAGING_DOMAIN }}/api/auth/session)
             
             ---
