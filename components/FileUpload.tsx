@@ -24,7 +24,8 @@ export default function FileUpload({
   accept = 'image/*',
   className = ''
 }: FileUploadProps) {
-  const { status } = useSession();
+  const sessionData = useSession();
+  const status = sessionData?.status;
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
