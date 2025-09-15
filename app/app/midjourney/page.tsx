@@ -302,16 +302,21 @@ export default function CreatePage() {
 
       eventSource.onerror = (error) => {
         console.error('SSE connection error:', error);
+        console.error('SSE readyState:', eventSource.readyState);
+        console.error('SSE url:', eventSource.url);
 
         // 自动重连
         if (reconnectCount < maxReconnects) {
           const delay = Math.min(1000 * Math.pow(2, reconnectCount), 30000); // 指数退避，最大30秒
+          console.log(`🔄 Attempting to reconnect SSE in ${delay}ms (attempt ${reconnectCount + 1}/${maxReconnects})`);
           setTimeout(() => {
             if (eventSourceRef.current?.readyState === EventSource.CLOSED) {
               reconnectCount++;
               setupConnection();
             }
           }, delay);
+        } else {
+          console.error('❌ Max SSE reconnection attempts reached');
         }
       };
 
