@@ -31,10 +31,8 @@ function broadcastNotification(notification: any) {
   });
 }
 
-// Notification functions (implement based on your needs)
+// Notification functions
 async function notifyTaskCompleted(taskData: WebhookCallbackPayload['data']): Promise<void> {
-  console.log(`🔔 Notifying user of completed task: ${taskData.job_id}`);
-
   // Broadcast to all connected clients via SSE
   broadcastNotification({
     type: 'task_completed',
@@ -46,8 +44,6 @@ async function notifyTaskCompleted(taskData: WebhookCallbackPayload['data']): Pr
 }
 
 async function notifyTaskFailed(taskData: WebhookCallbackPayload['data']): Promise<void> {
-  console.log(`🔔 Notifying user of failed task: ${taskData.job_id}`);
-
   // Broadcast to all connected clients via SSE
   broadcastNotification({
     type: 'task_failed',
@@ -59,8 +55,6 @@ async function notifyTaskFailed(taskData: WebhookCallbackPayload['data']): Promi
 }
 
 async function notifyTaskProgress(taskData: WebhookCallbackPayload['data']): Promise<void> {
-  console.log(`🔔 Notifying user of task progress: ${taskData.job_id} - ${taskData.status}`);
-
   // Broadcast to all connected clients via SSE
   broadcastNotification({
     type: 'task_progress',
@@ -115,15 +109,12 @@ export async function POST(request: NextRequest) {
   try {
     const body: WebhookCallbackPayload = await request.json();
 
-    // Log the callback payload for debugging
-    console.log('Received webhook callback from backend:', {
-      timestamp: body.timestamp,
+    // Log the callback payload
+    console.log('Webhook received:', {
       job_id: body.data.job_id,
-      model: body.data.model,
       task_type: body.data.task_type,
       status: body.data.status,
-      image_urls: body.data.output?.image_urls?.length || 0,
-      usage: body.data.meta?.usage,
+      image_count: body.data.output?.image_urls?.length || 0,
     });
 
     // Validate required fields
@@ -139,46 +130,11 @@ export async function POST(request: NextRequest) {
     const { data } = body;
 
     if (data.status === 'completed') {
-      console.log('✅ Task completed successfully:', {
-        job_id: data.job_id,
-        task_type: data.task_type,
-        model: data.model,
-        image_url: data.output?.image_url,
-        image_count: data.output?.image_urls?.length || 0,
-        usage: data.meta?.usage,
-        duration: calculateDuration(data.meta?.started_at, data.meta?.ended_at),
-      });
-
-      // Notify user of completion (implement as needed)
       await notifyTaskCompleted(data);
-
     } else if (data.status === 'failed') {
-      console.error('❌ Task failed:', {
-        job_id: data.job_id,
-        task_type: data.task_type,
-        error: data.error,
-        duration: calculateDuration(data.meta?.started_at, data.meta?.ended_at),
-      });
-
-      // Notify user of failure
       await notifyTaskFailed(data);
-
     } else if (data.status === 'running' || data.status === 'queued') {
-      console.log('⏳ Task status update:', {
-        job_id: data.job_id,
-        status: data.status,
-        task_type: data.task_type,
-      });
-
-      // Optionally notify user of progress updates
       await notifyTaskProgress(data);
-
-    } else {
-      console.log('📊 Task status update:', {
-        job_id: data.job_id,
-        status: data.status,
-        task_type: data.task_type,
-      });
     }
 
     // Acknowledge successful receipt
@@ -201,8 +157,6 @@ export async function POST(request: NextRequest) {
 // Handle SSE connections for real-time notifications
 export async function GET(request: NextRequest) {
   const clientId = Date.now().toString() + Math.random().toString(36).substring(2, 9);
-
-  console.log(`🔗 New SSE connection established: ${clientId}`);
 
   const encoder = new TextEncoder();
 
@@ -233,7 +187,6 @@ export async function GET(request: NextRequest) {
 
       // Clean up on disconnect
       const cleanup = () => {
-        console.log(`🔌 SSE connection closed: ${clientId}`);
         sseConnections.delete(clientId);
         try {
           controller.close();

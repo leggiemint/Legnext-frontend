@@ -154,8 +154,7 @@ export default function CreatePage() {
       // 注册任务以便处理webhook回调
       pendingTasksRef.current.set(result.job_id, 'diffusion');
 
-      toast.success('Generation started! Waiting for webhook notification...');
-      log.info('Task registered for webhook callback:', result.job_id);
+      toast.success('Generation started! Please wait for completion...');
 
     } catch (error: any) {
       log.error('Error generating images:', error);
@@ -170,6 +169,16 @@ export default function CreatePage() {
     if (!taskType) {
       log.warn('Received webhook notification for unknown task:', jobId);
       return;
+    }
+
+    // 防止重复处理同一个任务
+    if (data.status === 'completed' || data.status === 'failed') {
+      const isAlreadyProcessed = sessionStorage.getItem(`task_${jobId}_processed`);
+      if (isAlreadyProcessed) {
+        log.warn('Task already processed, ignoring duplicate webhook:', jobId);
+        return;
+      }
+      sessionStorage.setItem(`task_${jobId}_processed`, 'true');
     }
 
     log.info('📨 Processing webhook notification:', {
@@ -259,42 +268,55 @@ export default function CreatePage() {
   useEffect(() => {
     if (!isAuthenticated) return;
 
-    console.log('🔗 Setting up SSE connection for webhook notifications');
+    let reconnectCount = 0;
+    const maxReconnects = 5;
 
-    const eventSource = new EventSource('/api/backend-proxy/callback');
-    eventSourceRef.current = eventSource;
+    const setupConnection = () => {
+      const eventSource = new EventSource('/api/backend-proxy/callback');
+      eventSourceRef.current = eventSource;
 
-    eventSource.onopen = () => {
-      console.log('✅ SSE connection opened');
-    };
+      eventSource.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
 
-    eventSource.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        console.log('📨 Received SSE message:', data);
+          if (data.type === 'task_completed' || data.type === 'task_failed' || data.type === 'task_progress') {
+            // 处理任务状态更新
+            handleWebhookNotification(data.job_id, {
+              status: data.type === 'task_completed' ? 'completed' : data.type === 'task_failed' ? 'failed' : data.status,
+              output: data.output,
+              error: data.error
+            });
+          }
 
-        if (data.type === 'connected') {
-          console.log('🔗 SSE connection confirmed:', data.clientId);
-        } else if (data.type === 'task_completed' || data.type === 'task_failed' || data.type === 'task_progress') {
-          // 处理任务状态更新
-          handleWebhookNotification(data.job_id, {
-            status: data.type === 'task_completed' ? 'completed' : data.type === 'task_failed' ? 'failed' : data.status,
-            output: data.output,
-            error: data.error
-          });
+          // 重置重连计数
+          reconnectCount = 0;
+        } catch (error) {
+          console.error('Error parsing SSE message:', error);
         }
-      } catch (error) {
-        console.error('Error parsing SSE message:', error);
-      }
+      };
+
+      eventSource.onerror = (error) => {
+        console.error('SSE connection error:', error);
+
+        // 自动重连
+        if (reconnectCount < maxReconnects) {
+          const delay = Math.min(1000 * Math.pow(2, reconnectCount), 30000); // 指数退避，最大30秒
+          setTimeout(() => {
+            if (eventSourceRef.current?.readyState === EventSource.CLOSED) {
+              reconnectCount++;
+              setupConnection();
+            }
+          }, delay);
+        }
+      };
+
+      return eventSource;
     };
 
-    eventSource.onerror = (error) => {
-      console.error('❌ SSE connection error:', error);
-    };
+    const eventSource = setupConnection();
 
     // 清理连接
     return () => {
-      console.log('🔌 Cleaning up SSE connection');
       eventSource.close();
       eventSourceRef.current = null;
     };
@@ -348,8 +370,7 @@ export default function CreatePage() {
       // 注册任务以便处理webhook回调
       pendingTasksRef.current.set(result.job_id, 'upscale');
 
-      toast.success('Upscale started! Waiting for webhook notification...');
-      log.info('Upscale task registered for webhook callback:', result.job_id);
+      toast.success('Upscale started! Please wait for completion...');
 
     } catch (error: any) {
       log.error('Error upscaling image:', error);
