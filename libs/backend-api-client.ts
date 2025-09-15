@@ -200,12 +200,6 @@ class BackendApiClient {
     // Validate endpoint in development
     validateAndWarnBackendEndpoint(method, endpoint);
 
-    console.log(`🚀 Backend API Request:`, {
-      url,
-      method,
-      headers: { ...headers, 'API-KEY': headers['API-KEY'] ? '[REDACTED]' : undefined, 'X-API-KEY': headers['X-API-KEY'] ? '[REDACTED]' : undefined },
-      body: options.body
-    });
 
     const response = await fetch(url, {
       ...options,

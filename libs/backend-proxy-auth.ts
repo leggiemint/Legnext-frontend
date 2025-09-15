@@ -21,10 +21,8 @@ export async function authenticateUser(request: NextRequest): Promise<Authentica
   try {
     // 1. 检查session
     const session = await getServerSession(authOptions);
-    console.log('🔍 [AUTH] Session check:', { hasSession: !!session, userId: session?.user?.id });
     
     if (!session?.user?.id) {
-      console.log('❌ [AUTH] No session or user ID found');
       return NextResponse.json(
         { 
           error: 'Authentication required',
@@ -36,15 +34,8 @@ export async function authenticateUser(request: NextRequest): Promise<Authentica
 
     // 2. 获取用户完整信息
     const user = await getUserWithProfile(session.user.id);
-    console.log('🔍 [AUTH] User profile:', { 
-      userId: session.user.id, 
-      hasUser: !!user, 
-      hasInitApiKey: !!user?.profile?.initApiKey,
-      backendAccountId: user?.profile?.backendAccountId 
-    });
     
     if (!user) {
-      console.log('❌ [AUTH] User not found in database');
       return NextResponse.json(
         { 
           error: 'User not found',
@@ -56,7 +47,6 @@ export async function authenticateUser(request: NextRequest): Promise<Authentica
 
     // 3. 检查用户是否有initApiKey（后端API访问密钥）
     if (!user.profile?.initApiKey) {
-      console.log('❌ [AUTH] User has no initApiKey');
       return NextResponse.json(
         { 
           error: 'Backend API access not configured',

@@ -174,7 +174,13 @@ export function UserContextProvider({ children }: { children: React.ReactNode })
 
     } catch (err) {
       console.error('Error fetching user info:', err);
-      setError(err instanceof Error ? err.message : 'Failed to fetch user info');
+      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch user info';
+      setError(errorMessage);
+      
+      // 如果是网络错误，提供更友好的错误信息
+      if (errorMessage.includes('NetworkError') || errorMessage.includes('Failed to fetch')) {
+        setError('Network connection failed. Please check your internet connection and try again.');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -200,8 +206,14 @@ export function UserContextProvider({ children }: { children: React.ReactNode })
 
     } catch (err) {
       console.error('Error fetching balance:', err);
-      setError(err instanceof Error ? err.message : 'Failed to fetch balance');
+      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch balance';
+      setError(errorMessage);
       setBalance(null);
+      
+      // 如果是网络错误，提供更友好的错误信息
+      if (errorMessage.includes('NetworkError') || errorMessage.includes('Failed to fetch')) {
+        setError('Network connection failed. Please check your internet connection and try again.');
+      }
     } finally {
       setIsBalanceLoading(false);
     }
