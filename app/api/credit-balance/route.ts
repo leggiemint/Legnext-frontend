@@ -129,27 +129,6 @@ export async function GET() {
       const totalBalance = (remainingCredits + remainingPoints) / 1000;
       const availableBalance = (remainingCredits + remainingPoints - frozenCredits - frozenPoints) / 1000;
 
-      log.info(`✅ [Credit Balance] Balance calculated:`, {
-        backendAccountId: user.profile.backendAccountId,
-        remainingCredits,
-        remainingPoints,
-        frozenCredits,
-        frozenPoints,
-        usedCredits,
-        usedPoints,
-        calculatedCredits, // 从各个pack计算的值
-        totalBalance,
-        availableBalance,
-        creditPacksCount: creditPacks.credit_packs?.length || 0,
-        creditPacksDetails: creditPacks.credit_packs?.map((pack: any) => ({
-          id: pack.id,
-          active: pack.active,
-          capacity: pack.capacity,
-          used: pack.used,
-          frozen: pack.frozen,
-          available: pack.capacity - pack.used - pack.frozen
-        })) || []
-      });
 
       return NextResponse.json({
         balance: totalBalance,

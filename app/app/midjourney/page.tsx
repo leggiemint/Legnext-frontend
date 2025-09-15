@@ -37,13 +37,16 @@ export default function CreatePage() {
   const eventSourceRef = useRef<EventSource | null>(null);
   const pendingTasksRef = useRef<Map<string, 'diffusion' | 'upscale'>>(new Map());
 
-  // 获取当前域名用于callback URL
+  // 获取当前域名用于callback URL（给后端系统调用的webhook URL）
   const getCallbackUrl = () => {
     if (typeof window !== 'undefined') {
       return `${window.location.protocol}//${window.location.host}/api/backend-proxy/callback`;
     }
     return `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3001'}/api/backend-proxy/callback`;
   };
+
+  // SSE连接URL（前端使用，必须是相对路径）
+  const SSE_ENDPOINT = '/api/backend-proxy/callback';
 
   // Steps data for the StepsSection component
   const createSteps = [
@@ -272,7 +275,9 @@ export default function CreatePage() {
     const maxReconnects = 5;
 
     const setupConnection = () => {
-      const eventSource = new EventSource('/api/backend-proxy/callback');
+      // 使用常量确保使用相对路径
+      console.log('🔗 Setting up SSE connection to:', SSE_ENDPOINT);
+      const eventSource = new EventSource(SSE_ENDPOINT);
       eventSourceRef.current = eventSource;
 
       eventSource.onmessage = (event) => {

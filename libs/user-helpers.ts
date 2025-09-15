@@ -465,24 +465,13 @@ export async function createUserProfileWithBackend(
  * 确保用户有profile，如果没有则创建
  */
 export async function ensureUserProfile(userId: string, email: string, name?: string, image?: string): Promise<UserWithProfile | null> {
-  console.log(`🔐 [ensureUserProfile] Ensuring profile exists for:`, { userId, email, name, image });
   
   const user = await getUserWithProfile(userId);
   
   if (!user?.profile) {
-    console.log(`⚠️ [ensureUserProfile] Profile missing, creating new profile with backend account`);
     return await createUserProfileWithBackend(userId, email, 'free', name, image);
   }
   
-  console.log(`✅ [ensureUserProfile] Profile already exists:`, {
-    userId,
-    email,
-    backendAccountId: user.profile.backendAccountId,
-    plan: user.profile.plan,
-    initApiKey: user.profile.initApiKey ? user.profile.initApiKey.substring(0, 8) + '...' : 
-      (user.profile.preferences as any)?.initApiKey ? 
-        ((user.profile.preferences as any).initApiKey as string).substring(0, 8) + '...' : null
-  });
   
   return user;
 }

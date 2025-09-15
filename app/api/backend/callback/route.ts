@@ -21,7 +21,6 @@ async function notifyTaskCompleted(taskData: WebhookCallbackPayload['data']): Pr
   // 4. Email notification
   // 5. In-app notification system
 
-  console.log(`🔔 Notifying user of completed task: ${taskData.job_id}`);
 
   // Example: You could send to WebSocket or notification system here
   // await sendWebSocketNotification(userId, {
@@ -33,7 +32,6 @@ async function notifyTaskCompleted(taskData: WebhookCallbackPayload['data']): Pr
 }
 
 async function notifyTaskFailed(taskData: WebhookCallbackPayload['data']): Promise<void> {
-  console.log(`🔔 Notifying user of failed task: ${taskData.job_id}`);
 
   // Similar to completion notification but for failures
   // await sendWebSocketNotification(userId, {
@@ -45,7 +43,6 @@ async function notifyTaskFailed(taskData: WebhookCallbackPayload['data']): Promi
 }
 
 async function notifyTaskProgress(taskData: WebhookCallbackPayload['data']): Promise<void> {
-  console.log(`🔔 Notifying user of task progress: ${taskData.job_id} - ${taskData.status}`);
 
   // Optional: notify user of progress updates
   // await sendWebSocketNotification(userId, {
@@ -100,20 +97,9 @@ export async function POST(request: NextRequest) {
   try {
     const body: WebhookCallbackPayload = await request.json();
 
-    // Log the callback payload for debugging
-    console.log('Received webhook callback from backend:', {
-      timestamp: body.timestamp,
-      job_id: body.data.job_id,
-      model: body.data.model,
-      task_type: body.data.task_type,
-      status: body.data.status,
-      image_urls: body.data.output?.image_urls?.length || 0,
-      usage: body.data.meta?.usage,
-    });
 
     // Validate required fields
     if (!body.data?.job_id) {
-      console.error('Missing job_id in webhook payload');
       return NextResponse.json(
         { error: 'Missing job_id in payload' },
         { status: 400 }
@@ -124,9 +110,6 @@ export async function POST(request: NextRequest) {
     const { data } = body;
 
     if (data.status === 'completed') {
-      console.log('✅ Task completed successfully:', {
-        job_id: data.job_id,
-        task_type: data.task_type,
         model: data.model,
         image_url: data.output?.image_url,
         image_count: data.output?.image_urls?.length || 0,
@@ -138,9 +121,6 @@ export async function POST(request: NextRequest) {
       await notifyTaskCompleted(data);
 
     } else if (data.status === 'failed') {
-      console.error('❌ Task failed:', {
-        job_id: data.job_id,
-        task_type: data.task_type,
         error: data.error,
         duration: calculateDuration(data.meta?.started_at, data.meta?.ended_at),
       });
@@ -149,9 +129,6 @@ export async function POST(request: NextRequest) {
       await notifyTaskFailed(data);
 
     } else if (data.status === 'running' || data.status === 'queued') {
-      console.log('⏳ Task status update:', {
-        job_id: data.job_id,
-        status: data.status,
         task_type: data.task_type,
       });
 
@@ -159,9 +136,6 @@ export async function POST(request: NextRequest) {
       await notifyTaskProgress(data);
 
     } else {
-      console.log('📊 Task status update:', {
-        job_id: data.job_id,
-        status: data.status,
         task_type: data.task_type,
       });
     }
