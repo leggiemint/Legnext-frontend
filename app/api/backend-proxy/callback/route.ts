@@ -12,48 +12,63 @@ function calculateDuration(startedAt?: string, endedAt?: string): string {
   return `${seconds}s`;
 }
 
+// Global store for SSE connections - in production, use Redis or similar
+const sseConnections = new Map<string, WritableStreamDefaultWriter<Uint8Array>>();
+
+// Broadcast notification to all connected clients
+function broadcastNotification(notification: any) {
+  const message = `data: ${JSON.stringify(notification)}\n\n`;
+  const encoder = new TextEncoder();
+  const data = encoder.encode(message);
+
+  sseConnections.forEach((writer, clientId) => {
+    try {
+      writer.write(data);
+    } catch (error) {
+      console.error('Error sending SSE message to client:', clientId, error);
+      sseConnections.delete(clientId);
+    }
+  });
+}
+
 // Notification functions (implement based on your needs)
 async function notifyTaskCompleted(taskData: WebhookCallbackPayload['data']): Promise<void> {
-  // Implementation options:
-  // 1. WebSocket notification to user's browser
-  // 2. Server-sent events (SSE)
-  // 3. Push notifications
-  // 4. Email notification
-  // 5. In-app notification system
-
   console.log(`🔔 Notifying user of completed task: ${taskData.job_id}`);
 
-  // Example: You could send to WebSocket or notification system here
-  // await sendWebSocketNotification(userId, {
-  //   type: 'task_completed',
-  //   job_id: taskData.job_id,
-  //   images: taskData.output?.image_urls,
-  //   task_type: taskData.task_type
-  // });
+  // Broadcast to all connected clients via SSE
+  broadcastNotification({
+    type: 'task_completed',
+    job_id: taskData.job_id,
+    task_type: taskData.task_type,
+    output: taskData.output,
+    timestamp: Date.now()
+  });
 }
 
 async function notifyTaskFailed(taskData: WebhookCallbackPayload['data']): Promise<void> {
   console.log(`🔔 Notifying user of failed task: ${taskData.job_id}`);
 
-  // Similar to completion notification but for failures
-  // await sendWebSocketNotification(userId, {
-  //   type: 'task_failed',
-  //   job_id: taskData.job_id,
-  //   error: taskData.error,
-  //   task_type: taskData.task_type
-  // });
+  // Broadcast to all connected clients via SSE
+  broadcastNotification({
+    type: 'task_failed',
+    job_id: taskData.job_id,
+    task_type: taskData.task_type,
+    error: taskData.error,
+    timestamp: Date.now()
+  });
 }
 
 async function notifyTaskProgress(taskData: WebhookCallbackPayload['data']): Promise<void> {
   console.log(`🔔 Notifying user of task progress: ${taskData.job_id} - ${taskData.status}`);
 
-  // Optional: notify user of progress updates
-  // await sendWebSocketNotification(userId, {
-  //   type: 'task_progress',
-  //   job_id: taskData.job_id,
-  //   status: taskData.status,
-  //   task_type: taskData.task_type
-  // });
+  // Broadcast to all connected clients via SSE
+  broadcastNotification({
+    type: 'task_progress',
+    job_id: taskData.job_id,
+    task_type: taskData.task_type,
+    status: taskData.status,
+    timestamp: Date.now()
+  });
 }
 
 export interface WebhookCallbackPayload {
@@ -183,13 +198,78 @@ export async function POST(request: NextRequest) {
   }
 }
 
+// Handle SSE connections for real-time notifications
+export async function GET(request: NextRequest) {
+  const clientId = Date.now().toString() + Math.random().toString(36).substring(2, 9);
+
+  console.log(`🔗 New SSE connection established: ${clientId}`);
+
+  const encoder = new TextEncoder();
+
+  const stream = new ReadableStream({
+    start(controller) {
+      // Send initial connection message
+      const initialMessage = `data: ${JSON.stringify({
+        type: 'connected',
+        message: 'SSE connection established',
+        clientId,
+        timestamp: Date.now()
+      })}\n\n`;
+
+      controller.enqueue(encoder.encode(initialMessage));
+
+      // Create a writer that writes to the controller
+      const writer = {
+        write: (data: Uint8Array) => {
+          try {
+            controller.enqueue(data);
+          } catch (error) {
+            console.error('Error writing to SSE stream:', error);
+          }
+        }
+      } as WritableStreamDefaultWriter<Uint8Array>;
+
+      sseConnections.set(clientId, writer);
+
+      // Clean up on disconnect
+      const cleanup = () => {
+        console.log(`🔌 SSE connection closed: ${clientId}`);
+        sseConnections.delete(clientId);
+        try {
+          controller.close();
+        } catch (error) {
+          // Connection already closed
+        }
+      };
+
+      // Set up cleanup timer (connection timeout after 30 minutes)
+      const timeoutId = setTimeout(cleanup, 30 * 60 * 1000);
+
+      request.signal.addEventListener('abort', () => {
+        clearTimeout(timeoutId);
+        cleanup();
+      });
+    }
+  });
+
+  return new NextResponse(stream, {
+    headers: {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache, no-transform',
+      'Connection': 'keep-alive',
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Headers': 'Cache-Control',
+    },
+  });
+}
+
 // Handle preflight requests for CORS if needed
 export async function OPTIONS() {
   return new NextResponse(null, {
     status: 200,
     headers: {
       'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'POST, OPTIONS',
+      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type',
     },
   });
