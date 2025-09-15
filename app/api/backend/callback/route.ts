@@ -110,6 +110,7 @@ export async function POST(request: NextRequest) {
     const { data } = body;
 
     if (data.status === 'completed') {
+      console.log('Task completed:', {
         model: data.model,
         image_url: data.output?.image_url,
         image_count: data.output?.image_urls?.length || 0,
@@ -121,6 +122,7 @@ export async function POST(request: NextRequest) {
       await notifyTaskCompleted(data);
 
     } else if (data.status === 'failed') {
+      console.log('Task failed:', {
         error: data.error,
         duration: calculateDuration(data.meta?.started_at, data.meta?.ended_at),
       });
@@ -129,6 +131,7 @@ export async function POST(request: NextRequest) {
       await notifyTaskFailed(data);
 
     } else if (data.status === 'running' || data.status === 'queued') {
+      console.log('Task in progress:', {
         task_type: data.task_type,
       });
 
@@ -136,6 +139,7 @@ export async function POST(request: NextRequest) {
       await notifyTaskProgress(data);
 
     } else {
+      console.log('Unknown task status:', {
         task_type: data.task_type,
       });
     }

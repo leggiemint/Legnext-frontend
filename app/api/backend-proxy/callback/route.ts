@@ -13,7 +13,10 @@ function calculateDuration(startedAt?: string, endedAt?: string): string {
 }
 
 // Global store for SSE connections - in production, use Redis or similar
-const sseConnections = new Map<string, WritableStreamDefaultWriter<Uint8Array>>();
+const sseConnections = new Map<string, {
+  controller: ReadableStreamDefaultController<Uint8Array>;
+  writer: WritableStreamDefaultWriter<Uint8Array>;
+}>();
 
 // Broadcast notification to all connected clients
 function broadcastNotification(notification: any) {
@@ -21,9 +24,9 @@ function broadcastNotification(notification: any) {
   const encoder = new TextEncoder();
   const data = encoder.encode(message);
 
-  sseConnections.forEach((writer, clientId) => {
+  sseConnections.forEach((connection, clientId) => {
     try {
-      writer.write(data);
+      connection.controller.enqueue(data);
     } catch (error) {
       console.error('Error sending SSE message to client:', clientId, error);
       sseConnections.delete(clientId);
@@ -172,18 +175,11 @@ export async function GET(request: NextRequest) {
 
       controller.enqueue(encoder.encode(initialMessage));
 
-      // Create a writer that writes to the controller
-      const writer = {
-        write: (data: Uint8Array) => {
-          try {
-            controller.enqueue(data);
-          } catch (error) {
-            console.error('Error writing to SSE stream:', error);
-          }
-        }
-      } as WritableStreamDefaultWriter<Uint8Array>;
-
-      sseConnections.set(clientId, writer);
+      // Store the controller for broadcasting
+      sseConnections.set(clientId, {
+        controller,
+        writer: null as any // Not used in this implementation
+      });
 
       // Clean up on disconnect
       const cleanup = () => {
@@ -198,10 +194,16 @@ export async function GET(request: NextRequest) {
       // Set up cleanup timer (connection timeout after 30 minutes)
       const timeoutId = setTimeout(cleanup, 30 * 60 * 1000);
 
+      // Handle client disconnect
       request.signal.addEventListener('abort', () => {
         clearTimeout(timeoutId);
         cleanup();
       });
+    },
+    
+    cancel() {
+      // Clean up when the stream is cancelled
+      sseConnections.delete(clientId);
     }
   });
 
