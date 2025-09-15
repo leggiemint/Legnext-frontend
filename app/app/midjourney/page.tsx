@@ -15,6 +15,16 @@ import { log } from "@/libs/logger";
 
 export const dynamic = 'force-dynamic';
 
+// 轮询配置常量
+const POLLING_CONFIG = {
+  INITIAL_INTERVAL: 2000,    // 开始2秒轮询
+  PROGRESSIVE_INTERVALS: [2000, 3000, 5000, 8000, 10000], // 渐进式轮询间隔
+  MAX_INTERVAL: 15000,       // 最大15秒轮询间隔
+  MAX_DURATION: 180000,      // 最大轮询时长3分钟
+  MAX_RETRIES: 3,            // 单次请求最大重试次数
+  RETRY_DELAY_BASE: 1000,    // 重试延迟基数
+};
+
 export default function CreatePage() {
   const { isAuthenticated } = useAuth();
   const [textDescription, setTextDescription] = useState("");
@@ -33,20 +43,18 @@ export default function CreatePage() {
     fileName: string;
   } | null>(null);
 
-  // WebSocket连接和任务追踪
-  const eventSourceRef = useRef<EventSource | null>(null);
-  const pendingTasksRef = useRef<Map<string, 'diffusion' | 'upscale'>>(new Map());
+  // 轮询任务追踪
+  const pollingIntervalsRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
+  const pendingTasksRef = useRef<Map<string, {
+    type: 'diffusion' | 'upscale',
+    startTime: number,
+    retryCount: number,
+    pollCount: number,
+    lastPollTime: number,
+    totalPolls: number,
+    errors: string[]
+  }>>(new Map());
 
-  // 获取当前域名用于callback URL（给后端系统调用的webhook URL）
-  const getCallbackUrl = () => {
-    if (typeof window !== 'undefined') {
-      return `${window.location.protocol}//${window.location.host}/api/backend-proxy/callback`;
-    }
-    return `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3001'}/api/backend-proxy/callback`;
-  };
-
-  // SSE连接URL（前端使用，必须是相对路径）
-  const SSE_ENDPOINT = '/api/backend-proxy/callback';
 
   // Steps data for the StepsSection component
   const createSteps = [
@@ -131,9 +139,9 @@ export default function CreatePage() {
       // 构建完整的/imagine命令
       let fullPrompt = textDescription.trim();
 
-      log.info('Sending /imagine command to diffusion API with callback:', fullPrompt);
+      log.info('Sending /imagine command to diffusion API:', fullPrompt);
 
-      // 调用业务 Diffusion API (通过代理路由) - 现在使用webhook callback
+      // 调用业务 Diffusion API (通过代理路由) - 使用轮询方式
       const response = await fetch('/api/backend-proxy/v1/diffusion', {
         method: 'POST',
         headers: {
@@ -142,7 +150,6 @@ export default function CreatePage() {
         },
         body: JSON.stringify({
           text: fullPrompt,
-          callback: getCallbackUrl(), // 添加callback URL
         }),
       });
 
@@ -154,8 +161,8 @@ export default function CreatePage() {
       const result = await response.json();
       setCurrentTaskId(result.job_id);
 
-      // 注册任务以便处理webhook回调
-      pendingTasksRef.current.set(result.job_id, 'diffusion');
+      // 启动轮询任务状态
+      startPolling(result.job_id, 'diffusion');
 
       toast.success('Generation started! Please wait for completion...');
 
@@ -166,171 +173,334 @@ export default function CreatePage() {
     }
   };
 
-  // 处理webhook回调通知
-  const handleWebhookNotification = useCallback((jobId: string, data: any) => {
-    const taskType = pendingTasksRef.current.get(jobId);
-    if (!taskType) {
-      log.warn('Received webhook notification for unknown task:', jobId);
+  // 计算轮询间隔（渐进式）
+  const getPollingInterval = (pollCount: number): number => {
+    if (pollCount < POLLING_CONFIG.PROGRESSIVE_INTERVALS.length) {
+      return POLLING_CONFIG.PROGRESSIVE_INTERVALS[pollCount];
+    }
+    return POLLING_CONFIG.MAX_INTERVAL;
+  };
+
+  // 轮询任务状态
+  const pollTaskStatus = useCallback(async (jobId: string, pollCount = 0): Promise<void> => {
+    const taskInfo = pendingTasksRef.current.get(jobId);
+    if (!taskInfo || !userApiKey) {
+      log.warn('❌ Polling stopped - task not found or API key missing');
       return;
     }
 
-    // 防止重复处理同一个任务
-    if (data.status === 'completed' || data.status === 'failed') {
-      const isAlreadyProcessed = sessionStorage.getItem(`task_${jobId}_processed`);
-      if (isAlreadyProcessed) {
-        log.warn('Task already processed, ignoring duplicate webhook:', jobId);
-        return;
-      }
-      sessionStorage.setItem(`task_${jobId}_processed`, 'true');
-    }
+    const { type: taskType, startTime, retryCount, totalPolls, errors } = taskInfo;
+    const now = Date.now();
+    const elapsed = now - startTime;
 
-    log.info('📨 Processing webhook notification:', {
-      job_id: jobId,
-      task_type: taskType,
-      status: data.status,
-      output: data.output
-    });
+    // 更新轮询统计信息
+    const updatedTaskInfo = {
+      ...taskInfo,
+      pollCount,
+      lastPollTime: now,
+      totalPolls: totalPolls + 1
+    };
+    pendingTasksRef.current.set(jobId, updatedTaskInfo);
 
-    if (data.status === 'completed') {
-      // 任务完成
-      if (taskType === 'diffusion') {
-        // 处理生成的图片
-        log.info('🎨 Processing completed diffusion task:', {
-          status: data.status,
-          output: data.output,
-          image_urls: data.output?.image_urls
-        });
-
-        const images: string[] = [];
-        if (data.output?.image_urls && data.output.image_urls.length > 0) {
-          // 使用后端返回的实际图片URL数组，过滤空字符串
-          data.output.image_urls.forEach((url: string) => {
-            if (url && url.trim() !== '') {
-              images.push(url);
-            }
-          });
-        }
-
-        log.info('🖼️ Extracted images:', images);
-        setGeneratedImages(images);
-        setIsGenerating(false);
-        toast.success(`Images generated successfully! Found ${images.length} images.`);
-      } else if (taskType === 'upscale') {
-        // 处理放大的图片
-        if (data.output?.image_url) {
-          setUpscaledImage(data.output.image_url);
-        }
-        setIsUpscaling(false);
-        toast.success('Image upscaled successfully!');
-      }
-    } else if (data.status === 'failed') {
-      // 任务失败
-      log.error('❌ Task failed:', {
-        job_id: jobId,
-        error_code: data.error?.code,
-        error_message: data.error?.message,
-        error_raw: data.error?.raw_message,
-        task_type: taskType
+    // 检查是否超时
+    if (elapsed > POLLING_CONFIG.MAX_DURATION) {
+      log.error('⏰ Task timeout:', {
+        jobId: jobId.substring(0, 8) + '...',
+        taskType,
+        duration: `${Math.round(elapsed / 1000)}s`
       });
+      toast.error('Task timeout. Please try again.');
 
-      let errorMessage = data.error?.raw_message ||
-                        data.error?.message ||
-                        data.failure_reason ||
-                        `Task failed (${data.status})`;
-
-      // 简化错误消息，使其更用户友好
-      if (errorMessage.includes('unknown error, please contact support')) {
-        errorMessage = 'Image generation failed due to server error. Please try again or contact support.';
-      } else if (errorMessage.includes('task failed')) {
-        errorMessage = 'Image generation failed. Please check your prompt and try again.';
-      }
-
-      toast.error(errorMessage);
-
+      // 清理任务
       if (taskType === 'diffusion') {
         setIsGenerating(false);
       } else {
         setIsUpscaling(false);
       }
-    } else {
-      // 进度更新
-      log.info('📊 Task status update:', {
-        job_id: jobId,
-        status: data.status,
-        task_type: taskType
+
+      // 标记任务处理完成（超时）
+      sessionStorage.setItem(`task_${jobId}_processed`, 'true');
+      sessionStorage.removeItem(`task_${jobId}_processing`);
+      stopPolling(jobId);
+      return;
+    }
+
+    try {
+      // 简化轮询日志 - 只在重要节点记录
+      if (pollCount === 0 || pollCount % 5 === 0 || pollCount > 10) {
+        log.info(`🔍 Polling task status:`, {
+          jobId: jobId.substring(0, 8) + '...',
+          taskType,
+          elapsed: `${Math.round(elapsed / 1000)}s`,
+          poll: pollCount + 1,
+          errors: errors.length
+        });
+      }
+
+      // 调用状态检查API
+      const apiStartTime = Date.now();
+      const response = await fetch(`/api/backend-proxy/v1/job/${jobId}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-API-KEY': userApiKey,
+        },
       });
-    }
+      const apiDuration = Date.now() - apiStartTime;
 
-    // 如果任务完成或失败，从待处理任务中移除
-    if (data.status === 'completed' || data.status === 'failed') {
-      pendingTasksRef.current.delete(jobId);
-    }
-  }, []);
+      if (!response.ok) {
+        const errorText = await response.text().catch(() => 'Unknown error');
+        throw new Error(`HTTP ${response.status}: ${response.statusText} - ${errorText}`);
+      }
 
-  // 设置SSE连接接收webhook通知
-  useEffect(() => {
-    if (!isAuthenticated) return;
+      const data = await response.json();
+      // 只在状态变化时记录API响应
+      if (data.status === 'completed' || data.status === 'failed' || apiDuration > 5000) {
+        log.info('📊 API Response:', {
+          jobId: jobId.substring(0, 8) + '...',
+          status: data.status,
+          duration: `${apiDuration}ms`
+        });
+      }
 
-    let reconnectCount = 0;
-    const maxReconnects = 5;
+      // 处理任务结果
+      if (data.status === 'completed') {
+        // 防止重复处理 - 但只有在任务确实已被成功处理过时才跳过
+        const isAlreadyProcessed = sessionStorage.getItem(`task_${jobId}_processed`);
+        const currentTaskInProgress = taskType === 'diffusion' ? isGenerating : isUpscaling;
 
-    const setupConnection = () => {
-      // 使用常量确保使用相对路径
-      console.log('🔗 Setting up SSE connection to:', SSE_ENDPOINT);
-      const eventSource = new EventSource(SSE_ENDPOINT);
-      eventSourceRef.current = eventSource;
+        if (isAlreadyProcessed && !currentTaskInProgress) {
+          log.warn('Task already processed and UI updated, ignoring duplicate result:', {
+            jobId: jobId.substring(0, 8) + '...',
+            taskType,
+            uiInProgress: currentTaskInProgress
+          });
+          stopPolling(jobId);
+          return;
+        }
 
-      eventSource.onmessage = (event) => {
-        try {
-          const data = JSON.parse(event.data);
+        // 标记任务开始处理，但还未完成UI更新
+        sessionStorage.setItem(`task_${jobId}_processing`, 'true');
 
-          if (data.type === 'task_completed' || data.type === 'task_failed' || data.type === 'task_progress') {
-            // 处理任务状态更新
-            handleWebhookNotification(data.job_id, {
-              status: data.type === 'task_completed' ? 'completed' : data.type === 'task_failed' ? 'failed' : data.status,
-              output: data.output,
-              error: data.error
+        log.info('✅ Task completed:', {
+          jobId: jobId.substring(0, 8) + '...',
+          taskType,
+          duration: `${Math.round(elapsed / 1000)}s`,
+          polls: totalPolls + 1,
+          imageCount: data.output?.image_urls?.length || (data.output?.image_url ? 1 : 0)
+        });
+
+        if (taskType === 'diffusion') {
+          // 处理生成的图片
+          const images: string[] = [];
+          if (data.output?.image_urls && data.output.image_urls.length > 0) {
+            data.output.image_urls.forEach((url: string) => {
+              if (url && url.trim() !== '') {
+                images.push(url);
+              }
             });
           }
 
-          // 重置重连计数
-          reconnectCount = 0;
-        } catch (error) {
-          console.error('Error parsing SSE message:', error);
+          setGeneratedImages(images);
+          setIsGenerating(false);
+          toast.success(`Images generated successfully! Found ${images.length} images.`);
+        } else if (taskType === 'upscale') {
+          // 处理放大的图片
+          if (data.output?.image_url) {
+            setUpscaledImage(data.output.image_url);
+          }
+          setIsUpscaling(false);
+          toast.success('Image upscaled successfully!');
         }
-      };
 
-      eventSource.onerror = (error) => {
-        console.error('SSE connection error:', error);
-        console.error('SSE readyState:', eventSource.readyState);
-        console.error('SSE url:', eventSource.url);
+        // 标记任务完全处理完成
+        sessionStorage.setItem(`task_${jobId}_processed`, 'true');
+        sessionStorage.removeItem(`task_${jobId}_processing`);
+        stopPolling(jobId);
+      } else if (data.status === 'failed') {
+        log.error('❌ Task failed:', {
+          jobId: jobId.substring(0, 8) + '...',
+          taskType,
+          duration: `${Math.round(elapsed / 1000)}s`,
+          error: data.error?.message || data.error?.raw_message || 'Unknown error'
+        });
 
-        // 自动重连
-        if (reconnectCount < maxReconnects) {
-          const delay = Math.min(1000 * Math.pow(2, reconnectCount), 30000); // 指数退避，最大30秒
-          console.log(`🔄 Attempting to reconnect SSE in ${delay}ms (attempt ${reconnectCount + 1}/${maxReconnects})`);
-          setTimeout(() => {
-            if (eventSourceRef.current?.readyState === EventSource.CLOSED) {
-              reconnectCount++;
-              setupConnection();
-            }
-          }, delay);
+        let errorMessage = data.error?.raw_message ||
+                          data.error?.message ||
+                          data.failure_reason ||
+                          'Task failed';
+
+        // 简化错误消息
+        if (errorMessage.includes('unknown error, please contact support')) {
+          errorMessage = 'Image generation failed due to server error. Please try again or contact support.';
+        } else if (errorMessage.includes('task failed')) {
+          errorMessage = 'Image generation failed. Please check your prompt and try again.';
+        }
+
+        toast.error(errorMessage);
+
+        if (taskType === 'diffusion') {
+          setIsGenerating(false);
         } else {
-          console.error('❌ Max SSE reconnection attempts reached');
+          setIsUpscaling(false);
         }
-      };
 
-      return eventSource;
+        // 标记任务处理完成（失败）
+        sessionStorage.setItem(`task_${jobId}_processed`, 'true');
+        sessionStorage.removeItem(`task_${jobId}_processing`);
+        stopPolling(jobId);
+      } else {
+        // 任务仍在进行中，继续轮询
+        const nextInterval = getPollingInterval(pollCount);
+
+        // 只在特定情况下记录进度日志
+        if (pollCount === 0 || pollCount % 5 === 0 || elapsed > 60000) {
+          log.info('⏳ Task processing:', {
+            jobId: jobId.substring(0, 8) + '...',
+            status: data.status,
+            elapsed: `${Math.round(elapsed / 1000)}s`,
+            poll: pollCount + 1
+          });
+        }
+
+        // 更新任务信息（重置重试计数）
+        pendingTasksRef.current.set(jobId, {
+          ...updatedTaskInfo,
+          retryCount: 0
+        });
+
+        // 设置下一次轮询
+        const timeoutId = setTimeout(() => {
+          pollTaskStatus(jobId, pollCount + 1);
+        }, nextInterval);
+
+        pollingIntervalsRef.current.set(jobId, timeoutId);
+      }
+
+    } catch (error: any) {
+      const errorMessage = error.message || 'Unknown error';
+      const updatedErrors = [...errors, errorMessage];
+
+      log.error('🚫 Polling failed:', {
+        jobId: jobId.substring(0, 8) + '...',
+        error: errorMessage,
+        retry: `${retryCount + 1}/${POLLING_CONFIG.MAX_RETRIES}`,
+        elapsed: `${Math.round(elapsed / 1000)}s`
+      });
+
+      // 增加重试计数并记录错误
+      const newRetryCount = retryCount + 1;
+
+      if (newRetryCount >= POLLING_CONFIG.MAX_RETRIES) {
+        // 达到最大重试次数
+        log.error('🛑 Max retries reached:', {
+          jobId: jobId.substring(0, 8) + '...',
+          taskType,
+          duration: `${Math.round(elapsed / 1000)}s`,
+          finalError: errorMessage
+        });
+
+        toast.error('Network error. Please check your connection and try again.');
+
+        if (taskType === 'diffusion') {
+          setIsGenerating(false);
+        } else {
+          setIsUpscaling(false);
+        }
+
+        // 标记任务处理完成（网络错误）
+        sessionStorage.setItem(`task_${jobId}_processed`, 'true');
+        sessionStorage.removeItem(`task_${jobId}_processing`);
+        stopPolling(jobId);
+      } else {
+        // 指数退避重试
+        const retryDelay = POLLING_CONFIG.RETRY_DELAY_BASE * Math.pow(2, newRetryCount - 1);
+
+        log.info(`🔄 Retrying in ${retryDelay}ms (${newRetryCount}/${POLLING_CONFIG.MAX_RETRIES})`);
+
+        // 更新重试计数和错误历史
+        pendingTasksRef.current.set(jobId, {
+          ...updatedTaskInfo,
+          retryCount: newRetryCount,
+          errors: updatedErrors
+        });
+
+        // 延迟重试
+        const timeoutId = setTimeout(() => {
+          pollTaskStatus(jobId, pollCount);
+        }, retryDelay);
+
+        pollingIntervalsRef.current.set(jobId, timeoutId);
+      }
+    }
+  }, [userApiKey]);
+
+  // 停止轮询
+  const stopPolling = useCallback((jobId: string) => {
+    const taskInfo = pendingTasksRef.current.get(jobId);
+    const timeoutId = pollingIntervalsRef.current.get(jobId);
+
+    if (taskInfo) {
+      const elapsed = Date.now() - taskInfo.startTime;
+      log.info('🛑 Stopping polling:', {
+        jobId: jobId.substring(0, 8) + '...',
+        taskType: taskInfo.type,
+        duration: `${Math.round(elapsed / 1000)}s`,
+        polls: taskInfo.totalPolls
+      });
+    }
+
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+      pollingIntervalsRef.current.delete(jobId);
+    }
+    pendingTasksRef.current.delete(jobId);
+    // 不在这里标记为已处理，让调用方决定
+  }, []);
+
+  // 启动轮询
+  const startPolling = useCallback((jobId: string, taskType: 'diffusion' | 'upscale') => {
+    // 清理可能存在的旧轮询和session storage
+    stopPolling(jobId);
+    sessionStorage.removeItem(`task_${jobId}_processed`);
+    sessionStorage.removeItem(`task_${jobId}_processing`);
+
+    const startTime = Date.now();
+
+    // 添加任务到待处理列表
+    const newTaskInfo = {
+      type: taskType,
+      startTime,
+      retryCount: 0,
+      pollCount: 0,
+      lastPollTime: 0,
+      totalPolls: 0,
+      errors: [] as string[]
     };
 
-    const eventSource = setupConnection();
+    pendingTasksRef.current.set(jobId, newTaskInfo);
 
-    // 清理连接
+    log.info('🚀 Starting polling:', {
+      jobId: jobId.substring(0, 8) + '...',
+      taskType
+    });
+
+    // 立即开始轮询
+    pollTaskStatus(jobId, 0);
+  }, [pollTaskStatus, stopPolling]);
+
+  // 清理轮询资源
+  useEffect(() => {
     return () => {
-      eventSource.close();
-      eventSourceRef.current = null;
+      // 组件卸载时清理所有轮询
+      const currentPollingIntervals = pollingIntervalsRef.current;
+      currentPollingIntervals.forEach((timeoutId) => {
+        clearTimeout(timeoutId);
+      });
+      currentPollingIntervals.clear();
+      pendingTasksRef.current.clear();
     };
-  }, [isAuthenticated, handleWebhookNotification]);
+  }, []); // 空依赖数组，只在组件卸载时执行
 
   const handleUpscale = async (imageIndex: number) => {
     // 检查用户是否已登录
@@ -354,9 +524,9 @@ export default function CreatePage() {
     setUpscaledImage(null);
 
     try {
-      log.info('Sending upscale request for image index with callback:', imageIndex);
+      log.info('Sending upscale request for image index:', imageIndex);
 
-      // 调用业务 Upscale API (通过代理路由) - 现在使用webhook callback
+      // 调用业务 Upscale API (通过代理路由) - 使用轮询方式
       const response = await fetch('/api/backend-proxy/v1/upscale', {
         method: 'POST',
         headers: {
@@ -366,7 +536,6 @@ export default function CreatePage() {
         body: JSON.stringify({
           jobId: currentTaskId,
           imageNo: imageIndex, // 0-3 对应4张图片
-          callback: getCallbackUrl(), // 添加callback URL
         }),
       });
 
@@ -377,8 +546,8 @@ export default function CreatePage() {
 
       const result = await response.json();
 
-      // 注册任务以便处理webhook回调
-      pendingTasksRef.current.set(result.job_id, 'upscale');
+      // 启动轮询任务状态
+      startPolling(result.job_id, 'upscale');
 
       toast.success('Upscale started! Please wait for completion...');
 
