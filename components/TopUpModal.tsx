@@ -135,18 +135,13 @@ export default function TopUpModal({
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <div className="flex items-center gap-3">
             <WalletIcon className="w-6 h-6" style={{ color: config.colors.main }} />
-            <div>
-              <h2 className="text-xl font-semibold text-gray-900">
-                {title}
-              </h2>
-              <p className="text-sm text-gray-600">
-                Purchase credits for your account
-              </p>
-            </div>
+            <h2 className="text-xl font-semibold text-gray-900">
+              {title}
+            </h2>
           </div>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors p-2 hover:bg-gray-100 rounded-lg"
+            className="text-gray-400 hover:text-gray-600 transition-colors p-2 hover:bg-gray-100 rounded-full"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -236,76 +231,34 @@ export default function TopUpModal({
 
               {/* Amount Selection */}
               <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-3">Select Credit Package</label>
-                <div className="grid grid-cols-1 gap-3">
-                  {defaultTopUpOptions.map((option) => (
-                    <label
-                      key={option.amount}
-                      className={`flex items-center justify-between p-4 border-2 rounded-lg cursor-pointer transition-all ${
-                        selectedAmount === option.amount
-                          ? 'border-purple-500 bg-purple-50'
-                          : 'border-gray-200 hover:border-gray-300'
-                      }`}
-                    >
-                      <input
-                        type="radio"
-                        name="amount"
-                        value={option.amount}
-                        checked={selectedAmount === option.amount}
-                        onChange={(e) => setSelectedAmount(Number(e.target.value))}
-                        className="sr-only"
-                      />
-                      <div className="flex items-center gap-3">
-                        <div className={`w-4 h-4 rounded-full border-2 ${
-                          selectedAmount === option.amount
-                            ? 'border-purple-500 bg-purple-500'
-                            : 'border-gray-300'
-                        }`}>
-                          {selectedAmount === option.amount && (
-                            <div className="w-full h-full rounded-full bg-purple-500 flex items-center justify-center">
-                              <div className="w-2 h-2 rounded-full bg-white"></div>
-                            </div>
-                          )}
-                        </div>
-                        <div>
-                          <div className="font-medium text-gray-900">
-                            {option.credits.toLocaleString()} Credits
-                          </div>
-                          <div className="text-sm text-gray-500">
-                            ${(option.credits / 1000).toFixed(1)}k credits
-                          </div>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-lg font-bold text-gray-900">
-                          ${option.amount}
-                        </div>
-                        <div className="text-xs text-gray-500">
-                          ${(option.amount / option.credits * 1000).toFixed(2)}/1k
-                        </div>
-                      </div>
-                    </label>
-                  ))}
+                <label className="block text-sm font-medium text-gray-700 mb-3">Amount</label>
+                <div className="relative">
+                  <select
+                    value={selectedAmount}
+                    onChange={(e) => setSelectedAmount(Number(e.target.value))}
+                    className="w-full p-4 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent appearance-none cursor-pointer"
+                  >
+                    {defaultTopUpOptions.map((option) => (
+                      <option key={option.amount} value={option.amount}>
+                        ${option.amount} ({option.credits.toLocaleString()} credits)
+                      </option>
+                    ))}
+                  </select>
+                  {/* Custom dropdown arrow */}
+                  <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none">
+                    <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
                 </div>
+                
+                {/* Conversion text below dropdown */}
+                {selectedOption && (
+                  <p className="text-sm text-gray-500 mt-2">
+                    ${selectedOption.amount} → {selectedOption.credits.toLocaleString()} credits
+                  </p>
+                )}
               </div>
-
-              {/* Selected Summary */}
-              {selectedOption && (
-                <div className="bg-gray-50 rounded-lg p-4 mb-6">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm font-medium text-gray-900">Selected:</span>
-                    <span className="text-sm font-bold text-gray-900">
-                      {selectedOption.credits.toLocaleString()} credits
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium text-gray-900">Total:</span>
-                    <span className="text-lg font-bold" style={{ color: config.colors.main }}>
-                      ${selectedOption.amount}
-                    </span>
-                  </div>
-                </div>
-              )}
 
               {/* Action Buttons */}
               <div className="flex gap-3">
@@ -318,10 +271,11 @@ export default function TopUpModal({
                 <button
                   onClick={createPaymentIntent}
                   disabled={!selectedOption || isLoading}
-                  className="flex-1 px-6 py-3 text-white rounded-lg font-medium transition-colors disabled:opacity-50"
+                  className="flex-1 px-6 py-3 text-white rounded-lg font-medium transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
                   style={{ backgroundColor: config.colors.main }}
                 >
-                  Continue to Payment
+                  <WalletIcon className="w-5 h-5" />
+                  Top up
                 </button>
               </div>
             </div>
