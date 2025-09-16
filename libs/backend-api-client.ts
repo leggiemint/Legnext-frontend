@@ -1,4 +1,3 @@
-import { validateAndWarnBackendEndpoint } from './backend-api-validator';
 
 const BASE_MANAGER_URL = process.env.BACKEND_API_URL || process.env.BASE_MANAGER_URL || 'https://api.legnext.ai';
 const BACKEND_API_KEY = process.env.BACKEND_API_KEY;
@@ -197,8 +196,6 @@ class BackendApiClient {
       headers['API-KEY'] = this.apiKey;
     }
 
-    // Validate endpoint in development
-    validateAndWarnBackendEndpoint(method, endpoint);
 
 
     const response = await fetch(url, {

@@ -24,6 +24,8 @@
     "@mdx-js/react": "^2.3.0",
     "@next/mdx": "^13.5.6",
     "@prisma/client": "^5.22.0",
+    "@stripe/react-stripe-js": "^4.0.2",
+    "@stripe/stripe-js": "^7.9.0",
     "axios": "^1.6.8",
     "crisp-sdk-web": "^1.0.22",
     "dotenv": "^17.2.1",

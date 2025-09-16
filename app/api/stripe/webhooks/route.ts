@@ -157,42 +157,7 @@ async function handleCheckoutSessionCompleted(event: Stripe.Event) {
       log.warn(`User ${userId} has no backend account ID, skipping backend sync`);
     }
   }
-  // 处理TopUp支付模式
-  else if (session.mode === 'payment' && session.metadata?.type === 'topup') {
-    log.info('Processing TopUp checkout...');
-    
-    const credits = parseInt(session.metadata?.credits || '0');
-    if (!credits) {
-      log.error('❌ No credits found in session metadata for TopUp');
-      return;
-    }
-
-    log.info(`💰 TopUp payment completed for user ${userId}, credits: ${credits}`);
-
-    // 添加credits到用户账户
-    if (user.profile?.backendAccountId) {
-      try {
-        log.info(`🔄 Adding ${credits} credits to backend account ${user.profile.backendAccountId}`);
-        
-        const expiredAt = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000); // 1年后过期
-        
-        await backendApiClient.createCreditPack(
-          user.profile.backendAccountId,
-          {
-            capacity: credits,
-            description: `TopUp: ${credits} credits`,
-            expired_at: expiredAt.toISOString()
-          }
-        );
-        
-        log.info(`✅ Successfully added ${credits} credits to user account`);
-      } catch (error) {
-        log.error(`❌ Failed to add credits to backend account:`, error);
-      }
-    } else {
-      log.error(`❌ User has no backend account ID`);
-    }
-  }
+  // Note: TopUp payments now use PaymentIntent flow, handled by payment_intent.succeeded event
   else {
     log.info(`ℹ️ Checkout session mode '${session.mode}' not handled, skipping`);
   }
@@ -208,9 +173,9 @@ async function handleInvoicePaymentSucceeded(event: Stripe.Event) {
   
   // 区分订阅类型 (2024最佳实践)
   if (invoice.billing_reason === 'subscription_create') {
-    // 首次订阅支付，已在checkout.session.completed处理
-    // 但Stripe仍会发送invoice.payment_succeeded事件，我们记录但不重复处理
-    log.info(`Skipping subscription_create invoice ${invoice.id} - already handled in checkout.session.completed`);
+    // 首次订阅支付 - 现在使用 SetupIntent 流程，需要在这里处理
+    log.info(`Processing subscription_create invoice ${invoice.id} for SetupIntent flow`);
+    await handleSubscriptionCreation(invoice);
     return;
   }
   
@@ -218,6 +183,67 @@ async function handleInvoicePaymentSucceeded(event: Stripe.Event) {
     // 订阅续费
     log.info(`Processing subscription renewal for invoice ${invoice.id}`);
     await handleSubscriptionRenewal(invoice);
+  }
+}
+
+/**
+ * 处理订阅创建（首次支付成功）
+ */
+async function handleSubscriptionCreation(invoice: Stripe.Invoice) {
+  const customerId = invoice.customer as string;
+
+  // 通过Stripe客户ID查找用户
+  const paymentCustomer = await prisma.paymentCustomer.findUnique({
+    where: { stripeCustomerId: customerId },
+  });
+
+  if (!paymentCustomer) {
+    log.error(`Payment customer not found for Stripe customer: ${customerId}`);
+    return;
+  }
+
+  // 通过userId获取用户信息
+  const user = await getUserWithProfile(paymentCustomer.userId);
+  if (!user) {
+    log.error(`User not found for userId: ${paymentCustomer.userId}`);
+    return;
+  }
+  log.info(`Processing subscription creation for user ${user.id}`);
+
+  // 更新用户plan为pro
+  await updateUserPlan(user.id, 'pro');
+
+  // 如果有backend账户，同步到backend系统
+  if (user.profile?.backendAccountId) {
+    try {
+      log.info(`Syncing subscription to backend for account ${user.profile.backendAccountId}`);
+
+      // 1. 更新backend账户计划为developer
+      const planResponse = await backendApiClient.updateAccountPlan(user.profile.backendAccountId, 'developer');
+      log.info('Plan updated:', planResponse);
+
+      // 2. 为backend账户创建信用包 (订阅用户获得31天有效期的信用包)
+      const expiredAt = new Date();
+      expiredAt.setDate(expiredAt.getDate() + 31); // 31天有效期
+
+      const creditPackResponse = await backendApiClient.createCreditPack(user.profile.backendAccountId, {
+        capacity: 33000, // Pro计划的信用量
+        description: 'Pro subscription credit pack',
+        expired_at: expiredAt.toISOString(),
+      });
+
+      log.info(`✅ Backend account ${user.profile.backendAccountId} updated to developer plan with 33000 credits pack`);
+      log.info('Credit pack created:', creditPackResponse);
+    } catch (error) {
+      log.error('❌ Failed to sync with backend system:', error);
+      // 记录详细错误信息以便调试
+      if (error instanceof Error) {
+        log.error('Error message:', error.message);
+        log.error('Error stack:', error.stack);
+      }
+    }
+  } else {
+    log.warn(`User ${user.id} has no backend account ID, skipping backend sync`);
   }
 }
 

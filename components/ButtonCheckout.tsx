@@ -3,9 +3,9 @@
 import { useState } from "react";
 import { useSession } from "next-auth/react";
 import { toast } from "react-hot-toast";
-import apiClient from "@/libs/api";
 import config from "@/config";
 import PaymentErrorModal from "./PaymentErrorModal";
+import StripePaymentModal from "./StripePaymentModal";
 
 // This component is used to create Stripe Checkout Sessions
 // It calls the /api/stripe/create-checkout route with the priceId, successUrl and cancelUrl
@@ -13,11 +13,9 @@ import PaymentErrorModal from "./PaymentErrorModal";
 // You can also change the mode to "subscription" if you want to create a subscription instead of a one-time payment
 const ButtonCheckout = ({
   priceId,
-  mode, // Default to subscription for Pro plan
   isFree = false,
 }: {
   priceId?: string; // Optional for free plans
-  mode?: "payment" | "subscription";
   isFree?: boolean;
 }) => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -28,6 +26,7 @@ const ButtonCheckout = ({
     isOpen: false,
     error: null,
   });
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
   const sessionData = useSession();
   const session = sessionData?.data;
 
@@ -62,22 +61,14 @@ const ButtonCheckout = ({
             // Continue with checkout process
           }
           
-          // Logged in: proceed to payment checkout
+          // Logged in: open payment modal instead of redirecting
           if (!priceId) {
             toast.error("Price ID is required for paid plans");
             return;
           }
-          
-          const { url }: { url: string } = await apiClient.post(
-            "/stripe/create-checkout-session",
-            {
-              priceId,
-              mode: mode || "subscription",
-              successUrl: `${window.location.origin}/app`,
-              cancelUrl: window.location.href,
-            }
-          );
-          window.location.href = url;
+
+          // Open Stripe Elements payment modal
+          setShowPaymentModal(true);
         } else {
           // Not logged in: redirect to login first
           window.location.href = config.auth.loginUrl;
@@ -157,6 +148,19 @@ const ButtonCheckout = ({
         error={errorModal.error}
         onRetry={handleRetry}
       />
+
+      {/* Stripe Payment Modal */}
+      {priceId && (
+        <StripePaymentModal
+          isOpen={showPaymentModal}
+          onClose={() => setShowPaymentModal(false)}
+          priceId={priceId}
+          onSuccess={() => {
+            setShowPaymentModal(false);
+            toast.success("Welcome to Pro! Your subscription is now active.");
+          }}
+        />
+      )}
     </>
   );
 };

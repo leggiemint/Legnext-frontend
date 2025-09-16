@@ -48,6 +48,8 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       {config.domainName && (
         <head>
           <PlausibleProvider domain={config.domainName} />
+          {/* Endorsely Tracking Script */}
+          <script async src="https://assets.endorsely.com/endorsely.js" data-endorsely="fe0cc7e9-20b1-4fff-af79-349362801659"></script>
           {/* Favicon */}
           <link rel="icon" type="image/x-icon" href="/favicon/favicon.ico" />
           <link rel="icon" type="image/png" sizes="16x16" href="/favicon/favicon-16x16.png" />

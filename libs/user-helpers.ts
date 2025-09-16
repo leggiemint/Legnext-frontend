@@ -23,8 +23,6 @@ export interface UserWithProfile {
  */
 export async function getUserWithProfile(userId: string): Promise<UserWithProfile | null> {
   try {
-    console.log(`🔍 [getUserWithProfile] Fetching user profile for: ${userId}`);
-    
     // 纯JWT策略下，直接从UserProfile表获取数据
     const [profile, paymentCustomer] = await Promise.all([
       prisma.userProfile.findUnique({ where: { userId } }),
@@ -32,7 +30,6 @@ export async function getUserWithProfile(userId: string): Promise<UserWithProfil
     ]);
 
     if (!profile) {
-      console.log(`❌ [getUserWithProfile] No profile found for userId: ${userId}`);
       return null;
     }
 
@@ -51,21 +48,8 @@ export async function getUserWithProfile(userId: string): Promise<UserWithProfil
       paymentCustomer
     };
 
-    console.log(`✅ [getUserWithProfile] Found user profile:`, {
-      userId,
-      email: userWithProfile.email,
-      name: userWithProfile.name,
-      hasProfile: true,
-      backendAccountId: profile.backendAccountId,
-      profilePlan: profile.plan,
-      initApiKey: userWithProfile.profile.initApiKey ? userWithProfile.profile.initApiKey.substring(0, 8) + '...' : null,
-      hasPaymentCustomer: !!paymentCustomer,
-      stripeCustomerId: paymentCustomer?.stripeCustomerId || null
-    });
-
     return userWithProfile as any;
   } catch (error: any) {
-    console.error(`❌ [getUserWithProfile] Error fetching user profile:`, error);
     return null;
   }
 }

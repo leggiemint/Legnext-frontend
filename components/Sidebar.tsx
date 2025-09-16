@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { KeyIcon, CreditCardIcon, CurrencyDollarIcon, DocumentTextIcon, ClipboardDocumentListIcon, BookOpenIcon } from "@heroicons/react/24/outline";
 import { useUser, useUserPlan, useBalance } from '@/contexts/UserContext';
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 
 // Tools组菜单项
 const toolsItems = [
@@ -71,42 +71,20 @@ const Sidebar = () => {
   const session = sessionData?.data;
   
   // 使用统一的用户状态管理
-  const { user, isLoading } = useUser();
+  const { user, isLoading, balance, refreshBalance } = useUser();
   const userPlan = useUserPlan();
-  const { balance } = useBalance();
+  const { isLoading: balanceLoading } = useBalance();
   const isProUser = userPlan === 'pro';
-  
-  // 获取与credit-balance页面一致的数据
-  const [balanceData, setBalanceData] = useState<any>(null);
-  const [balanceLoading, setBalanceLoading] = useState(false);
 
+  // 监听用户变化，刷新余额
   useEffect(() => {
-    if (session?.user?.id) {
-      fetchBalanceData();
+    if (session?.user?.id && refreshBalance) {
+      refreshBalance();
     }
-  }, [session]);
+  }, [session?.user?.id, refreshBalance]);
 
-  const fetchBalanceData = async () => {
-    try {
-      setBalanceLoading(true);
-      const response = await fetch('/api/credit-balance');
-      if (response.ok) {
-        const data = await response.json();
-        setBalanceData(data);
-      }
-    } catch (error) {
-      console.error('Failed to fetch balance data:', error);
-    } finally {
-      setBalanceLoading(false);
-    }
-  };
-
-  const displayBalance = balance?.availableBalance 
+  const displayBalance = balance?.availableBalance
     ? balance.availableBalance.toFixed(2)
-    : balanceData?.credits?.totalAccountBalance 
-    ? balanceData.credits.totalAccountBalance.toFixed(2)
-    : balanceData?.credits?.balance 
-    ? (balanceData.credits.balance / 1000).toFixed(2)
     : '0.00';
 
   return (
@@ -271,7 +249,7 @@ const Sidebar = () => {
               {/* Upgrade Button for Free Users */}
               {!isProUser && (
                 <Link 
-                  href="/pricing"
+                  href="/app/subscription"
                   className="w-full block text-center bg-gradient-to-r from-purple-600 to-cyan-600 text-white py-2 px-3 rounded-lg text-sm font-medium hover:from-cyan-600 hover:to-cyan-700 transition-all duration-200 hover:scale-[1.02] shadow-sm"
                 >
                   ⚡ Upgrade to Premium
