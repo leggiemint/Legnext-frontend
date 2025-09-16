@@ -15,7 +15,6 @@ interface TopUpModalProps {
   onClose: () => void;
   title?: string;
   description?: string;
-  buttonText?: string;
 }
 
 const defaultTopUpOptions = [
@@ -35,8 +34,7 @@ export default function TopUpModal({
   isOpen,
   onClose,
   title = "Top up",
-  description = "Get more credits to continue using the app.",
-  buttonText = "Top up"
+  description = "Get more credits to continue using the app."
 }: TopUpModalProps) {
   const { refreshBalance } = useUser();
   const [selectedAmount, setSelectedAmount] = useState(10);

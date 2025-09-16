@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Elements } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
+import Image from 'next/image';
 import StripePaymentForm from './StripePaymentForm';
 import { toast } from 'react-hot-toast';
 import config from '@/config';
@@ -131,9 +132,11 @@ export default function StripePaymentModal({
         {/* 模态框头部 */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <div className="flex items-center gap-3">
-            <img 
-              src="/favicon/apple-touch-icon.png" 
-              alt="Legnext" 
+            <Image
+              src="/favicon/apple-touch-icon.png"
+              alt="Legnext"
+              width={32}
+              height={32}
               className="w-8 h-8 rounded-lg"
             />
             <div>

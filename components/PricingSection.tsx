@@ -163,10 +163,9 @@ const PricingSection = () => {
                               Already Subscribed
                             </div>
                           ) : (
-                            <ButtonCheckout 
-                              priceId={plan.priceId} 
+                            <ButtonCheckout
+                              priceId={plan.priceId}
                               isFree={plan.isFree}
-                              mode="subscription"
                             />
                           )}
                         </div>

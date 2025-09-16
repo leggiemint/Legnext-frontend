@@ -478,7 +478,6 @@ export default function SubscriptionPage() {
       <TopUpModal
         isOpen={showTopUp}
         onClose={() => setShowTopUp(false)}
-        buttonText="Get credits"
       />
 
       {/* Cancel Subscription Confirmation Modal */}
