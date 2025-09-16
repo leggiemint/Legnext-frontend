@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { KeyIcon, CreditCardIcon, CurrencyDollarIcon, DocumentTextIcon, ClipboardDocumentListIcon, BookOpenIcon } from "@heroicons/react/24/outline";
+import { KeyIcon, CreditCardIcon, CurrencyDollarIcon, DocumentTextIcon, ClipboardDocumentListIcon, BookOpenIcon, BanknotesIcon } from "@heroicons/react/24/outline";
 import { useUser, useUserPlan, useBalance } from '@/contexts/UserContext';
 import { useEffect } from 'react';
 
@@ -13,6 +13,11 @@ const toolsItems = [
     name: "Midjourney",
     href: "/app/midjourney",
     icon: <svg className="w-5 h-5 text-purple-600" fill="currentColor" viewBox="0 0 24 24"><path d="M3 18h18v2H3v-2zm16-4H5l-2-8h18l-2 8zM7 8l1.5-6h7L17 8H7z"/><path d="M12 4l-1 4h2l-1-4z" fill="currentColor"/></svg>,
+  },
+  {
+    name: "Credit Balance", 
+    href: "/app/credit-balance",
+    icon: <CurrencyDollarIcon className="w-5 h-5" />
   },
   // {
   //   name: "Create Video",
@@ -49,13 +54,13 @@ const apiLogsItems = [
 const billingItems = [
   {
     name: "Subscription",
-    href: "/app/subscription", 
+    href: "/app/subscription",
     icon: <CreditCardIcon className="w-5 h-5" />
   },
   {
-    name: "Credit Balance", 
-    href: "/app/credit-balance",
-    icon: <CurrencyDollarIcon className="w-5 h-5" />
+    name: "Payment Methods",
+    href: "/app/payment-methods",
+    icon: <BanknotesIcon className="w-5 h-5" />
   },
   {
     name: "Invoices",

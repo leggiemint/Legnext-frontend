@@ -66,6 +66,14 @@ export default function StripePaymentForm({
         clientSecret,
         confirmParams: {
           return_url: `${window.location.origin}/app`,
+          payment_method_data: {
+            billing_details: {
+              phone: '', // Required when phone field is set to 'never'
+              address: {
+                line1: '', // Required when address is set to 'never'
+              },
+            },
+          },
         },
         redirect: 'if_required', // 避免自动重定向
       });
@@ -160,7 +168,9 @@ export default function StripePaymentForm({
                     name: 'auto',
                     email: 'auto',
                     phone: 'never',
-                    address: 'never',
+                    address: {
+                      country: 'auto', // Let Stripe auto-detect country from card
+                    },
                   },
                 },
                 terms: {

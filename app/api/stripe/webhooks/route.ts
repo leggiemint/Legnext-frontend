@@ -17,6 +17,8 @@ const eventHandlers = {
   'customer.subscription.updated': handleSubscriptionUpdated,
   'customer.subscription.deleted': handleSubscriptionDeleted,
   'payment_intent.succeeded': handlePaymentIntentSucceeded,
+  'setup_intent.created': handleSetupIntentCreated,
+  'setup_intent.succeeded': handleSetupIntentSucceeded,
 };
 
 export async function POST(request: NextRequest) {
@@ -445,4 +447,51 @@ async function handlePaymentIntentSucceeded(event: Stripe.Event) {
   } else {
     log.error(`❌ [Webhook] User has no backend account ID`);
   }
+}
+
+/**
+ * 处理SetupIntent创建事件
+ */
+async function handleSetupIntentCreated(event: Stripe.Event) {
+  const setupIntent = event.data.object as Stripe.SetupIntent;
+
+  log.info(`🔧 [Webhook] SetupIntent created: ${setupIntent.id}`);
+
+  // 对于SetupIntent创建事件，我们通常不需要做特别处理
+  // 主要的逻辑会在setup_intent.succeeded事件中处理
+
+  // 记录webhook事件到日志 (webhookEvent表暂未在schema中定义)
+  log.info(`📝 [Webhook] SetupIntent created logged: ${setupIntent.id}`);
+}
+
+/**
+ * 处理SetupIntent成功事件
+ */
+async function handleSetupIntentSucceeded(event: Stripe.Event) {
+  const setupIntent = event.data.object as Stripe.SetupIntent;
+
+  log.info(`✅ [Webhook] SetupIntent succeeded: ${setupIntent.id}`);
+
+  // 检查SetupIntent的类型
+  const intentType = setupIntent.metadata?.type;
+
+  if (intentType === 'payment_method_setup') {
+    // 用于支付方式管理的SetupIntent
+    log.info(`💳 [Webhook] Payment method setup completed for customer: ${setupIntent.customer}`);
+
+    // 这里可以添加额外的逻辑，比如：
+    // - 发送确认邮件
+    // - 更新用户的支付方式状态
+    // - 触发其他业务逻辑
+
+  } else if (intentType === 'subscription_setup') {
+    // 用于订阅的SetupIntent
+    log.info(`🔄 [Webhook] Subscription setup completed, setup_intent_id: ${setupIntent.id}`);
+
+    // 订阅相关的SetupIntent通常会在confirm-subscription API中处理
+    // 这里只是记录日志
+  }
+
+  // 记录成功事件到日志 (webhookEvent表暂未在schema中定义)
+  log.info(`✅ [Webhook] SetupIntent succeeded logged: ${setupIntent.id}`);
 }
