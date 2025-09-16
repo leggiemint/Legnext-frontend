@@ -14,11 +14,6 @@ const toolsItems = [
     href: "/app/midjourney",
     icon: <svg className="w-5 h-5 text-purple-600" fill="currentColor" viewBox="0 0 24 24"><path d="M3 18h18v2H3v-2zm16-4H5l-2-8h18l-2 8zM7 8l1.5-6h7L17 8H7z"/><path d="M12 4l-1 4h2l-1-4z" fill="currentColor"/></svg>,
   },
-  {
-    name: "Credit Balance", 
-    href: "/app/credit-balance",
-    icon: <CurrencyDollarIcon className="w-5 h-5" />
-  },
   // {
   //   name: "Create Video",
   //   href: "/app/create-video",
@@ -52,6 +47,11 @@ const apiLogsItems = [
 
 // Billing组菜单项
 const billingItems = [
+  {
+    name: "Credit Balance", 
+    href: "/app/credit-balance",
+    icon: <CurrencyDollarIcon className="w-5 h-5" />
+  },
   {
     name: "Subscription",
     href: "/app/subscription",
