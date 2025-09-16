@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { KeyIcon, CreditCardIcon, CurrencyDollarIcon, DocumentTextIcon, ClipboardDocumentListIcon, BookOpenIcon } from "@heroicons/react/24/outline";
+import { KeyIcon, CreditCardIcon, CurrencyDollarIcon, DocumentTextIcon, ClipboardDocumentListIcon, BookOpenIcon, BanknotesIcon } from "@heroicons/react/24/outline";
 import { useUser, useUserPlan, useBalance } from '@/contexts/UserContext';
 import { useEffect } from 'react';
 
@@ -48,14 +48,19 @@ const apiLogsItems = [
 // Billing组菜单项
 const billingItems = [
   {
-    name: "Subscription",
-    href: "/app/subscription", 
-    icon: <CreditCardIcon className="w-5 h-5" />
-  },
-  {
     name: "Credit Balance", 
     href: "/app/credit-balance",
     icon: <CurrencyDollarIcon className="w-5 h-5" />
+  },
+  {
+    name: "Subscription",
+    href: "/app/subscription",
+    icon: <CreditCardIcon className="w-5 h-5" />
+  },
+  {
+    name: "Payment Methods",
+    href: "/app/payment-methods",
+    icon: <BanknotesIcon className="w-5 h-5" />
   },
   {
     name: "Invoices",
