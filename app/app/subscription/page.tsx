@@ -60,6 +60,54 @@ export default function SubscriptionPage() {
   // Check if subscription is set to cancel at period end
   const subscriptionCanceled = activeSubscription?.cancel_at_period_end || false;
 
+  // Specific customer subscription expiration reminder configuration
+  const getSubscriptionExpirationNotice = (userEmail: string) => {
+    // Configuration for specific emails with their expiration dates
+    const affectedEmails = {
+      'm.t.pham@kardiachain.io': {
+        expirationDate: '2025-10-16', // Current Period End from CSV
+        message: 'Due to system upgrade, your subscription was automatically canceled. Please resubscribe to continue using Pro features.'
+      },
+      'info@leonardopicollo.com': {
+        expirationDate: '2025-10-15',
+        message: 'Due to system upgrade, your subscription was automatically canceled. Please resubscribe to continue using Pro features.'
+      },
+      'wangbolwq@gmail.com': {
+        expirationDate: '2025-10-14',
+        message: 'Due to system upgrade, your subscription was automatically canceled. Please resubscribe to continue using Pro features.'
+      },
+      'timboooxd33@gmail.com': {
+        expirationDate: '2025-10-14',
+        message: 'Due to system upgrade, your subscription was automatically canceled. Please resubscribe to continue using Pro features.'
+      },
+      'huikai.work@gmail.com': {
+        expirationDate: '2025-10-13',
+        message: 'Due to system upgrade, your subscription was automatically canceled. Please resubscribe to continue using Pro features.'
+      },
+      'emolgroupste@gmail.com': {
+        expirationDate: '2025-10-13',
+        message: 'Due to system upgrade, your subscription was automatically canceled. Please resubscribe to continue using Pro features.'
+      },
+    };
+
+    const userConfig = affectedEmails[userEmail as keyof typeof affectedEmails];
+    
+    if (userConfig) {
+      return {
+        show: true,
+        title: 'System Upgrade Notice',
+        message: userConfig.message,
+        expirationDate: userConfig.expirationDate,
+        urgent: false,
+      };
+    }
+
+    return { show: false };
+  };
+
+  const expirationNotice = session?.user?.email ?
+    getSubscriptionExpirationNotice(session.user.email) : { show: false };
+
   // Load subscriptions when component mounts or user changes
   useEffect(() => {
     if (session?.user) {
@@ -80,7 +128,7 @@ export default function SubscriptionPage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          immediate: false // 在周期结束时取消
+          immediate: false // Cancel at period end
         })
       });
 
@@ -125,13 +173,13 @@ export default function SubscriptionPage() {
     try {
       console.log("🔄 Reactivating subscription...");
       
-      // 调用恢复订阅API
+      // Call resume subscription API
       const response = await fetch('/api/stripe/subscription/resume', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({}) // API会自动查找需要恢复的订阅
+        body: JSON.stringify({}) // API will automatically find subscriptions to resume
       });
 
       const result = await response.json();
@@ -144,7 +192,7 @@ export default function SubscriptionPage() {
       
       toast.success("Subscription reactivated! Your subscription will continue as normal.");
       
-      // 刷新用户数据和订阅状态
+      // Refresh user data and subscription status
       await refreshAll();
       await fetchSubscriptions();
       
@@ -198,6 +246,32 @@ export default function SubscriptionPage() {
                 <div className="h-4 bg-gray-300 rounded w-20"></div>
                 <div className="h-6 bg-gray-300 rounded w-32"></div>
                 <div className="h-6 bg-gray-300 rounded-full w-20"></div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* System upgrade notice */}
+        {session && expirationNotice.show && isProUser && (
+          <div className="bg-blue-50 border border-blue-200 p-4 mb-6 rounded-lg">
+            <div className="flex items-start">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-blue-600 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3 flex-1">
+                <h3 className="text-sm font-medium text-blue-800 mb-1">
+                  {expirationNotice.title}
+                </h3>
+                <p className="text-blue-700 text-sm">
+                  {expirationNotice.message}
+                </p>
+                {expirationNotice.expirationDate && (
+                  <p className="text-blue-600 text-xs mt-2">
+                    Expiration date: {expirationNotice.expirationDate}
+                  </p>
+                )}
               </div>
             </div>
           </div>
