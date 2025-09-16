@@ -1,6 +1,7 @@
 import MainLayout from "@/components/MainLayout";
 import { getSEOTags } from "@/libs/seo";
-export const dynamic = 'force-dynamic';
+// 静态内容页面，可以缓存
+// export const dynamic = 'force-dynamic';
 
 export const metadata = getSEOTags({
   title: "Refund Policy | Legnext - Service Terms and Conditions",

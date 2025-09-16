@@ -1,7 +1,8 @@
 import MainLayout from "@/components/MainLayout";
 import { getSEOTags } from "@/libs/seo";
 
-export const dynamic = 'force-dynamic';
+// 文档页面是静态内容，可以缓存
+// export const dynamic = 'force-dynamic';
 
 export const metadata = getSEOTags({
   title: "Midjourney Upscale | AI Image Enhancement API",

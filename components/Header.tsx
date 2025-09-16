@@ -184,7 +184,7 @@ const HeaderContent = () => {
   );
 
   return (
-    <header className="sticky top-0 z-40 flex w-full p-0 justify-center border-b border-gray-200/20 bg-white/60 backdrop-blur-xl transition-all">
+    <header className="sticky top-0 z-40 flex w-full p-0 justify-center border-b border-gray-200/20 bg-transparent backdrop-blur-xl transition-all">
       <div className="container flex justify-between items-center py-3 h-12 md:py-4 md:h-16 min-w-0">
         {/* Left Side: Logo */}
         <div className="flex items-center">

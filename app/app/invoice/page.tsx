@@ -254,16 +254,6 @@ export default function InvoicePage() {
 
                       {/* Invoice Actions */}
                       <div className="flex items-center gap-3 mt-3">
-                        {invoice.hosted_invoice_url && (
-                          <a
-                            href={invoice.hosted_invoice_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-purple-600 hover:text-purple-700 text-sm font-medium"
-                          >
-                            View Invoice
-                          </a>
-                        )}
                         {invoice.invoice_pdf && (
                           <a
                             href={invoice.invoice_pdf}

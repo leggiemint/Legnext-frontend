@@ -478,12 +478,11 @@ export default function SubscriptionPage() {
       <TopUpModal
         isOpen={showTopUp}
         onClose={() => setShowTopUp(false)}
-        buttonText="Get credits"
       />
 
       {/* Cancel Subscription Confirmation Modal */}
       {showCancelModal && (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
+        <div className="fixed inset-0 z-[60] overflow-y-auto">
           <div className="flex min-h-screen items-center justify-center p-4">
             {/* Backdrop */}
             <div 

@@ -11,7 +11,8 @@ import TelegramCommunity from "@/components/DiscordCommunity";
 import MainLayout from "@/components/MainLayout";
 import ImageShowcase from "@/components/ImageShowcase"
 
-export const dynamic = 'force-dynamic';
+// 移除 force-dynamic 以启用静态化和缓存
+// export const dynamic = 'force-dynamic';
 
 export default function HomePage() {
   return (

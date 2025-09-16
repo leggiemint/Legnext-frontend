@@ -40,18 +40,19 @@ const PricingSection = () => {
             <div key={plan.priceId || `plan-${index}`} className="pricing-card">
               <div className="relative w-full max-w-lg mx-auto">
                 {plan.isFeatured && (
-                  <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20">
-                    <span className="badge text-xs text-white font-semibold border-0 px-3 py-1 rounded-full" style={{ backgroundColor: config.colors.main }}>
-                      POPULAR
-                    </span>
-                  </div>
-                )}
-
-                {plan.isFeatured && (
                   <div className="absolute -inset-[1px] rounded-[9px] z-10" style={{ backgroundColor: config.colors.main }}></div>
                 )}
 
                 <div className="relative flex flex-col h-full gap-5 lg:gap-8 z-10 bg-white p-8 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300 border border-gray-100">
+                  {/* Popular Tag - positioned at the top of the card */}
+                  {plan.isFeatured && (
+                    <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20">
+                      <span className="badge text-xs text-white font-semibold border-0 px-3 py-1 rounded-full" style={{ backgroundColor: config.colors.main }}>
+                        POPULAR
+                      </span>
+                    </div>
+                  )}
+                  
                   <div className="flex justify-between items-center gap-4">
                     <div>
                       <p className="text-lg lg:text-xl font-bold text-gray-900">{plan.name}</p>
@@ -162,10 +163,9 @@ const PricingSection = () => {
                               Already Subscribed
                             </div>
                           ) : (
-                            <ButtonCheckout 
-                              priceId={plan.priceId} 
+                            <ButtonCheckout
+                              priceId={plan.priceId}
                               isFree={plan.isFree}
-                              mode="subscription"
                             />
                           )}
                         </div>
