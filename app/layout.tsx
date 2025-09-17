@@ -8,6 +8,7 @@ import ClientLayout from "@/components/LayoutClient";
 import { AuthProvider } from "@/components/AuthProvider";
 import { UserContextProvider } from "@/contexts/UserContext";
 import PlanSyncChecker from "@/components/PlanSyncChecker";
+import GetReditusTracker from "@/components/GetReditusTracker";
 import ClientOnly from "@/components/ClientOnly";
 import config from "@/config";
 import "./globals.css";
@@ -50,8 +51,10 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       {config.domainName && (
         <head>
           <PlausibleProvider domain={config.domainName} />
-          {/* Endorsely Tracking Script */}
-          <script async src="https://assets.endorsely.com/endorsely.js" data-endorsely="fe0cc7e9-20b1-4fff-af79-349362801659"></script>
+          {/* GetReditus Pageview Tracking Script */}
+          <script dangerouslySetInnerHTML={{
+            __html: `(function (w, d, s, p, t) { w.gr = w.gr || function () { w.gr.ce = 60; w.gr.q = w.gr.q || []; w.gr.q.push(arguments); }; p = d.getElementsByTagName(s)[0]; t = d.createElement(s); t.async = true; t.src = "https://script.getreditus.com/v2.js"; p.parentNode.insertBefore(t, p); })(window, document, "script"); gr("initCustomer", "cd6dbbde-a066-4d60-b761-ebf78b254c4e"); gr("track", "pageview");`
+          }} />
           {/* Favicon */}
           <link rel="icon" type="image/x-icon" href="/favicon/favicon.ico" />
           <link rel="icon" type="image/png" sizes="16x16" href="/favicon/favicon-16x16.png" />
@@ -68,6 +71,10 @@ export default function RootLayout({ children }: { children: ReactNode }) {
               {/* Plan同步检查组件 - 全局监控用户plan状态 */}
               <ClientOnly>
                 <PlanSyncChecker syncInterval={5 * 60 * 1000} syncOnlyWhenVisible={true} />
+              </ClientOnly>
+              {/* GetReditus 转化跟踪组件 */}
+              <ClientOnly>
+                <GetReditusTracker />
               </ClientOnly>
               {children}
             </UserContextProvider>
