@@ -1,5 +1,7 @@
 import { prisma } from '@/libs/prisma';
 import { backendApiClient } from '@/libs/backend-api-client';
+import { sendFeishuMessage } from '@/libs/feishu';
+import { log } from '@/libs/logger';
 
 export interface UserWithProfile {
   id: string;
@@ -437,6 +439,23 @@ export async function createUserProfileWithBackend(
           ((finalUserData.profile.preferences as any).initApiKey as string).substring(0, 8) + '...' : null,
       hasPaymentCustomer: !!finalUserData?.paymentCustomer
     });
+
+    if (finalUserData) {
+      try {
+        await sendFeishuMessage({
+          event: 'user.signup',
+          title: 'New Legnext User Registered',
+          text: [
+            `Email: ${email}`,
+            `User ID: ${userId}`,
+            `Plan: ${finalUserData.profile?.plan ?? plan}`,
+            `Backend Account: ${finalUserData.profile?.backendAccountId ?? 'N/A'}`,
+          ].join('\n'),
+        });
+      } catch (notifyError) {
+        log.error('❌ [Feishu] Failed to send signup notification', notifyError);
+      }
+    }
 
     return finalUserData;
   } catch (error) {

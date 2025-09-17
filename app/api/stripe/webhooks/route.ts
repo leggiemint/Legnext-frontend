@@ -5,6 +5,7 @@ import { backendApiClient } from '@/libs/backend-api-client';
 import { getUserWithProfile, updateUserPlan } from '@/libs/user-helpers';
 import { prisma } from '@/libs/prisma';
 import { log } from '@/libs/logger';
+import { sendFeishuMessage } from '@/libs/feishu';
 import Stripe from 'stripe';
 
 export const dynamic = 'force-dynamic';
@@ -246,6 +247,22 @@ async function handleSubscriptionCreation(invoice: Stripe.Invoice) {
     }
   } else {
     log.warn(`User ${user.id} has no backend account ID, skipping backend sync`);
+  }
+
+  try {
+    const amount = invoice.total ? (invoice.total / 100).toFixed(2) : 'Unknown';
+    await sendFeishuMessage({
+      event: 'subscription.created',
+      title: 'New Pro Subscription',
+      text: [
+        `User: ${user.email || user.id}`,
+        `Stripe Invoice: ${invoice.id}`,
+        `Amount: $${amount}`,
+        `Status: ${invoice.status ?? 'unknown'}`,
+      ].join('\n'),
+    });
+  } catch (notifyError) {
+    log.error('❌ [Feishu] Failed to send subscription notification', notifyError);
   }
 }
 
