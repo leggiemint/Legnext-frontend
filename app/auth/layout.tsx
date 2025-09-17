@@ -1,6 +1,5 @@
 import { ReactNode } from "react";
 import { Viewport } from "next";
-import PlausibleProvider from "next-plausible";
 import { getSEOTags } from "@/libs/seo";
 import ClientLayout from "@/components/LayoutClient";
 import config from "@/config";
@@ -37,22 +36,10 @@ export const metadata = getSEOTags({
 
 export default function AuthLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" data-theme={config.colors.theme} className="font-sans">
-      {config.domainName && (
-        <head>
-          <PlausibleProvider domain={config.domainName} />
-          <link rel="icon" type="image/x-icon" href="/favicon/favicon.ico" />
-          <link rel="icon" type="image/png" sizes="16x16" href="/favicon/favicon-16x16.png" />
-          <link rel="icon" type="image/png" sizes="32x32" href="/favicon/favicon-32x32.png" />
-          <link rel="apple-touch-icon" sizes="180x180" href="/favicon/apple-touch-icon.png" />
-          <link rel="manifest" href="/favicon/site.webmanifest" />
-        </head>
-      )}
-      <body className="bg-gray-50 text-gray-900">
-        <ClientLayout>
-          {children}
-        </ClientLayout>
-      </body>
-    </html>
+    <div className="bg-gray-50 text-gray-900 min-h-screen">
+      <ClientLayout>
+        {children}
+      </ClientLayout>
+    </div>
   );
 }

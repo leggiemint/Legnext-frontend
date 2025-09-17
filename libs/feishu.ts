@@ -34,9 +34,9 @@ export async function sendFeishuMessage({ text, event, title }: FeishuMessageOpt
       },
       body: JSON.stringify({
         msg_type: 'text',
-        content: JSON.stringify({
+        content: {
           text: mergedText,
-        }),
+        },
       }),
     });
 

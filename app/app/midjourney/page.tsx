@@ -578,6 +578,7 @@ export default function CreatePage() {
         </div>
       </div>
 
+
       {/* Login Modal */}
       <LoginModal 
         isOpen={showLoginModal}

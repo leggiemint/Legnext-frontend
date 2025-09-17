@@ -8,6 +8,8 @@ import Link from "next/link";
 import { signOut } from "next-auth/react";
 import logo from "@/app/logo.svg";
 import UserAvatar from "./UserAvatar";
+import { isReferralWidgetLoaded, showReferralWidget, waitForGetReditus } from "@/libs/getreditus";
+import { useUser } from "@/contexts/UserContext";
 
 const links: {
   href: string;
@@ -24,6 +26,10 @@ const links: {
   {
     href: "/pricing",
     label: "Pricing",
+  },
+  {
+    href: "#affiliate",
+    label: "Affiliate",
   },
 ];
 
@@ -47,7 +53,90 @@ const HeaderContent = () => {
   const searchParams = useSearchParams();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState<boolean>(false);
-  const isAuthenticated = false;
+  const [isClient, setIsClient] = useState(false);
+  const { user, isLoading } = useUser();
+  
+  // 确保客户端渲染
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  // 只有在客户端渲染完成且用户数据加载完成后才判断认证状态
+  const isAuthenticated = isClient && !isLoading && !!user;
+
+  // 主动加载推荐小部件的函数
+  const loadReferralWidget = async () => {
+    if (!isClient) return false;
+    
+    try {
+      // 等待 GetReditus 脚本加载完成
+      const isGetReditusLoaded = await waitForGetReditus(10000);
+      if (!isGetReditusLoaded) {
+        throw new Error('GetReditus script not loaded within timeout');
+      }
+
+      // 获取认证令牌
+      const authResponse = await fetch('/api/getreditus/auth-token', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!authResponse.ok) {
+        const errorData = await authResponse.json();
+        throw new Error(errorData.error || 'Failed to get auth token');
+      }
+
+      const { auth_token, product_id } = await authResponse.json();
+
+      // 准备用户详细信息
+      const userDetails = {
+        email: user?.email || '',
+        first_name: user?.name?.split(' ')[0] || '',
+        last_name: user?.name?.split(' ').slice(1).join(' ') || '',
+        company_id: user?.id || '',
+        company_name: 'Legnext User',
+      };
+
+      // 调用 GetReditus 加载推荐小部件
+      if (typeof window !== 'undefined' && window.gr) {
+        window.gr('loadReferralWidget', {
+          product_id,
+          auth_token,
+          user_details: userDetails,
+        });
+
+        // 等待推荐小部件初始化
+        let attempts = 0;
+        const maxAttempts = 10;
+        const checkInterval = 500;
+
+        const checkWidget = () => {
+          attempts++;
+          
+          if (window.referralWidget && typeof window.referralWidget.show === 'function') {
+            return true;
+          }
+          
+          if (attempts < maxAttempts) {
+            setTimeout(checkWidget, checkInterval);
+            return false;
+          }
+          return false;
+        };
+
+        // 开始检查
+        setTimeout(checkWidget, 100);
+        return true;
+      } else {
+        throw new Error('GetReditus gr function not available');
+      }
+    } catch (error) {
+      console.error('Error loading referral widget:', error);
+      return false;
+    }
+  };
 
   // Close menus when the route changes
   useEffect(() => {
@@ -128,14 +217,14 @@ const HeaderContent = () => {
       <div className="hidden md:block relative">
         <button
           onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
-          className="user-avatar-btn flex items-center justify-center w-10 h-10 rounded-full border-2 border-purple-600 bg-white hover:bg-gray-50 transition-colors duration-200 p-0"
+          className="flex relative justify-center items-center box-border overflow-hidden align-middle outline-none w-8 h-8 text-tiny bg-cyan-500 text-white rounded-full z-10 transition-transform hover:scale-105 p-0"
           aria-label="User menu"
         >
           <UserAvatar
-            src={null}
-            name="User"
-            email=""
-            size="md"
+            src={user?.image}
+            name={user?.name}
+            email={user?.email}
+            size="sm"
             className="border-0"
           />
         </button>
@@ -146,22 +235,38 @@ const HeaderContent = () => {
             <div className="px-4 py-3 border-b border-gray-100">
               <div className="flex items-center gap-3">
                 <UserAvatar
-                  src={null}
-                  name="User"
-                  email=""
+                  src={user?.image}
+                  name={user?.name}
+                  email={user?.email}
                   size="md"
                 />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-gray-900 truncate">
-                    User
+                    {user?.name || "User"}
                   </p>
                   <p className="text-xs text-gray-500 truncate">
-                    
+                    {user?.email}
                   </p>
                 </div>
               </div>
             </div>
-            <div className="border-t border-gray-100">
+            {/* Menu Items */}
+            <div className="py-2">
+              <Link 
+                href="/app" 
+                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                onClick={() => setIsUserDropdownOpen(false)}
+              >
+                Dashboard
+              </Link>
+              <Link 
+                href="/app/api-keys" 
+                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                onClick={() => setIsUserDropdownOpen(false)}
+              >
+                API Keys
+              </Link>
+              <hr className="my-2 border-gray-200" />
               <button
                 onClick={async () => {
                   try {
@@ -172,9 +277,9 @@ const HeaderContent = () => {
                     window.location.href = "/";
                   }
                 }}
-                className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 transition-colors"
               >
-                Sign out
+                Sign Out
               </button>
             </div>
           </div>
@@ -211,6 +316,61 @@ const HeaderContent = () => {
         <div className="hidden md:flex items-center gap-4 overflow-x-auto absolute left-1/2 transform -translate-x-1/2">
           {links.map((link) => {
             const isExternal = link.href.startsWith('http');
+            const isAffiliate = link.href === '#affiliate';
+            
+            if (isAffiliate) {
+              if (!config.getreditus?.enabled) {
+                return null;
+              }
+
+              return isAuthenticated ? (
+                <button
+                  key={link.href}
+                  onClick={async () => {
+                    if (!isClient) return;
+                    
+                    try {
+                      // 先检查是否已加载
+                      if (isReferralWidgetLoaded()) {
+                        showReferralWidget();
+                        return;
+                      }
+                      
+                      // 如果未加载，主动加载推荐小部件
+                      console.log('Loading referral widget...');
+                      const loaded = await loadReferralWidget();
+                      
+                      if (loaded) {
+                        // 等待一下让推荐小部件完全初始化
+                        setTimeout(() => {
+                          if (isReferralWidgetLoaded()) {
+                            showReferralWidget();
+                          }
+                        }, 1000);
+                      } else {
+                        console.warn('Failed to load referral widget');
+                      }
+                    } catch (error) {
+                      console.error('Error loading referral widget:', error);
+                    }
+                  }}
+                  className="flex items-center text-sm lg:text-[1rem] font-medium transition-colors text-gray-600 hover:text-gray-900 whitespace-nowrap flex-shrink-0"
+                  title={link.label}
+                >
+                  {link.label}
+                </button>
+              ) : (
+                <Link
+                  href="/api/auth/signin"
+                  key={link.href}
+                  className="flex items-center text-sm lg:text-[1rem] font-medium transition-colors text-gray-600 hover:text-gray-900 whitespace-nowrap flex-shrink-0"
+                  title={`${link.label} (Login required)`}
+                >
+                  {link.label}
+                </Link>
+              );
+            }
+            
             return isExternal ? (
               <a
                 href={link.href}
@@ -299,6 +459,65 @@ const HeaderContent = () => {
           <nav className="grid grid-flow-row auto-rows-max text-sm">
             {links.map((link) => {
               const isExternal = link.href.startsWith('http');
+              const isAffiliate = link.href === '#affiliate';
+              
+              if (isAffiliate) {
+                if (!config.getreditus?.enabled) {
+                  return null;
+                }
+
+                return isAuthenticated ? (
+                  <button
+                    key={link.href}
+                    onClick={async () => {
+                      if (!isClient) return;
+                      
+                      try {
+                        // 先检查是否已加载
+                        if (isReferralWidgetLoaded()) {
+                          showReferralWidget();
+                          setIsMobileMenuOpen(false);
+                          return;
+                        }
+                        
+                        // 如果未加载，主动加载推荐小部件
+                        console.log('Loading referral widget...');
+                        const loaded = await loadReferralWidget();
+                        
+                        if (loaded) {
+                          // 等待一下让推荐小部件完全初始化
+                          setTimeout(() => {
+                            if (isReferralWidgetLoaded()) {
+                              showReferralWidget();
+                            }
+                          }, 1000);
+                        } else {
+                          console.warn('Failed to load referral widget');
+                        }
+                        setIsMobileMenuOpen(false);
+                      } catch (error) {
+                        console.error('Error loading referral widget:', error);
+                        setIsMobileMenuOpen(false);
+                      }
+                    }}
+                    className="flex items-center p-2 w-full text-sm font-medium rounded-md hover:bg-gray-100 transition-colors mobile-menu-link"
+                    title={link.label}
+                  >
+                    {link.label}
+                  </button>
+                ) : (
+                  <Link
+                    href="/api/auth/signin"
+                    key={link.href}
+                    className="flex items-center p-2 w-full text-sm font-medium rounded-md hover:bg-gray-100 transition-colors mobile-menu-link"
+                    title={`${link.label} (Login required)`}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    {link.label}
+                  </Link>
+                );
+              }
+              
               return isExternal ? (
                 <a
                   href={link.href}
@@ -349,26 +568,36 @@ const HeaderContent = () => {
                   <div className="px-2 py-1 border-b border-gray-100">
                     <div className="flex items-center gap-3">
                       <UserAvatar
-                        src={null}
-                        name="User"
-                        email=""
+                        src={user?.image}
+                        name={user?.name}
+                        email={user?.email}
                         size="sm"
                       />
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-gray-900 truncate">
-                          User
+                          {user?.name || "User"}
                         </p>
                         <p className="text-xs text-gray-500 truncate">
-                          
+                          {user?.email}
                         </p>
                       </div>
                     </div>
                   </div>
-                  <Link href="/app/midjourney" className="w-full">
-                    <button className="w-full inline-flex items-center justify-center px-4 py-2 bg-purple-600 text-white font-medium rounded-lg hover:bg-purple-600/90 transition-colors duration-200 shadow-sm">
-                      Dashboard
-                    </button>
+                  <Link 
+                    href="/app" 
+                    className="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors rounded-md"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    Dashboard
                   </Link>
+                  <Link 
+                    href="/app/api-keys" 
+                    className="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors rounded-md"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    API Keys
+                  </Link>
+                  <hr className="my-2 border-gray-200" />
                   <button
                     onClick={async () => {
                       try {
@@ -379,9 +608,9 @@ const HeaderContent = () => {
                         window.location.href = "/";
                       }
                     }}
-                    className="w-full inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-background bg-red-100 text-red-700 hover:bg-red-200 h-9 px-3"
+                    className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 transition-colors rounded-md"
                   >
-                    Sign out
+                    Sign Out
                   </button>
                 </div>
               ) : (

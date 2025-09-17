@@ -267,15 +267,6 @@ export function UserContextProvider({ children }: { children: React.ReactNode })
     refreshAll,
   };
 
-  // 服务器端渲染时返回基础 Provider
-  if (!isClient) {
-    return (
-      <UserContext.Provider value={contextValue}>
-        {children}
-      </UserContext.Provider>
-    );
-  }
-
   return (
     <UserContext.Provider value={contextValue}>
       {children}

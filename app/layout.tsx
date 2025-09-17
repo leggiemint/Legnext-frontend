@@ -1,5 +1,6 @@
 import { ReactNode } from "react";
 import { Viewport } from "next";
+import Script from "next/script";
 import PlausibleProvider from "next-plausible";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
@@ -48,22 +49,28 @@ export const metadata = getSEOTags({
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" data-theme={config.colors.theme} className="font-sans">
-      {config.domainName && (
-        <head>
-          <PlausibleProvider domain={config.domainName} />
-          {/* GetReditus Pageview Tracking Script */}
-          <script dangerouslySetInnerHTML={{
-            __html: `(function (w, d, s, p, t) { w.gr = w.gr || function () { w.gr.ce = 60; w.gr.q = w.gr.q || []; w.gr.q.push(arguments); }; p = d.getElementsByTagName(s)[0]; t = d.createElement(s); t.async = true; t.src = "https://script.getreditus.com/v2.js"; p.parentNode.insertBefore(t, p); })(window, document, "script"); gr("initCustomer", "cd6dbbde-a066-4d60-b761-ebf78b254c4e"); gr("track", "pageview");`
-          }} />
-          {/* Favicon */}
-          <link rel="icon" type="image/x-icon" href="/favicon/favicon.ico" />
-          <link rel="icon" type="image/png" sizes="16x16" href="/favicon/favicon-16x16.png" />
-          <link rel="icon" type="image/png" sizes="32x32" href="/favicon/favicon-32x32.png" />
-          <link rel="apple-touch-icon" sizes="180x180" href="/favicon/apple-touch-icon.png" />
-          <link rel="manifest" href="/favicon/site.webmanifest" />
-        </head>
-      )}
+      <head>
+        {/* Favicon */}
+        <link rel="icon" type="image/x-icon" href="/favicon/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon/favicon-16x16.png" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon/favicon-32x32.png" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/favicon/apple-touch-icon.png" />
+        <link rel="manifest" href="/favicon/site.webmanifest" />
+      </head>
       <body className="bg-white text-gray-900">
+        {/* Plausible Analytics */}
+        {config.domainName && <PlausibleProvider domain={config.domainName} />}
+        
+        {config.getreditus?.enabled ? (
+          <Script
+            id="getreditus-script"
+            strategy="afterInteractive"
+            dangerouslySetInnerHTML={{
+              __html: `(function (w, d, s, p, t) { w.gr = w.gr || function () { w.gr.ce = 60; w.gr.q = w.gr.q || []; w.gr.q.push(arguments); }; p = d.getElementsByTagName(s)[0]; t = d.createElement(s); t.async = true; t.src = "https://script.getreditus.com/v2.js"; p.parentNode.insertBefore(t, p); })(window, document, "script"); gr("initCustomer", "cd6dbbde-a066-4d60-b761-ebf78b254c4e"); gr("track", "pageview");`
+            }}
+          />
+        ) : null}
+        
         {/* ClientLayout contains all the client wrappers (Crisp chat support, toast messages, tooltips, etc.) */}
         <ClientLayout>
           <AuthProvider>
@@ -73,9 +80,11 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                 <PlanSyncChecker syncInterval={5 * 60 * 1000} syncOnlyWhenVisible={true} />
               </ClientOnly>
               {/* GetReditus 转化跟踪组件 */}
-              <ClientOnly>
-                <GetReditusTracker />
-              </ClientOnly>
+              {config.getreditus?.enabled ? (
+                <ClientOnly>
+                  <GetReditusTracker />
+                </ClientOnly>
+              ) : null}
               {children}
             </UserContextProvider>
           </AuthProvider>

@@ -40,6 +40,11 @@ export interface ConfigProps {
   mailgun?: {
     supportEmail?: string;
   };
+
+  // GetReditus 推荐程序配置
+  getreditus?: {
+    enabled?: boolean;
+  };
 }
 
 // Stripe计划接口

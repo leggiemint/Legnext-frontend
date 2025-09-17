@@ -65,6 +65,11 @@ export default function ImagesPage() {
   }, [session, status]);
 
   const formatDate = (dateString: string) => {
+    if (!isClient) {
+      // 服务器端渲染时返回一个占位符，避免水合错误
+      return 'Loading...';
+    }
+    
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', {
       year: 'numeric',
