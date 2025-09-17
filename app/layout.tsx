@@ -1,6 +1,8 @@
 import { ReactNode } from "react";
 import { Viewport } from "next";
 import PlausibleProvider from "next-plausible";
+import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import { getSEOTags } from "@/libs/seo";
 import ClientLayout from "@/components/LayoutClient";
 import { AuthProvider } from "@/components/AuthProvider";
@@ -71,6 +73,8 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             </UserContextProvider>
           </AuthProvider>
         </ClientLayout>
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );
