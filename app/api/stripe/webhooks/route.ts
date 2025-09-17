@@ -458,6 +458,24 @@ async function handlePaymentIntentSucceeded(event: Stripe.Event) {
       );
       
       log.info(`✅ [Webhook] Successfully added ${credits} credits to user account`);
+      
+      // 发送飞书通知
+      try {
+        const amount = (paymentIntent.amount / 100).toFixed(2);
+        await sendFeishuMessage({
+          event: 'payment.topup',
+          title: 'TopUp Payment Success',
+          text: [
+            `User: ${user.email || user.id}`,
+            `Payment Intent: ${paymentIntent.id}`,
+            `Amount: $${amount}`,
+            `Credits: ${credits}`,
+            `Status: ${paymentIntent.status}`,
+          ].join('\n'),
+        });
+      } catch (notifyError) {
+        log.error('❌ [Feishu] Failed to send topup notification', notifyError);
+      }
     } catch (error) {
       log.error(`❌ [Webhook] Failed to add credits to backend account:`, error);
     }
