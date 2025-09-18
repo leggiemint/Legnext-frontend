@@ -63,6 +63,9 @@ function CreditBalanceContent() {
       log.info('🔄 TopUp payment successful, refreshing data...');
       toast.success('Payment successful! Your credits have been added to your account.');
       
+      // 触发自定义事件，通知其他组件刷新
+      window.dispatchEvent(new CustomEvent('payment-success'));
+      
       // 延迟刷新以确保webhook处理完成
       setTimeout(() => {
         refreshCreditBalance();
@@ -152,6 +155,9 @@ function CreditBalanceContent() {
       log.info('✅ Code redeemed successfully:', result);
       
       toast.success(`Code redeemed successfully! Credits have been added to your account.`, { id: 'redeem' });
+      
+      // 触发自定义事件，通知其他组件刷新
+      window.dispatchEvent(new CustomEvent('payment-success'));
       
       // 刷新数据以显示新添加的credits
       setTimeout(() => {

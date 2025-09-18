@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/libs/next-auth';
 import { stripe } from '@/libs/stripe-client';
 import { getUserWithProfile } from '@/libs/user-helpers';
+import { withValidStripeCustomer } from '@/libs/stripe-utils';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,19 +20,25 @@ export async function GET() {
 
     // 获取用户信息
     const user = await getUserWithProfile(session.user.id);
-    if (!user?.paymentCustomer?.stripeCustomerId) {
-      return NextResponse.json({
-        subscriptions: [],
-        hasActiveSubscription: false,
-      });
+    if (!user?.email) {
+      return NextResponse.json(
+        { error: 'User profile not found' },
+        { status: 404 }
+      );
     }
 
-    // 获取客户的所有订阅
-    const subscriptions = await stripe.subscriptions.list({
-      customer: user.paymentCustomer.stripeCustomerId,
-      status: 'all',
-      expand: ['data.latest_invoice', 'data.items.data.price'],
-    });
+    // 使用强化的Stripe客户验证机制
+    const subscriptions = await withValidStripeCustomer(
+      session.user.id,
+      user.email,
+      async (customerId) => {
+        return await stripe.subscriptions.list({
+          customer: customerId,
+          status: 'all',
+          expand: ['data.latest_invoice', 'data.items.data.price'],
+        });
+      }
+    );
 
     // 格式化订阅数据
     const formattedSubscriptions = subscriptions.data.map(sub => ({

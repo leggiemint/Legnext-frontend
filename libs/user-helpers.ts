@@ -627,6 +627,7 @@ export async function updateUserPlan(userId: string, newPlan: 'free' | 'pro'): P
 
 /**
  * 获取或创建Stripe客户
+ * @deprecated 使用 getOrCreateStripeCustomerResilient 替代
  */
 export async function getOrCreateStripeCustomer(userId: string): Promise<string | null> {
   let paymentCustomer = await prisma.paymentCustomer.findUnique({

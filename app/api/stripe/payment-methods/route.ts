@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/libs/next-auth';
 import { stripe } from '@/libs/stripe-client';
-import { prisma } from '@/libs/prisma';
+import { getUserWithProfile } from '@/libs/user-helpers';
+import { withValidStripeCustomer } from '@/libs/stripe-utils';
 
 // GET: List customer's payment methods
 export async function GET() {
@@ -15,20 +16,26 @@ export async function GET() {
       );
     }
 
-    // Get customer from database
-    const paymentCustomer = await prisma.paymentCustomer.findUnique({
-      where: { userId: session.user.id },
-    });
-
-    if (!paymentCustomer?.stripeCustomerId) {
-      return NextResponse.json({ paymentMethods: [] });
+    // 获取用户信息
+    const user = await getUserWithProfile(session.user.id);
+    if (!user?.email) {
+      return NextResponse.json(
+        { error: 'User profile not found' },
+        { status: 404 }
+      );
     }
 
-    // Get payment methods from Stripe
-    const paymentMethods = await stripe.paymentMethods.list({
-      customer: paymentCustomer.stripeCustomerId,
-      type: 'card',
-    });
+    // 使用强化的Stripe客户验证机制获取支付方法
+    const paymentMethods = await withValidStripeCustomer(
+      session.user.id,
+      user.email,
+      async (customerId) => {
+        return await stripe.paymentMethods.list({
+          customer: customerId,
+          type: 'card',
+        });
+      }
+    );
 
     return NextResponse.json({
       paymentMethods: paymentMethods.data.map(pm => ({
@@ -83,27 +90,30 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    // Get customer from database
-    const paymentCustomer = await prisma.paymentCustomer.findUnique({
-      where: { userId: session.user.id },
-    });
-
-    if (!paymentCustomer?.stripeCustomerId) {
+    // 获取用户信息并验证Stripe客户
+    const user = await getUserWithProfile(session.user.id);
+    if (!user?.email) {
       return NextResponse.json(
-        { error: 'Customer not found' },
+        { error: 'User profile not found' },
         { status: 404 }
       );
     }
 
-    // Verify the payment method belongs to this customer
-    const paymentMethod = await stripe.paymentMethods.retrieve(paymentMethodId);
+    // 使用强化机制验证并删除支付方法
+    await withValidStripeCustomer(
+      session.user.id,
+      user.email,
+      async (customerId) => {
+        // Verify the payment method belongs to this customer
+        const paymentMethod = await stripe.paymentMethods.retrieve(paymentMethodId);
 
-    if (paymentMethod.customer !== paymentCustomer.stripeCustomerId) {
-      return NextResponse.json(
-        { error: 'Payment method not found' },
-        { status: 404 }
-      );
-    }
+        if (paymentMethod.customer !== customerId) {
+          throw new Error('Payment method not found');
+        }
+
+        return paymentMethod;
+      }
+    );
 
     // Detach the payment method from the customer
     await stripe.paymentMethods.detach(paymentMethodId);

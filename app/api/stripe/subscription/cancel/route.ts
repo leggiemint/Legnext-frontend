@@ -4,6 +4,7 @@ import { authOptions } from '@/libs/next-auth';
 import { cancelSubscription, cancelSubscriptionImmediately, getActiveSubscriptions } from '@/libs/stripe-client';
 import { getUserWithProfile, updateUserPlan } from '@/libs/user-helpers';
 import { backendApiClient } from '@/libs/backend-api-client';
+import { withValidStripeCustomer } from '@/libs/stripe-utils';
 
 export const dynamic = 'force-dynamic';
 
@@ -21,11 +22,11 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { subscriptionId, immediate = false } = body;
 
-    // 获取用户信息以验证订阅所有权
+    // 获取用户信息
     const user = await getUserWithProfile(session.user.id);
-    if (!user?.paymentCustomer?.stripeCustomerId) {
+    if (!user?.email) {
       return NextResponse.json(
-        { error: 'User has no payment customer' },
+        { error: 'User profile not found' },
         { status: 404 }
       );
     }
@@ -37,8 +38,14 @@ export async function POST(request: NextRequest) {
     // 如果没有提供subscriptionId，自动查找用户的活跃订阅
     if (!targetSubscriptionId) {
       console.log('🔍 [Cancel Subscription] No subscription ID provided, searching for active subscriptions...');
-      
-      const activeSubscriptions = await getActiveSubscriptions(user.paymentCustomer.stripeCustomerId);
+
+      const activeSubscriptions = await withValidStripeCustomer(
+        session.user.id,
+        user.email,
+        async (customerId) => {
+          return await getActiveSubscriptions(customerId);
+        }
+      );
       
       if (activeSubscriptions.length === 0) {
         return NextResponse.json(

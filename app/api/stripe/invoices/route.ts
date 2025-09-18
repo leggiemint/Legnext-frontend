@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/libs/next-auth';
 import { getCustomerInvoices } from '@/libs/stripe-client';
 import { getUserWithProfile } from '@/libs/user-helpers';
-
+import { withValidStripeCustomer } from '@/libs/stripe-utils';
 import { log } from '@/libs/logger';
 
 export const dynamic = 'force-dynamic';
@@ -25,16 +25,20 @@ export async function GET(request: NextRequest) {
 
     // 获取用户信息
     const user = await getUserWithProfile(session.user.id);
-    if (!user?.paymentCustomer?.stripeCustomerId) {
-      return NextResponse.json({
-        invoices: [],
-      });
+    if (!user?.email) {
+      return NextResponse.json(
+        { error: 'User profile not found' },
+        { status: 404 }
+      );
     }
 
-    // 获取客户发票
-    const invoices = await getCustomerInvoices(
-      user.paymentCustomer.stripeCustomerId,
-      limit
+    // 使用强化的Stripe客户验证机制获取发票
+    const invoices = await withValidStripeCustomer(
+      session.user.id,
+      user.email,
+      async (customerId) => {
+        return await getCustomerInvoices(customerId, limit);
+      }
     );
 
     // 格式化发票数据

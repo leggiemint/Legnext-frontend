@@ -4,8 +4,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { KeyIcon, CreditCardIcon, CurrencyDollarIcon, DocumentTextIcon, ClipboardDocumentListIcon, BookOpenIcon, BanknotesIcon, GiftIcon } from "@heroicons/react/24/outline";
-import { useUser, useUserPlan, useBalance } from '@/contexts/UserContext';
+import { useUser, useUserPlan } from '@/contexts/UserContext';
 import { useEffect } from 'react';
+import useSWR from 'swr';
 import ReferralButton from '@/components/ReferralButton';
 import GetReditusReferralWidget from '@/components/GetReditusReferralWidget';
 
@@ -78,22 +79,47 @@ const Sidebar = () => {
   const session = sessionData?.data;
   
   // 使用统一的用户状态管理
-  const { user, isLoading, balance, refreshBalance } = useUser();
+  const { user, isLoading } = useUser();
   const userPlan = useUserPlan();
-  const { isLoading: balanceLoading } = useBalance();
   const isProUser = userPlan === 'pro';
 
-  // 监听用户变化，刷新余额
-  useEffect(() => {
-    if (session?.user?.id && refreshBalance) {
-      refreshBalance();
+  // 使用与page.tsx相同的SWR机制获取credit-balance数据
+  const { data: creditBalanceData, error: creditBalanceError, isLoading: creditBalanceLoading, mutate: refreshCreditBalance } = useSWR(
+    session?.user?.email ? '/api/credit-balance' : null,
+    async (url) => {
+      const response = await fetch(url);
+      if (!response.ok) throw new Error('Failed to fetch credit balance data');
+      return response.json();
+    },
+    { 
+      refreshInterval: 30000, // 30秒刷新一次
+      revalidateOnFocus: true, // 窗口获得焦点时重新验证
+      revalidateOnReconnect: true, // 网络重连时重新验证
     }
-  }, [session?.user?.id, refreshBalance]);
+  );
 
+  // 监听支付成功事件，自动刷新余额
+  useEffect(() => {
+    const handlePaymentSuccess = () => {
+      // 延迟刷新以确保webhook处理完成
+      setTimeout(() => {
+        refreshCreditBalance();
+      }, 2000);
+    };
 
-  const displayBalance = balance?.availableBalance
-    ? balance.availableBalance.toFixed(2)
-    : '0.00';
+    // 监听自定义事件
+    window.addEventListener('payment-success', handlePaymentSuccess);
+    
+    return () => {
+      window.removeEventListener('payment-success', handlePaymentSuccess);
+    };
+  }, [refreshCreditBalance]);
+
+  // 处理credit-balance API返回的统一数据
+  const creditBalance = creditBalanceData;
+  const accountBalance = creditBalance?.balance || 0;
+
+  const displayBalance = accountBalance.toFixed(2);
 
   return (
     <div className="bg-white w-64 fixed left-0 top-16 h-[calc(100vh-4rem)] flex flex-col z-40 border-r border-gray-200">
