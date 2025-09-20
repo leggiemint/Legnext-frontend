@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import ButtonSupport from "@/components/ButtonSupport";
+import ButtonSupport from "@/components/ui/ButtonSupport";
 
 export const dynamic = 'force-dynamic';
 
