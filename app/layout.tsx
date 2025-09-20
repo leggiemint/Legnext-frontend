@@ -5,12 +5,12 @@ import PlausibleProvider from "next-plausible";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { getSEOTags } from "@/libs/seo";
-import ClientLayout from "@/components/LayoutClient";
-import { AuthProvider } from "@/components/AuthProvider";
+import ClientLayout from "@/components/layout/LayoutClient";
+import { AuthProvider } from "@/components/auth/AuthProvider";
 import { UserContextProvider } from "@/contexts/UserContext";
-import PlanSyncChecker from "@/components/PlanSyncChecker";
-import GetReditusTracker from "@/components/GetReditusTracker";
-import ClientOnly from "@/components/ClientOnly";
+import PlanSyncChecker from "@/components/payment/PlanSyncChecker";
+import GetReditusTracker from "@/components/tracking/GetReditusTracker";
+import ClientOnly from "@/components/modals/ClientOnly";
 import config from "@/config";
 import "./globals.css";
 
