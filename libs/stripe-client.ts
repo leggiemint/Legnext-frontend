@@ -79,17 +79,46 @@ export async function getOrCreateStripeCustomer(
   name?: string
 ): Promise<string> {
   try {
-    // 先尝试通过metadata查找现有客户
-    const existingCustomers = await stripe.customers.list({
+    // 🔒 安全修复：先通过userId metadata查找，确保多租户隔离
+    const existingCustomersByUserId = await stripe.customers.list({
+      limit: 100, // 增加限制以确保找到正确的客户
+    });
+
+    // 在客户列表中查找匹配的userId
+    const existingCustomer = existingCustomersByUserId.data.find(
+      customer => customer.metadata?.userId === userId
+    );
+
+    if (existingCustomer) {
+      // 🔒 验证email匹配，防止数据泄露
+      if (existingCustomer.email !== email) {
+        console.warn(`⚠️ Customer ${existingCustomer.id} has userId ${userId} but different email. Updating email.`);
+        await stripe.customers.update(existingCustomer.id, {
+          email,
+          name,
+        });
+      }
+      return existingCustomer.id;
+    }
+
+    // 🔒 双重检查：通过email查找但验证userId不冲突
+    const existingCustomersByEmail = await stripe.customers.list({
       email: email,
       limit: 1,
     });
 
-    if (existingCustomers.data.length > 0) {
-      const customer = existingCustomers.data[0];
-      // 更新metadata以包含userId
+    if (existingCustomersByEmail.data.length > 0) {
+      const customer = existingCustomersByEmail.data[0];
+      
+      // 🔒 安全检查：如果email存在但userId不同，这是一个安全问题
+      if (customer.metadata?.userId && customer.metadata.userId !== userId) {
+        throw new Error(`Security violation: Email ${email} is already associated with a different user`);
+      }
+      
+      // 如果email存在但没有userId，更新metadata
       await stripe.customers.update(customer.id, {
         metadata: { userId },
+        name,
       });
       return customer.id;
     }
@@ -101,6 +130,7 @@ export async function getOrCreateStripeCustomer(
       metadata: { userId },
     });
 
+    console.log(`✅ Created new Stripe customer: ${customer.id} for user: ${userId}`);
     return customer.id;
   } catch (error) {
     console.error('Error getting or creating Stripe customer:', error);
