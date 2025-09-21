@@ -11,6 +11,7 @@ const nextConfig = {
       "logos-world.net",
       "avatars.githubusercontent.com", // GitHub avatars
       "cdn.legnext.ai", // LegNext CDN for generated images
+      "image.legnext.ai",
     ],
   },
 };
