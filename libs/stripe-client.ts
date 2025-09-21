@@ -149,6 +149,7 @@ export async function createSubscriptionCheckoutSession(
       automatic_tax: {
         enabled: true,
       },
+      // 注意：Checkout Session会自动处理3D Secure认证
     };
 
     console.log('📋 Stripe session config:', JSON.stringify(sessionConfig, null, 2));

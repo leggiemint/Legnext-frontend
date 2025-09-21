@@ -68,6 +68,12 @@ export async function POST(request: NextRequest) {
       automatic_payment_methods: {
         enabled: true,
       },
+      // 启用3D Secure认证（对印度用户很重要）
+      payment_method_options: {
+        card: {
+          request_three_d_secure: 'automatic' as const,
+        },
+      },
       metadata: {
         userId: session.user.id!,
         priceId: priceId,
