@@ -13,6 +13,7 @@ export const dynamic = 'force-dynamic';
 // Webhook事件处理器映射
 const eventHandlers = {
   'checkout.session.completed': handleCheckoutSessionCompleted,
+  'customer.subscription.created': handleSubscriptionCreated, // 🔒 安全：添加订阅创建验证
   'invoice.payment_succeeded': handleInvoicePaymentSucceeded,
   'invoice.payment_failed': handleInvoicePaymentFailed,
   'customer.subscription.updated': handleSubscriptionUpdated,
@@ -632,6 +633,75 @@ async function handleCustomerUpdated(event: Stripe.Event) {
   } catch (error) {
     log.error(`❌ [Webhook] Error processing customer update:`, {
       customerId: customer.id,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
+    
+    // 不要抛出错误，避免 Stripe 重试
+  }
+}
+
+/**
+ * 🔒 安全处理订阅创建事件
+ * 验证订阅属于正确的用户，防止跨用户数据泄露
+ */
+async function handleSubscriptionCreated(event: Stripe.Event) {
+  const subscription = event.data.object as Stripe.Subscription;
+  
+  try {
+    log.info(`🆕 Subscription created: ${subscription.id}, status: ${subscription.status}`);
+
+    // 🔒 安全验证1：检查subscription metadata中的userId
+    const subscriptionUserId = subscription.metadata?.userId;
+    if (!subscriptionUserId) {
+      log.error(`❌ [Security] Subscription ${subscription.id} missing userId in metadata`);
+      return;
+    }
+
+    // 🔒 安全验证2：获取customer并验证userId匹配
+    const customer = await stripe.customers.retrieve(subscription.customer as string);
+    if (customer.deleted) {
+      log.error(`❌ [Security] Customer ${subscription.customer} is deleted`);
+      return;
+    }
+
+    const customerUserId = (customer as Stripe.Customer).metadata?.userId;
+    if (!customerUserId) {
+      log.error(`❌ [Security] Customer ${customer.id} missing userId in metadata`);
+      return;
+    }
+
+    // 🔒 安全验证3：确保subscription和customer的userId一致
+    if (subscriptionUserId !== customerUserId) {
+      log.error(`❌ [Security] UserId mismatch - Subscription: ${subscriptionUserId}, Customer: ${customerUserId}`);
+      return;
+    }
+
+    // 🔒 安全验证4：确保用户存在于我们的系统中
+    const user = await getUserWithProfile(subscriptionUserId);
+    if (!user) {
+      log.error(`❌ [Security] User ${subscriptionUserId} not found in our system`);
+      return;
+    }
+
+    // ✅ 所有安全验证通过，处理订阅激活
+    log.info(`✅ Security checks passed for subscription ${subscription.id}, user: ${subscriptionUserId}`);
+
+    // 更新用户计划为Pro
+    await updateUserPlan(subscriptionUserId, 'pro');
+    log.info(`✅ Updated user ${subscriptionUserId} plan to Pro`);
+
+    // 处理backend积分包创建等其他逻辑
+    // await handleCreditPackCreation(user, subscription, 'subscription.created'); // TODO: 实现积分包创建逻辑
+
+    // 发送通知
+    // await sendSubscriptionNotification(user, subscription, customer.id); // TODO: 实现通知逻辑
+    
+    log.info(`✅ [Webhook] Subscription ${subscription.id} processed successfully for user ${subscriptionUserId}`);
+
+  } catch (error) {
+    log.error(`❌ [Webhook] Error processing subscription creation:`, {
+      subscriptionId: subscription.id,
+      customerId: subscription.customer,
       error: error instanceof Error ? error.message : 'Unknown error',
     });
     
