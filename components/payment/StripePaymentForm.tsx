@@ -195,7 +195,6 @@ export default function StripePaymentForm({
             <AddressElement
               options={{
                 mode: 'billing',
-                allowedCountries: ['US', 'GB', 'CA', 'AU', 'DE', 'FR', 'JP', 'CN', 'SG'],
                 fields: {
                   phone: 'never',
                 },
