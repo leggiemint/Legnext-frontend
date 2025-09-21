@@ -155,7 +155,7 @@ export async function createSubscriptionCheckoutSession(
       cancelUrl: params.cancelUrl || STRIPE_CONFIG.urls.cancel,
     });
 
-    const sessionConfig = {
+    const sessionConfig: Stripe.Checkout.SessionCreateParams = {
       mode: 'subscription' as const,
       customer: params.customerId,
       line_items: [
@@ -173,13 +173,12 @@ export async function createSubscriptionCheckoutSession(
         address: 'auto' as const,
         name: 'auto' as const,
       },
-      // 注意：subscription模式下不需要手动启用invoice_creation
-      // Stripe会自动为订阅创建发票
+      // 限制支付方式为卡片和数字钱包
+      payment_method_types: ['card'],
       // 自动税收计算
       automatic_tax: {
         enabled: true,
       },
-      // 注意：Checkout Session会自动处理3D Secure认证
     };
 
     console.log('📋 Stripe session config:', JSON.stringify(sessionConfig, null, 2));
@@ -217,7 +216,7 @@ export async function createTopUpCheckoutSession(
       cancelUrl: params.cancelUrl || STRIPE_CONFIG.urls.cancel,
     });
 
-    const sessionConfig = {
+    const sessionConfig: Stripe.Checkout.SessionCreateParams = {
       mode: 'payment' as const,
       customer: params.customerId,
       line_items: [
@@ -244,6 +243,8 @@ export async function createTopUpCheckoutSession(
         address: 'auto' as const,
         name: 'auto' as const,
       },
+      // 限制支付方式为卡片
+      payment_method_types: ['card'],
       // 自动税收计算
       automatic_tax: {
         enabled: true,

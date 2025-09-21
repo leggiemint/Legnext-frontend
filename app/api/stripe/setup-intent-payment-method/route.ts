@@ -36,25 +36,17 @@ export async function POST() {
       },
     });
 
-    // 创建 SetupIntent 来收集支付方式（不收费）
+    // 创建 SetupIntent 来收集支付方式（不收费） - 仅限卡片
     const setupIntent = await stripe.setupIntents.create({
       customer: customerId,
       usage: 'off_session', // 用于未来的支付
-      automatic_payment_methods: {
-        enabled: true,
-        // 允许重定向，但主要用于支付方式保存
-        allow_redirects: 'always',
-      },
-      // 专注于可保存的支付方式配置
+      // 仅允许卡片支付方式
+      payment_method_types: ['card'] as const,
+      // 专注于卡片支付方式配置
       payment_method_options: {
         card: {
           request_three_d_secure: 'automatic' as const,
           // Stripe 自动处理验证需求
-        },
-        us_bank_account: {
-          financial_connections: {
-            permissions: ['payment_method', 'balances'],
-          },
         },
       },
       metadata: {

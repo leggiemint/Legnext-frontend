@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // 创建PaymentIntent for TopUp (一次性支付)
+    // 创建PaymentIntent for TopUp (一次性支付) - 仅限卡片支付
     const paymentIntent = await stripe.paymentIntents.create({
       amount: amount * 100, // 转换为分
       currency: 'usd',
@@ -65,21 +65,13 @@ export async function POST(request: NextRequest) {
         credits: credits.toString(),
         amount: amount.toString(),
       },
-      automatic_payment_methods: {
-        enabled: true,
-        // 允许重定向支付方式（如 UPI、iDEAL 等）
-        allow_redirects: 'always',
-      },
-      // 优化的支付方式配置，类似 Checkout 的自动行为
+      // 仅允许卡片支付方式
+      payment_method_types: ['card'] as const,
+      // 支付方式配置
       payment_method_options: {
         card: {
           request_three_d_secure: 'automatic' as const,
           // 自动根据风险和地区要求处理 3D Secure
-        },
-        us_bank_account: {
-          financial_connections: {
-            permissions: ['payment_method', 'balances'],
-          },
         },
       },
     });
