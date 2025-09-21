@@ -360,11 +360,57 @@ async function handleSubscriptionUpdated(event: Stripe.Event) {
 
   log.info(`Subscription updated for user ${user.id}: ${subscription.status}`);
 
+  // 检查订阅是否被取消（期末取消）
+  const isCancelled = subscription.status === 'canceled' || 
+                     subscription.status === 'unpaid' || 
+                     subscription.cancel_at_period_end === true;
+
   // 根据订阅状态更新用户plan
   if (subscription.status === 'active' || subscription.status === 'trialing') {
-    await updateUserPlan(user.id, 'pro');
-  } else if (subscription.status === 'canceled' || subscription.status === 'unpaid') {
+    if (subscription.cancel_at_period_end === true) {
+      // 期末取消：发送取消通知
+      try {
+        await sendFeishuMessage({
+          event: 'subscription.cancelled',
+          title: '⚠️ Subscription Cancelled - Follow Up Required',
+          text: [
+            `User: ${user.email || user.id}`,
+            `Stripe Subscription: ${subscription.id}`,
+            `Cancellation Type: End of Period`,
+            `Cancellation Reason: ${subscription.cancellation_details?.reason || 'Not specified'}`,
+            `Cancelled At: ${subscription.canceled_at ? new Date(subscription.canceled_at * 1000).toISOString() : new Date().toISOString()}`,
+            `Period End: ${subscription.current_period_end ? new Date(subscription.current_period_end * 1000).toISOString() : 'Unknown'}`,
+            `Action Required: Contact user for feedback and retention`
+          ].join('\n'),
+        });
+      } catch (notifyError) {
+        log.error('❌ [Feishu] Failed to send subscription cancellation notification', notifyError);
+      }
+    } else {
+      // 正常活跃状态
+      await updateUserPlan(user.id, 'pro');
+    }
+  } else if (isCancelled) {
     await updateUserPlan(user.id, 'free');
+    
+    // 发送取消订阅通知给客服团队
+    try {
+      await sendFeishuMessage({
+        event: 'subscription.cancelled',
+        title: '⚠️ Subscription Cancelled - Follow Up Required',
+        text: [
+          `User: ${user.email || user.id}`,
+          `Stripe Subscription: ${subscription.id}`,
+          `Cancellation Type: Immediate`,
+          `Cancellation Reason: ${subscription.cancellation_details?.reason || 'Not specified'}`,
+          `Cancelled At: ${subscription.canceled_at ? new Date(subscription.canceled_at * 1000).toISOString() : 'Unknown'}`,
+          `Period End: ${subscription.current_period_end ? new Date(subscription.current_period_end * 1000).toISOString() : 'Unknown'}`,
+          `Action Required: Contact user for feedback and retention`
+        ].join('\n'),
+      });
+    } catch (notifyError) {
+      log.error('❌ [Feishu] Failed to send subscription cancellation notification', notifyError);
+    }
   }
 }
 
@@ -408,6 +454,24 @@ async function handleSubscriptionDeleted(event: Stripe.Event) {
     } catch (error) {
       log.error('Failed to downgrade backend account:', error);
     }
+  }
+
+  // 发送取消订阅通知给客服团队
+  try {
+    await sendFeishuMessage({
+      event: 'subscription.cancelled',
+      title: '⚠️ Subscription Cancelled - Follow Up Required',
+      text: [
+        `User: ${user.email || user.id}`,
+        `Stripe Subscription: ${subscription.id}`,
+        `Cancellation Reason: ${subscription.cancellation_details?.reason || 'Not specified'}`,
+        `Cancelled At: ${subscription.canceled_at ? new Date(subscription.canceled_at * 1000).toISOString() : 'Unknown'}`,
+        `Period End: ${subscription.current_period_end ? new Date(subscription.current_period_end * 1000).toISOString() : 'Unknown'}`,
+        `Action Required: Contact user for feedback and retention`
+      ].join('\n'),
+    });
+  } catch (notifyError) {
+    log.error('❌ [Feishu] Failed to send subscription cancellation notification', notifyError);
   }
 }
 
