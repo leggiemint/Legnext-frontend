@@ -84,25 +84,25 @@ function PaymentForm({ clientSecret, onSuccess, onError }: PaymentFormProps) {
           <PaymentElement
             options={{
               layout: 'tabs',
-              // 支付方式管理：优先显示可保存的支付方式（卡片优先）
+              // 仅显示卡片支付方式
               paymentMethodOrder: ['card'],
               fields: {
                 billingDetails: {
                   name: 'auto',
                   email: 'auto',
-                  phone: 'auto', // 某些地区的支付方式需要
+                  phone: 'never', // 卡片支付不需要手机号
                   address: {
-                    country: 'auto', // 让 Stripe 自动决定必要的地址字段
+                    country: 'auto',
+                    city: 'auto',
+                    line1: 'auto',
+                    line2: 'auto',
+                    postalCode: 'auto',
+                    state: 'auto',
                   },
                 },
               },
               terms: {
                 card: 'never',
-                usBankAccount: 'never',
-                bancontact: 'never',
-                ideal: 'never',
-                sepaDebit: 'never',
-                sofort: 'never',
               },
               wallets: {
                 applePay: 'auto',

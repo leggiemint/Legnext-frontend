@@ -31,6 +31,7 @@ export default function InvoicePage() {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [processingPdfs, setProcessingPdfs] = useState<Set<string>>(new Set());
   const [pagination] = useState<{
     limit: number;
     cursor?: string;
@@ -145,6 +146,77 @@ export default function InvoicePage() {
     }).format(amount / 100); // Stripe amounts are in cents
   };
 
+  // 处理PDF下载 - 按需处理
+  const handlePdfDownload = async (invoice: Invoice) => {
+    if (!invoice.invoice_pdf) {
+      console.warn('No PDF available for invoice:', invoice.id);
+      return;
+    }
+
+    try {
+      setProcessingPdfs(prev => new Set(prev).add(invoice.id));
+      
+      console.log(`🔄 Processing PDF for invoice: ${invoice.id}`);
+      
+      // 调用处理PDF的API
+      const response = await fetch(`/api/stripe/invoices/${invoice.id}/processed`);
+      
+      if (!response.ok) {
+        // 尝试解析错误响应
+        try {
+          const errorData = await response.json();
+          throw new Error(JSON.stringify(errorData));
+        } catch (parseError) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+      }
+      
+      const result = await response.json();
+      
+      if (result.success && result.processedUrl) {
+        console.log(`✅ PDF processed successfully: ${result.processedUrl}`);
+        // 下载处理后的PDF
+        window.open(result.processedUrl, '_blank');
+      } else {
+        // 将完整的结果对象作为错误传递，包含fallbackUrl
+        throw new Error(JSON.stringify(result));
+      }
+      
+    } catch (error) {
+      console.error('PDF processing error:', error);
+      
+      // 尝试解析API响应中的错误信息
+      let errorMessage = 'Unknown error occurred';
+      let fallbackUrl = invoice.invoice_pdf;
+      
+      if (error instanceof Error) {
+        try {
+          // 如果error.message是JSON格式的响应
+          const errorData = JSON.parse(error.message);
+          errorMessage = errorData.error || error.message;
+          fallbackUrl = errorData.fallbackUrl || invoice.invoice_pdf;
+        } catch {
+          errorMessage = error.message;
+        }
+      }
+      
+      // 显示用户友好的错误信息
+      setError(`PDF processing failed: ${errorMessage}. Downloading original PDF instead.`);
+      
+      // 出错时降级到原始PDF（使用fallbackUrl或原始URL）
+      console.log('Falling back to original PDF...', { fallbackUrl, originalUrl: invoice.invoice_pdf });
+      if (fallbackUrl) {
+        window.open(fallbackUrl, '_blank');
+      }
+    } finally {
+      setProcessingPdfs(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(invoice.id);
+        return newSet;
+      });
+    }
+  };
+
   // 免费用户且从未有过Pro计划
   if (!session) {
     return (
@@ -188,12 +260,23 @@ export default function InvoicePage() {
         {/* Error State */}
         {error && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-6 mb-8">
-            <div className="flex items-center">
-              <ExclamationCircleIcon className="w-5 h-5 text-red-600 mr-3" />
-              <div>
-                <h3 className="text-sm font-medium text-red-800">Error Loading Invoices</h3>
-                <p className="text-sm text-red-600 mt-1">{error}</p>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <ExclamationCircleIcon className="w-5 h-5 text-red-600 mr-3" />
+                <div>
+                  <h3 className="text-sm font-medium text-red-800">Error</h3>
+                  <p className="text-sm text-red-600 mt-1">{error}</p>
+                </div>
               </div>
+              <button
+                onClick={() => setError(null)}
+                className="text-red-400 hover:text-red-600 transition-colors"
+                title="Dismiss error"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
             </div>
           </div>
         )}
@@ -255,14 +338,25 @@ export default function InvoicePage() {
                       {/* Invoice Actions */}
                       <div className="flex items-center gap-3 mt-3">
                         {invoice.invoice_pdf && (
-                          <a
-                            href={invoice.invoice_pdf}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-gray-600 hover:text-gray-700 text-sm font-medium"
+                          <button
+                            onClick={() => handlePdfDownload(invoice)}
+                            disabled={processingPdfs.has(invoice.id)}
+                            className="flex items-center gap-1 text-purple-600 hover:text-purple-700 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                           >
-                            Download PDF
-                          </a>
+                            {processingPdfs.has(invoice.id) ? (
+                              <>
+                                <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-purple-600"></div>
+                                Processing PDF...
+                              </>
+                            ) : (
+                              <>
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                                Download PDF
+                              </>
+                            )}
+                          </button>
                         )}
                         {invoice.period_start && invoice.period_end && (
                           <span className="text-sm text-gray-500">
