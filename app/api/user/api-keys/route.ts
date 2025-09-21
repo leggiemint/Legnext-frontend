@@ -49,9 +49,12 @@ export async function GET() {
 
       log.info(`✅ [API Keys] Retrieved ${apiKeys.length} API keys for account ${user.profile.backendAccountId}`);
 
+      // 排序API keys，确保第一个（ID最小的）是初始密钥
+      const sortedKeys = apiKeys.sort((a, b) => a.id - b.id);
+
       return NextResponse.json({
         data: {
-          apiKeys: apiKeys.map(key => ({
+          apiKeys: sortedKeys.map((key, index) => ({
             id: key.id,
             name: key.name,
             value: key.value, // 保持为value字段以匹配前端预期
@@ -59,7 +62,8 @@ export async function GET() {
             isActive: !key.revoked, // 映射为isActive
             revoked: key.revoked,
             createdAt: key.created_at,
-            updatedAt: key.updated_at
+            updatedAt: key.updated_at,
+            isInitKey: index === 0 // 只有第一个key（ID最小的）是初始密钥
           })),
           backendAccountId: user.profile.backendAccountId
         }
