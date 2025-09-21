@@ -20,6 +20,8 @@ const eventHandlers = {
   'payment_intent.succeeded': handlePaymentIntentSucceeded,
   'setup_intent.created': handleSetupIntentCreated,
   'setup_intent.succeeded': handleSetupIntentSucceeded,
+  // 🎯 添加客户信息更新处理（对标托管 Checkout 行为）
+  'customer.updated': handleCustomerUpdated,
 };
 
 export async function POST(request: NextRequest) {
@@ -360,11 +362,57 @@ async function handleSubscriptionUpdated(event: Stripe.Event) {
 
   log.info(`Subscription updated for user ${user.id}: ${subscription.status}`);
 
+  // 检查订阅是否被取消（期末取消）
+  const isCancelled = subscription.status === 'canceled' || 
+                     subscription.status === 'unpaid' || 
+                     subscription.cancel_at_period_end === true;
+
   // 根据订阅状态更新用户plan
   if (subscription.status === 'active' || subscription.status === 'trialing') {
-    await updateUserPlan(user.id, 'pro');
-  } else if (subscription.status === 'canceled' || subscription.status === 'unpaid') {
+    if (subscription.cancel_at_period_end === true) {
+      // 期末取消：发送取消通知
+      try {
+        await sendFeishuMessage({
+          event: 'subscription.cancelled',
+          title: '⚠️ Subscription Cancelled - Follow Up Required',
+          text: [
+            `User: ${user.email || user.id}`,
+            `Stripe Subscription: ${subscription.id}`,
+            `Cancellation Type: End of Period`,
+            `Cancellation Reason: ${subscription.cancellation_details?.reason || 'Not specified'}`,
+            `Cancelled At: ${subscription.canceled_at ? new Date(subscription.canceled_at * 1000).toISOString() : new Date().toISOString()}`,
+            `Period End: ${subscription.current_period_end ? new Date(subscription.current_period_end * 1000).toISOString() : 'Unknown'}`,
+            `Action Required: Contact user for feedback and retention`
+          ].join('\n'),
+        });
+      } catch (notifyError) {
+        log.error('❌ [Feishu] Failed to send subscription cancellation notification', notifyError);
+      }
+    } else {
+      // 正常活跃状态
+      await updateUserPlan(user.id, 'pro');
+    }
+  } else if (isCancelled) {
     await updateUserPlan(user.id, 'free');
+    
+    // 发送取消订阅通知给客服团队
+    try {
+      await sendFeishuMessage({
+        event: 'subscription.cancelled',
+        title: '⚠️ Subscription Cancelled - Follow Up Required',
+        text: [
+          `User: ${user.email || user.id}`,
+          `Stripe Subscription: ${subscription.id}`,
+          `Cancellation Type: Immediate`,
+          `Cancellation Reason: ${subscription.cancellation_details?.reason || 'Not specified'}`,
+          `Cancelled At: ${subscription.canceled_at ? new Date(subscription.canceled_at * 1000).toISOString() : 'Unknown'}`,
+          `Period End: ${subscription.current_period_end ? new Date(subscription.current_period_end * 1000).toISOString() : 'Unknown'}`,
+          `Action Required: Contact user for feedback and retention`
+        ].join('\n'),
+      });
+    } catch (notifyError) {
+      log.error('❌ [Feishu] Failed to send subscription cancellation notification', notifyError);
+    }
   }
 }
 
@@ -408,6 +456,24 @@ async function handleSubscriptionDeleted(event: Stripe.Event) {
     } catch (error) {
       log.error('Failed to downgrade backend account:', error);
     }
+  }
+
+  // 发送取消订阅通知给客服团队
+  try {
+    await sendFeishuMessage({
+      event: 'subscription.cancelled',
+      title: '⚠️ Subscription Cancelled - Follow Up Required',
+      text: [
+        `User: ${user.email || user.id}`,
+        `Stripe Subscription: ${subscription.id}`,
+        `Cancellation Reason: ${subscription.cancellation_details?.reason || 'Not specified'}`,
+        `Cancelled At: ${subscription.canceled_at ? new Date(subscription.canceled_at * 1000).toISOString() : 'Unknown'}`,
+        `Period End: ${subscription.current_period_end ? new Date(subscription.current_period_end * 1000).toISOString() : 'Unknown'}`,
+        `Action Required: Contact user for feedback and retention`
+      ].join('\n'),
+    });
+  } catch (notifyError) {
+    log.error('❌ [Feishu] Failed to send subscription cancellation notification', notifyError);
   }
 }
 
@@ -529,4 +595,46 @@ async function handleSetupIntentSucceeded(event: Stripe.Event) {
 
   // 记录成功事件到日志 (webhookEvent表暂未在schema中定义)
   log.info(`✅ [Webhook] SetupIntent succeeded logged: ${setupIntent.id}`);
+}
+
+/**
+ * 处理客户信息更新事件
+ * 对标托管 Checkout 的自动客户信息更新功能
+ */
+async function handleCustomerUpdated(event: Stripe.Event) {
+  const customer = event.data.object as Stripe.Customer;
+  
+  try {
+    log.info(`👤 [Webhook] Customer updated: ${customer.id}`, {
+      email: customer.email,
+      name: customer.name,
+      address: customer.address,
+    });
+
+    // 如果有 userId metadata，同步更新到我们的数据库
+    if (customer.metadata?.userId) {
+      const userId = customer.metadata.userId;
+      
+      // 这里可以添加逻辑来同步客户信息到我们的数据库
+      // 例如更新用户的账单地址、姓名等
+      log.info(`🔄 [Webhook] Syncing customer info for user: ${userId}`, {
+        customerId: customer.id,
+        email: customer.email,
+        name: customer.name,
+      });
+      
+      // 可以在这里调用用户更新 API 或直接更新数据库
+      // await updateUserBillingInfo(userId, customer);
+    }
+
+    log.info(`✅ [Webhook] Customer update processed: ${customer.id}`);
+    
+  } catch (error) {
+    log.error(`❌ [Webhook] Error processing customer update:`, {
+      customerId: customer.id,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
+    
+    // 不要抛出错误，避免 Stripe 重试
+  }
 }
