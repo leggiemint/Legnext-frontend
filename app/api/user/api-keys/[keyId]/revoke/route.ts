@@ -35,6 +35,40 @@ export async function POST(
     }
 
     try {
+      // 首先获取所有API keys来检查是否为初始密钥
+      const apiKeysResponse = await backendApiClient.getAccountApiKeys(user.profile.backendAccountId);
+      
+      if (apiKeysResponse.code !== 200) {
+        log.error('❌ [API Keys] Failed to fetch API keys for validation:', apiKeysResponse);
+        return NextResponse.json({ 
+          error: 'Failed to validate API key'
+        }, { status: 500 });
+      }
+
+      const apiKeys = apiKeysResponse.data || [];
+      const sortedKeys = apiKeys.sort((a, b) => a.id - b.id);
+      
+      // 检查要撤销的key是否为初始密钥（ID最小的）
+      const keyToRevoke = apiKeys.find(key => key.id === keyId);
+      if (!keyToRevoke) {
+        log.error('❌ [API Keys] API key not found:', keyId);
+        return NextResponse.json({ 
+          error: 'API key not found'
+        }, { status: 404 });
+      }
+
+      // 检查是否为初始密钥
+      if (keyToRevoke.id === sortedKeys[0]?.id) {
+        log.warn('🚫 [API Keys] Attempted to revoke initial API key:', {
+          keyId,
+          keyName: keyToRevoke.name,
+          userId: session.user.email
+        });
+        return NextResponse.json({ 
+          error: 'Cannot revoke initial API key'
+        }, { status: 403 });
+      }
+
       log.info(`🔍 [API Keys] Revoking API key ${keyId} for backend account: ${user.profile.backendAccountId}`);
       
       const revokeResponse = await backendApiClient.revokeApiKey(user.profile.backendAccountId, keyId);
