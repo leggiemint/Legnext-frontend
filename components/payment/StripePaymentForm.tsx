@@ -66,14 +66,8 @@ export default function StripePaymentForm({
         clientSecret,
         confirmParams: {
           return_url: `${window.location.origin}/app`,
-          payment_method_data: {
-            billing_details: {
-              phone: '', // Required when phone field is set to 'never'
-              address: {
-                line1: '', // Required when address is set to 'never'
-              },
-            },
-          },
+          // 🎯 移除硬编码的 billing_details，让 PaymentElement 和 AddressElement 的用户输入生效
+          // 这对印度等需要电话/地址验证的支付方式至关重要
         },
         redirect: 'if_required', // 避免自动重定向
       });
@@ -162,14 +156,15 @@ export default function StripePaymentForm({
             <PaymentElement
               options={{
                 layout: 'tabs',
-                paymentMethodOrder: ['card', 'us_bank_account'],
+                // 让 Stripe 根据用户地理位置、货币和可用性自动决定支付方式
+                // 与 TopUp 保持一致的行为
                 fields: {
                   billingDetails: {
                     name: 'auto',
                     email: 'auto',
-                    phone: 'never',
+                    phone: 'auto', // 某些地区和支付方式需要
                     address: {
-                      country: 'auto', // Let Stripe auto-detect country from card
+                      country: 'auto', // 让 Stripe 根据支付方式需求自动决定地址字段
                     },
                   },
                 },
@@ -180,6 +175,10 @@ export default function StripePaymentForm({
                   ideal: 'never',
                   sepaDebit: 'never',
                   sofort: 'never',
+                },
+                wallets: {
+                  applePay: 'auto',
+                  googlePay: 'auto',
                 },
               }}
             />

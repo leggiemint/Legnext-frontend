@@ -77,6 +77,32 @@ export default function TopUpPaymentForm({
         <PaymentElement
           options={{
             layout: "tabs",
+            // 让 Stripe 根据用户地理位置、货币和可用性自动决定支付方式
+            // 类似 Checkout 页面的行为
+            fields: {
+              billingDetails: {
+                name: 'auto',
+                email: 'auto',
+                phone: 'auto', // 对某些地区的支付方式是必需的
+                address: {
+                  country: 'auto', // 让 Stripe 自动检测并决定必要的地址字段
+                },
+              },
+            },
+            // 隐藏条款（保持简洁的用户体验）
+            terms: {
+              card: 'never',
+              usBankAccount: 'never',
+              bancontact: 'never',
+              ideal: 'never',
+              sepaDebit: 'never',
+              sofort: 'never',
+            },
+            // 启用钱包支付（由 Stripe 根据用户环境自动显示）
+            wallets: {
+              applePay: 'auto',
+              googlePay: 'auto',
+            },
           }}
         />
       </div>

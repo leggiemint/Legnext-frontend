@@ -67,11 +67,19 @@ export async function POST(request: NextRequest) {
       usage: 'off_session', // 用于未来的订阅支付
       automatic_payment_methods: {
         enabled: true,
+        // 允许重定向支付方式，让 Stripe 自动决定可用的支付方式
+        allow_redirects: 'always',
       },
-      // 启用3D Secure认证（对印度用户很重要）
+      // 类似 Checkout 的智能支付方式配置
       payment_method_options: {
         card: {
           request_three_d_secure: 'automatic' as const,
+          // Stripe 自动根据地区、风险等因素决定是否需要 3D Secure
+        },
+        us_bank_account: {
+          financial_connections: {
+            permissions: ['payment_method', 'balances'],
+          },
         },
       },
       metadata: {

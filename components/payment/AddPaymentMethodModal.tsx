@@ -53,18 +53,8 @@ function PaymentForm({ clientSecret, onSuccess, onError }: PaymentFormProps) {
         clientSecret,
         confirmParams: {
           return_url: `${window.location.origin}/app/payment-methods`,
-          payment_method_data: {
-            billing_details: {
-              phone: '', // Required when phone field is set to 'never'
-              address: {
-                line1: '', // Required when line1 is set to 'never'
-                line2: '', // Required when line2 is set to 'never'
-                city: '', // Required when city is set to 'never'
-                state: '', // Required when state is set to 'never'
-                postal_code: '', // Required when postalCode is set to 'never'
-              },
-            },
-          },
+          // 🎯 移除硬编码的 billing_details，让 PaymentElement 的用户输入生效
+          // 这对印度等地区的支付方式至关重要
         },
         redirect: 'if_required',
       });
@@ -94,17 +84,18 @@ function PaymentForm({ clientSecret, onSuccess, onError }: PaymentFormProps) {
           <PaymentElement
             options={{
               layout: 'tabs',
+              // 支付方式管理：优先显示可保存的支付方式（卡片优先）
               paymentMethodOrder: ['card'],
-                fields: {
-                  billingDetails: {
-                    name: 'auto',
-                    email: 'auto',
-                    phone: 'never',
-                    address: {
-                      country: 'auto', // Let Stripe auto-detect country from card
-                    },
+              fields: {
+                billingDetails: {
+                  name: 'auto',
+                  email: 'auto',
+                  phone: 'auto', // 某些地区的支付方式需要
+                  address: {
+                    country: 'auto', // 让 Stripe 自动决定必要的地址字段
                   },
                 },
+              },
               terms: {
                 card: 'never',
                 usBankAccount: 'never',
@@ -112,6 +103,10 @@ function PaymentForm({ clientSecret, onSuccess, onError }: PaymentFormProps) {
                 ideal: 'never',
                 sepaDebit: 'never',
                 sofort: 'never',
+              },
+              wallets: {
+                applePay: 'auto',
+                googlePay: 'auto',
               },
             }}
           />
