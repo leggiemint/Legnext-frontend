@@ -61,25 +61,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 创建 SetupIntent 来收集支付方式（不收费）
+    // 创建 SetupIntent 来收集支付方式（仅支持卡片支付）
     const setupIntent = await stripe.setupIntents.create({
       customer: customerId,
       usage: 'off_session', // 用于未来的订阅支付
-      automatic_payment_methods: {
-        enabled: true,
-        // 允许重定向支付方式，让 Stripe 自动决定可用的支付方式
-        allow_redirects: 'always',
-      },
-      // 类似 Checkout 的智能支付方式配置
+      payment_method_types: ['card'], // 仅支持卡片支付
       payment_method_options: {
         card: {
           request_three_d_secure: 'automatic' as const,
           // Stripe 自动根据地区、风险等因素决定是否需要 3D Secure
-        },
-        us_bank_account: {
-          financial_connections: {
-            permissions: ['payment_method', 'balances'],
-          },
         },
       },
       metadata: {
