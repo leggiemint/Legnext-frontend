@@ -38,6 +38,11 @@ export default function CreatePage() {
   // 轮询间隔配置
   const POLLING_INTERVAL = 2000; // 2秒
   const POLLING_TIMEOUT = 3 * 60 * 1000; // 3分钟
+  const MAX_RETRY_ATTEMPTS = 5; // 最大重试次数
+  
+  // 调试模式：在开发环境或URL参数包含debug=true时启用
+  const isDebugMode = process.env.NODE_ENV === 'development' || 
+                     (typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('debug') === 'true');
 
   // Steps data for the StepsSection component
   const createSteps = [
@@ -122,10 +127,10 @@ export default function CreatePage() {
       // 构建完整的/imagine命令
       let fullPrompt = textDescription.trim();
 
-      // 只在开发环境记录详细日志
-      if (process.env.NODE_ENV === 'development') {
-        log.info('Sending /imagine command to diffusion API:', fullPrompt);
-      }
+      log.info('Starting diffusion task:', {
+        prompt_length: fullPrompt.length,
+        has_api_key: !!userApiKey
+      });
 
       // 调用业务 Diffusion API (通过代理路由) - 使用轮询机制
       const response = await fetch('/api/backend-proxy/v1/diffusion', {
@@ -147,6 +152,10 @@ export default function CreatePage() {
 
       const result = await response.json();
       setCurrentTaskId(result.job_id);
+
+      log.info('Diffusion task started:', {
+        job_id: result.job_id
+      });
 
       // 注册任务并开始轮询
       pendingTasksRef.current.set(result.job_id, 'diffusion');
@@ -198,30 +207,35 @@ export default function CreatePage() {
 
       const data = await response.json();
       
-      // 只在开发环境或错误时记录详细日志
-      if (process.env.NODE_ENV === 'development') {
+      // 记录轮询状态（仅在调试模式下显示详细信息）
+      if (isDebugMode) {
         log.info('📊 Polling job status:', {
           job_id: jobId,
           task_type: taskType,
           status: data.status,
-          output: data.output
+          has_output: !!data.output,
+          response_ok: response.ok,
+          response_status: response.status
+        });
+        
+        log.info('🔍 Full API response:', {
+          job_id: jobId,
+          full_data: data
         });
       }
 
       if (data.status === 'completed') {
         // 任务完成
+        log.info('✅ Task completed successfully:', {
+          job_id: jobId,
+          task_type: taskType,
+          status: data.status
+        });
+
         if (taskType === 'diffusion') {
           // 处理生成的图片
-          if (process.env.NODE_ENV === 'development') {
-            log.info('🎨 Processing completed diffusion task:', {
-              status: data.status,
-              output: data.output,
-              image_urls: data.output?.image_urls
-            });
-          }
-
           const images: string[] = [];
-          if (data.output?.image_urls && data.output.image_urls.length > 0) {
+          if (data.output?.image_urls && Array.isArray(data.output.image_urls) && data.output.image_urls.length > 0) {
             // 使用后端返回的实际图片URL数组，过滤空字符串
             data.output.image_urls.forEach((url: string) => {
               if (url && url.trim() !== '') {
@@ -230,43 +244,49 @@ export default function CreatePage() {
             });
           }
 
-          if (process.env.NODE_ENV === 'development') {
-            log.info('🖼️ Extracted images:', images);
-          }
+          log.info('🎨 Diffusion task completed:', {
+            job_id: jobId,
+            images_count: images.length
+          });
+          
           setGeneratedImages(images);
           setIsGenerating(false);
           toast.success(`Images generated successfully! Found ${images.length} images.`);
         } else if (taskType === 'upscale') {
           // 处理放大的图片
           if (data.output?.image_url) {
+            log.info('🔍 Upscale task completed:', {
+              job_id: jobId,
+              has_image_url: !!data.output.image_url
+            });
+            
             setUpscaledImage(data.output.image_url);
+            setIsUpscaling(false);
+            toast.success('Image upscaled successfully!');
+          } else {
+            log.error('Upscale completed but no image URL found:', {
+              job_id: jobId,
+              output: data.output
+            });
+            setIsUpscaling(false);
+            toast.error('Upscale completed but no image URL found');
           }
-          setIsUpscaling(false);
-          toast.success('Image upscaled successfully!');
         }
 
         // 停止轮询
-        const interval = pollingIntervalsRef.current.get(jobId);
-        if (interval) {
-          clearInterval(interval);
-          pollingIntervalsRef.current.delete(jobId);
-        }
-        pendingTasksRef.current.delete(jobId);
-        retryCountRef.current.delete(jobId);
+        cleanupPolling(jobId, taskType, 'completed');
 
       } else if (data.status === 'failed') {
         // 任务失败
         log.error('❌ Task failed:', {
           job_id: jobId,
+          task_type: taskType,
           error_code: data.error?.code,
-          error_message: data.error?.message,
-          error_raw: data.error?.raw_message,
-          task_type: taskType
+          error_message: data.error?.message
         });
 
         let errorMessage = data.error?.raw_message ||
                           data.error?.message ||
-                          data.failure_reason ||
                           `Task failed (${data.status})`;
 
         // 特殊处理credits不足错误
@@ -298,18 +318,11 @@ export default function CreatePage() {
         }
 
         // 停止轮询
-        const interval = pollingIntervalsRef.current.get(jobId);
-        if (interval) {
-          clearInterval(interval);
-          pollingIntervalsRef.current.delete(jobId);
-        }
-        pendingTasksRef.current.delete(jobId);
-        retryCountRef.current.delete(jobId);
+        cleanupPolling(jobId, taskType, 'failed');
 
       } else {
         // 任务仍在进行中，继续轮询
-        // 只在开发环境记录进度日志
-        if (process.env.NODE_ENV === 'development') {
+        if (isDebugMode) {
           log.info('📊 Task in progress:', {
             job_id: jobId,
             status: data.status,
@@ -319,33 +332,63 @@ export default function CreatePage() {
       }
 
     } catch (error: any) {
-      log.error('Error polling job status:', error);
-      
       // 增加重试计数
       const retryCount = retryCountRef.current.get(jobId) || 0;
       retryCountRef.current.set(jobId, retryCount + 1);
       
+      log.error('Polling error:', {
+        job_id: jobId,
+        task_type: taskType,
+        retry_count: retryCount + 1,
+        error: error.message
+      });
+      
       // 如果重试次数过多，停止轮询
-      if (retryCount >= 5) {
-        log.error('Max retry attempts reached for job:', jobId);
-        const interval = pollingIntervalsRef.current.get(jobId);
-        if (interval) {
-          clearInterval(interval);
-          pollingIntervalsRef.current.delete(jobId);
-        }
-        pendingTasksRef.current.delete(jobId);
-        retryCountRef.current.delete(jobId);
+      if (retryCount >= MAX_RETRY_ATTEMPTS) {
+        log.error('Max polling retries reached:', {
+          job_id: jobId,
+          task_type: taskType
+        });
+        
+        cleanupPolling(jobId, taskType, 'max_retries');
         
         if (taskType === 'diffusion') {
-          setIsGenerating(false);
-          toast.error('Failed to check generation status. Please refresh and try again.');
+          toast.error('Failed to check generation status after multiple attempts. Please refresh and try again.');
         } else {
-          setIsUpscaling(false);
-          toast.error('Failed to check upscale status. Please refresh and try again.');
+          toast.error('Failed to check upscale status after multiple attempts. Please refresh and try again.');
         }
       }
     }
   }, [userApiKey]);
+
+  // 清理轮询任务的辅助函数
+  const cleanupPolling = useCallback((jobId: string, taskType: 'diffusion' | 'upscale', reason: string) => {
+    const interval = pollingIntervalsRef.current.get(jobId);
+    if (interval) {
+      clearInterval(interval);
+      pollingIntervalsRef.current.delete(jobId);
+    }
+    pendingTasksRef.current.delete(jobId);
+    retryCountRef.current.delete(jobId);
+    
+    if (isDebugMode) {
+      log.info('Polling cleanup:', {
+        job_id: jobId,
+        task_type: taskType,
+        reason: reason
+      });
+    }
+    
+    // 只有在失败、超时或重试失败时才设置状态为false
+    // 任务完成时不应该在这里设置状态，应该在处理结果时设置
+    if (reason !== 'completed') {
+      if (taskType === 'diffusion') {
+        setIsGenerating(false);
+      } else {
+        setIsUpscaling(false);
+      }
+    }
+  }, []);
 
   // 开始轮询任务
   const startPolling = useCallback((jobId: string, taskType: 'diffusion' | 'upscale') => {
@@ -367,22 +410,14 @@ export default function CreatePage() {
 
     // 按配置超时时间停止轮询 (防止无限轮询)
     setTimeout(() => {
-      const interval = pollingIntervalsRef.current.get(jobId);
-      if (interval) {
-        clearInterval(interval);
-        pollingIntervalsRef.current.delete(jobId);
-        pendingTasksRef.current.delete(jobId);
-        
-        if (taskType === 'diffusion') {
-          setIsGenerating(false);
-          toast.error('Image generation timed out. Please try again.');
-        } else {
-          setIsUpscaling(false);
-          toast.error('Image upscaling timed out. Please try again.');
-        }
+      cleanupPolling(jobId, taskType, 'timeout');
+      if (taskType === 'diffusion') {
+        toast.error('Image generation timed out. Please try again.');
+      } else {
+        toast.error('Image upscaling timed out. Please try again.');
       }
     }, POLLING_TIMEOUT);
-  }, [pollJobStatus, POLLING_INTERVAL, POLLING_TIMEOUT]);
+  }, [pollJobStatus, cleanupPolling, POLLING_INTERVAL, POLLING_TIMEOUT]);
 
   // 清理轮询任务
   useEffect(() => {
@@ -393,13 +428,43 @@ export default function CreatePage() {
     
     return () => {
       // 组件卸载时清理所有轮询任务
-      pollingIntervals.forEach((interval) => {
+      if (isDebugMode) {
+        log.info('Component unmounting, cleaning up polling tasks:', {
+          active_intervals: pollingIntervals.size,
+          pending_tasks: pendingTasks.size,
+          retry_counts: retryCounts.size
+        });
+      }
+      
+      pollingIntervals.forEach((interval, jobId) => {
         clearInterval(interval);
+        if (isDebugMode) {
+          log.info('Cleared polling interval for job:', jobId);
+        }
       });
       pollingIntervals.clear();
       pendingTasks.clear();
       retryCounts.clear();
     };
+  }, []);
+
+  // 生产环境健康检查：定期检查是否有僵尸轮询
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'production') {
+      const healthCheckInterval = setInterval(() => {
+        const activeIntervals = pollingIntervalsRef.current.size;
+        const pendingTasks = pendingTasksRef.current.size;
+        
+        if (isDebugMode && (activeIntervals > 0 || pendingTasks > 0)) {
+          log.info('Health check - Active polling:', {
+            intervals: activeIntervals,
+            tasks: pendingTasks
+          });
+        }
+      }, 30000); // 每30秒检查一次
+
+      return () => clearInterval(healthCheckInterval);
+    }
   }, []);
 
   const handleUpscale = async (imageIndex: number) => {
@@ -424,10 +489,11 @@ export default function CreatePage() {
     setUpscaledImage(null);
 
     try {
-      // 只在开发环境记录详细日志
-      if (process.env.NODE_ENV === 'development') {
-        log.info('Sending upscale request for image index:', imageIndex);
-      }
+      log.info('Starting upscale task:', {
+        image_index: imageIndex,
+        job_id: currentTaskId,
+        has_api_key: !!userApiKey
+      });
 
       // 调用业务 Upscale API (通过代理路由) - 使用轮询机制
       const response = await fetch('/api/backend-proxy/v1/upscale', {
@@ -449,6 +515,11 @@ export default function CreatePage() {
       }
 
       const result = await response.json();
+
+      log.info('Upscale task started:', {
+        job_id: result.job_id,
+        original_job_id: currentTaskId
+      });
 
       // 注册任务并开始轮询
       pendingTasksRef.current.set(result.job_id, 'upscale');
