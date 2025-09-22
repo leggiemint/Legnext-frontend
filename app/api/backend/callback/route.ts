@@ -13,7 +13,7 @@ function calculateDuration(startedAt?: string, endedAt?: string): string {
 }
 
 // Notification functions (implement based on your needs)
-async function notifyTaskCompleted(taskData: WebhookCallbackPayload['data']): Promise<void> {
+async function notifyTaskCompleted(_taskData: WebhookCallbackPayload['data']): Promise<void> {
   // Implementation options:
   // 1. WebSocket notification to user's browser
   // 2. Server-sent events (SSE)
@@ -31,7 +31,7 @@ async function notifyTaskCompleted(taskData: WebhookCallbackPayload['data']): Pr
   // });
 }
 
-async function notifyTaskFailed(taskData: WebhookCallbackPayload['data']): Promise<void> {
+async function notifyTaskFailed(_taskData: WebhookCallbackPayload['data']): Promise<void> {
 
   // Similar to completion notification but for failures
   // await sendWebSocketNotification(userId, {
@@ -42,7 +42,7 @@ async function notifyTaskFailed(taskData: WebhookCallbackPayload['data']): Promi
   // });
 }
 
-async function notifyTaskProgress(taskData: WebhookCallbackPayload['data']): Promise<void> {
+async function notifyTaskProgress(_taskData: WebhookCallbackPayload['data']): Promise<void> {
 
   // Optional: notify user of progress updates
   // await sendWebSocketNotification(userId, {

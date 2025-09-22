@@ -9,12 +9,9 @@ import PricingSection from "@/components/sections/PricingSection";
 import TopUpModal from "../../../../components/payment/TopUpModal";
 import { useUser, useUserPlan } from "@/contexts/UserContext";
 import { useRouter } from "next/navigation";
-import config from "@/config";
-
 export const dynamic = 'force-dynamic';
 
 export default function SubscriptionPage() {
-  const router = useRouter();
   const sessionData = useSession();
   const session = sessionData?.data;
   const [showTopUp, setShowTopUp] = useState(false);
@@ -22,9 +19,6 @@ export default function SubscriptionPage() {
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [, setCancelReason] = useState("");
   const [reactivating, setReactivating] = useState(false);
-  
-  // 🔄 重定向处理状态
-  const [hasProcessedRedirect, setHasProcessedRedirect] = useState(false);
   
   // Subscription state management
   const [subscriptions, setSubscriptions] = useState<any[]>([]);

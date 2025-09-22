@@ -113,12 +113,12 @@ export async function GET() {
       const usedCredits = creditPacks.used_credits || 0;
       
       // 也可以从各个credit pack计算（作为验证）
-      const calculatedCredits = creditPacks.credit_packs?.reduce((total: number, pack: any) => {
-        if (pack.active) {
-          return total + (pack.capacity - pack.used - pack.frozen);
-        }
-        return total;
-      }, 0) || 0;
+      // const calculatedCredits = creditPacks.credit_packs?.reduce((total: number, pack: any) => {
+      //   if (pack.active) {
+      //     return total + (pack.capacity - pack.used - pack.frozen);
+      //   }
+      //   return total;
+      // }, 0) || 0;
       
       // 计算points（从wallet获取）
       const remainingPoints = wallet.point_remain || 0;
