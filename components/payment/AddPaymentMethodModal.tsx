@@ -90,7 +90,7 @@ function PaymentForm({ clientSecret, onSuccess, onError }: PaymentFormProps) {
                 billingDetails: {
                   name: 'auto',
                   email: 'auto',
-                  phone: 'never', // 卡片支付不需要手机号
+                  phone: 'auto', // 允许用户输入手机号，对国际支付方式更友好
                   address: {
                     country: 'auto',
                     city: 'auto',
