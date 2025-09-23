@@ -143,13 +143,13 @@ When a new user registers and logs in:
    - User plan update to 'pro'
 3. **Sync to backend**:
    - `PATCH /api/backend/account/[id]/plan` → Update to 'developer' plan
-   - `POST /api/backend/account/[id]/wallet/credit_pack` → Add 33000 credits pack (31 days)
+   - `POST /api/backend/account/[id]/wallet/credit_pack` → Add 30000 credits pack (31 days)
 
 #### Subscription Renewal
 1. **Monthly payment** → `invoice.payment_succeeded` webhook
 2. **Maintain pro status** → `updateUserPlan(userId, 'pro')`
 3. **Add renewal credits**:
-   - `POST /api/backend/account/[id]/wallet/credit_pack` → Add 33000 credits pack (31 days)
+   - `POST /api/backend/account/[id]/wallet/credit_pack` → Add 30000 credits pack (31 days)
 
 #### Subscription Cancellation
 1. **User cancels** → Manual cancellation via `/api/stripe/subscription/cancel`
@@ -166,7 +166,7 @@ When a new user registers and logs in:
 
 ### Pro Subscription Credit Pack Details
 
-- **Amount**: 33000 credits
+- **Amount**: 30000 credits
 - **Validity**: 31 days from subscription/renewal
 - **Description**: 'Pro subscription credit pack' / 'Pro subscription renewal credit pack'
 - **Type**: Subscription (31-day expiration)
@@ -190,7 +190,7 @@ When a new user registers and logs in:
 - `Processing webhook event: ${event.type}` - Event type received
 - `Syncing subscription to backend for account ${accountId}` - Backend sync started
 - `Plan updated:` - Backend plan update response
-- `✅ Backend account updated to developer plan with 33000 credits pack` - Success confirmation
+- `✅ Backend account updated to developer plan with 30000 credits pack` - Success confirmation
 - `❌ Failed to sync with backend system:` - Error details with stack trace
 
 #### Price ID Configuration

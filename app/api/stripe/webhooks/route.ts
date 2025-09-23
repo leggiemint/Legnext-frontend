@@ -144,12 +144,12 @@ async function handleCheckoutSessionCompleted(event: Stripe.Event) {
         expiredAt.setDate(expiredAt.getDate() + 31); // 31天有效期
 
         const creditPackResponse = await backendApiClient.createCreditPack(user.profile.backendAccountId, {
-          capacity: 33000, // Pro计划的信用量
+          capacity: 30000, // Pro计划的信用量
           description: 'Pro subscription credit pack',
           expired_at: expiredAt.toISOString(),
         });
 
-        log.info(`✅ Backend account ${user.profile.backendAccountId} updated to developer plan with 33000 credits pack`);
+        log.info(`✅ Backend account ${user.profile.backendAccountId} updated to developer plan with 30000 credits pack`);
         log.info('Credit pack created:', creditPackResponse);
       } catch (error) {
         log.error('❌ Failed to sync with backend system:', error);
@@ -233,12 +233,12 @@ async function handleSubscriptionCreation(invoice: Stripe.Invoice) {
       expiredAt.setDate(expiredAt.getDate() + 31); // 31天有效期
 
       const creditPackResponse = await backendApiClient.createCreditPack(user.profile.backendAccountId, {
-        capacity: 33000, // Pro计划的信用量
+        capacity: 30000, // Pro计划的信用量
         description: 'Pro subscription credit pack',
         expired_at: expiredAt.toISOString(),
       });
 
-      log.info(`✅ Backend account ${user.profile.backendAccountId} updated to developer plan with 33000 credits pack`);
+      log.info(`✅ Backend account ${user.profile.backendAccountId} updated to developer plan with 30000 credits pack`);
       log.info('Credit pack created:', creditPackResponse);
     } catch (error) {
       log.error('❌ Failed to sync with backend system:', error);
@@ -305,7 +305,7 @@ async function handleSubscriptionRenewal(invoice: Stripe.Invoice) {
       expiredAt.setDate(expiredAt.getDate() + 31); // 31天有效期
 
       const creditPackResponse = await backendApiClient.createCreditPack(user.profile.backendAccountId, {
-        capacity: 33000,
+        capacity: 30000,
         description: 'Pro subscription renewal credit pack',
         expired_at: expiredAt.toISOString(),
       });

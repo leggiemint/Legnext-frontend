@@ -46,7 +46,7 @@ const config = {
         credits: 30000, // 30,000 credits per month (1$ = 1000 credits)
         priceAnchor: 99,
         features: [
-          { name: "33,000 API points monthly" },
+          { name: "30,000 API points monthly" },
           { name: "All features of Free plan" },
           { name: "Top-up recharge support" },
           { name: "Priority support" },
