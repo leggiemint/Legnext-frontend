@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import StepsSection from "@/components/ui/StepsSection";
 import OCMakerExamples from "@/components/examples/OCMakerExamples";
@@ -12,17 +12,13 @@ import ProgressBar from "@/components/ui/ProgressBar";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { toast } from "react-hot-toast";
 import { log } from "@/libs/logger";
+import { useImageGenerationTask } from "@/hooks/useImageGenerationTask";
 
 export const dynamic = 'force-dynamic';
 
 export default function CreatePage() {
   const { isAuthenticated } = useAuth();
   const [textDescription, setTextDescription] = useState("");
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [isUpscaling, setIsUpscaling] = useState(false);
-  const [generatedImages, setGeneratedImages] = useState<string[]>([]);
-  const [upscaledImage, setUpscaledImage] = useState<string | null>(null);
-  const [currentTaskId, setCurrentTaskId] = useState<string | null>(null);
   const [, setSelectedImageIndex] = useState<number | null>(null);
   const [userApiKey, setUserApiKey] = useState<string | null>(null);
   const [isLoadingApiKey, setIsLoadingApiKey] = useState(false);
@@ -33,20 +29,35 @@ export default function CreatePage() {
     fileName: string;
   } | null>(null);
 
-  // WebSocket连接和任务追踪
-  const eventSourceRef = useRef<EventSource | null>(null);
-  const pendingTasksRef = useRef<Map<string, 'diffusion' | 'upscale'>>(new Map());
+  // 使用新的图像生成任务管理器
+  const {
+    isGenerating,
+    isUpscaling,
+    generatedImages,
+    upscaledImage,
+    currentTaskId,
+    isConnected,
+    connectionError,
+    activeTasks,
+    startImageGeneration,
+    startImageUpscaling,
+    cancelCurrentTask,
+    reset,
+  } = useImageGenerationTask(userApiKey, {
+    onImagesGenerated: (images) => {
+      toast.success(`Images generated successfully! Found ${images.length} images.`);
+    },
+    onImageUpscaled: (imageUrl) => {
+      toast.success('Image upscaled successfully!');
+    },
+    onTaskFailed: (error) => {
+      toast.error(error);
+    },
+    onProgressUpdate: (progress, message) => {
+      log.info(`Progress: ${progress}% - ${message}`);
+    },
+  });
 
-  // 获取当前域名用于callback URL（给后端系统调用的webhook URL）
-  const getCallbackUrl = () => {
-    if (typeof window !== 'undefined') {
-      return `${window.location.protocol}//${window.location.host}/api/backend-proxy/callback`;
-    }
-    return `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3001'}/api/backend-proxy/callback`;
-  };
-
-  // SSE连接URL（前端使用，必须是相对路径）
-  const SSE_ENDPOINT = '/api/backend-proxy/callback';
 
   // Steps data for the StepsSection component
   const createSteps = [
@@ -122,215 +133,16 @@ export default function CreatePage() {
       return;
     }
 
-    setIsGenerating(true);
-    setGeneratedImages([]);
-    setUpscaledImage(null);
-    setCurrentTaskId(null);
-
     try {
-      // 构建完整的/imagine命令
-      let fullPrompt = textDescription.trim();
-
-      log.info('Sending /imagine command to diffusion API with callback:', fullPrompt);
-
-      // 调用业务 Diffusion API (通过代理路由) - 现在使用webhook callback
-      const response = await fetch('/api/backend-proxy/v1/diffusion', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-API-KEY': userApiKey,
-        },
-        body: JSON.stringify({
-          text: fullPrompt,
-          callback: getCallbackUrl(), // 添加callback URL
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to generate images');
-      }
-
-      const result = await response.json();
-      setCurrentTaskId(result.job_id);
-
-      // 注册任务以便处理webhook回调
-      pendingTasksRef.current.set(result.job_id, 'diffusion');
-
+      // 使用新的任务管理器开始图像生成
+      await startImageGeneration(textDescription.trim());
       toast.success('Generation started! Please wait for completion...');
-
     } catch (error: any) {
       log.error('Error generating images:', error);
       toast.error(error.message || 'Failed to generate images');
-      setIsGenerating(false);
     }
   };
 
-  // 处理webhook回调通知
-  const handleWebhookNotification = useCallback((jobId: string, data: any) => {
-    const taskType = pendingTasksRef.current.get(jobId);
-    if (!taskType) {
-      log.warn('Received webhook notification for unknown task:', jobId);
-      return;
-    }
-
-    // 防止重复处理同一个任务
-    if (data.status === 'completed' || data.status === 'failed') {
-      const isAlreadyProcessed = sessionStorage.getItem(`task_${jobId}_processed`);
-      if (isAlreadyProcessed) {
-        log.warn('Task already processed, ignoring duplicate webhook:', jobId);
-        return;
-      }
-      sessionStorage.setItem(`task_${jobId}_processed`, 'true');
-    }
-
-    log.info('📨 Processing webhook notification:', {
-      job_id: jobId,
-      task_type: taskType,
-      status: data.status,
-      output: data.output
-    });
-
-    if (data.status === 'completed') {
-      // 任务完成
-      if (taskType === 'diffusion') {
-        // 处理生成的图片
-        log.info('🎨 Processing completed diffusion task:', {
-          status: data.status,
-          output: data.output,
-          image_urls: data.output?.image_urls
-        });
-
-        const images: string[] = [];
-        if (data.output?.image_urls && data.output.image_urls.length > 0) {
-          // 使用后端返回的实际图片URL数组，过滤空字符串
-          data.output.image_urls.forEach((url: string) => {
-            if (url && url.trim() !== '') {
-              images.push(url);
-            }
-          });
-        }
-
-        log.info('🖼️ Extracted images:', images);
-        setGeneratedImages(images);
-        setIsGenerating(false);
-        toast.success(`Images generated successfully! Found ${images.length} images.`);
-      } else if (taskType === 'upscale') {
-        // 处理放大的图片
-        if (data.output?.image_url) {
-          setUpscaledImage(data.output.image_url);
-        }
-        setIsUpscaling(false);
-        toast.success('Image upscaled successfully!');
-      }
-    } else if (data.status === 'failed') {
-      // 任务失败
-      log.error('❌ Task failed:', {
-        job_id: jobId,
-        error_code: data.error?.code,
-        error_message: data.error?.message,
-        error_raw: data.error?.raw_message,
-        task_type: taskType
-      });
-
-      let errorMessage = data.error?.raw_message ||
-                        data.error?.message ||
-                        data.failure_reason ||
-                        `Task failed (${data.status})`;
-
-      // 简化错误消息，使其更用户友好
-      if (errorMessage.includes('unknown error, please contact support')) {
-        errorMessage = 'Image generation failed due to server error. Please try again or contact support.';
-      } else if (errorMessage.includes('task failed')) {
-        errorMessage = 'Image generation failed. Please check your prompt and try again.';
-      }
-
-      toast.error(errorMessage);
-
-      if (taskType === 'diffusion') {
-        setIsGenerating(false);
-      } else {
-        setIsUpscaling(false);
-      }
-    } else {
-      // 进度更新
-      log.info('📊 Task status update:', {
-        job_id: jobId,
-        status: data.status,
-        task_type: taskType
-      });
-    }
-
-    // 如果任务完成或失败，从待处理任务中移除
-    if (data.status === 'completed' || data.status === 'failed') {
-      pendingTasksRef.current.delete(jobId);
-    }
-  }, []);
-
-  // 设置SSE连接接收webhook通知
-  useEffect(() => {
-    if (!isAuthenticated) return;
-
-    let reconnectCount = 0;
-    const maxReconnects = 5;
-
-    const setupConnection = () => {
-      // 使用常量确保使用相对路径
-      console.log('🔗 Setting up SSE connection to:', SSE_ENDPOINT);
-      const eventSource = new EventSource(SSE_ENDPOINT);
-      eventSourceRef.current = eventSource;
-
-      eventSource.onmessage = (event) => {
-        try {
-          const data = JSON.parse(event.data);
-
-          if (data.type === 'task_completed' || data.type === 'task_failed' || data.type === 'task_progress') {
-            // 处理任务状态更新
-            handleWebhookNotification(data.job_id, {
-              status: data.type === 'task_completed' ? 'completed' : data.type === 'task_failed' ? 'failed' : data.status,
-              output: data.output,
-              error: data.error
-            });
-          }
-
-          // 重置重连计数
-          reconnectCount = 0;
-        } catch (error) {
-          console.error('Error parsing SSE message:', error);
-        }
-      };
-
-      eventSource.onerror = (error) => {
-        console.error('SSE connection error:', error);
-        console.error('SSE readyState:', eventSource.readyState);
-        console.error('SSE url:', eventSource.url);
-
-        // 自动重连
-        if (reconnectCount < maxReconnects) {
-          const delay = Math.min(1000 * Math.pow(2, reconnectCount), 30000); // 指数退避，最大30秒
-          console.log(`🔄 Attempting to reconnect SSE in ${delay}ms (attempt ${reconnectCount + 1}/${maxReconnects})`);
-          setTimeout(() => {
-            if (eventSourceRef.current?.readyState === EventSource.CLOSED) {
-              reconnectCount++;
-              setupConnection();
-            }
-          }, delay);
-        } else {
-          console.error('❌ Max SSE reconnection attempts reached');
-        }
-      };
-
-      return eventSource;
-    };
-
-    const eventSource = setupConnection();
-
-    // 清理连接
-    return () => {
-      eventSource.close();
-      eventSourceRef.current = null;
-    };
-  }, [isAuthenticated, handleWebhookNotification]);
 
   const handleUpscale = async (imageIndex: number) => {
     // 检查用户是否已登录
@@ -349,43 +161,14 @@ export default function CreatePage() {
       return;
     }
 
-    setIsUpscaling(true);
-    setSelectedImageIndex(imageIndex);
-    setUpscaledImage(null);
-
     try {
-      log.info('Sending upscale request for image index with callback:', imageIndex);
-
-      // 调用业务 Upscale API (通过代理路由) - 现在使用webhook callback
-      const response = await fetch('/api/backend-proxy/v1/upscale', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-API-KEY': userApiKey,
-        },
-        body: JSON.stringify({
-          jobId: currentTaskId,
-          imageNo: imageIndex, // 0-3 对应4张图片
-          callback: getCallbackUrl(), // 添加callback URL
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to upscale image');
-      }
-
-      const result = await response.json();
-
-      // 注册任务以便处理webhook回调
-      pendingTasksRef.current.set(result.job_id, 'upscale');
-
+      setSelectedImageIndex(imageIndex);
+      // 使用新的任务管理器开始图像放大
+      await startImageUpscaling(imageIndex);
       toast.success('Upscale started! Please wait for completion...');
-
     } catch (error: any) {
       log.error('Error upscaling image:', error);
       toast.error(error.message || 'Failed to upscale image');
-      setIsUpscaling(false);
     }
   };
 
@@ -400,6 +183,22 @@ export default function CreatePage() {
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
             Experience the power of Midjourney&apos;s /imagine command through our API. Generate 4 unique image variations from your text description, then upscale your favorites to high resolution.
           </p>
+          
+          {/* Connection Status */}
+          <div className="mt-4 flex justify-center items-center space-x-2">
+            <div className={`w-3 h-3 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`}></div>
+            <span className="text-sm text-gray-600">
+              {isConnected ? 'Connected' : 'Disconnected'}
+            </span>
+            {connectionError && (
+              <span className="text-sm text-red-600 ml-2">
+                ({connectionError})
+              </span>
+            )}
+            <span className="text-xs text-gray-500 ml-2">
+              Active tasks: {activeTasks.length}
+            </span>
+          </div>
         </div>
 
       {/* Step 1: Choose Input Method */}
