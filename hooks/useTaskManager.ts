@@ -25,6 +25,7 @@ export interface TaskManagerConfig {
   maxReconnects?: number; // 最大重连次数，默认3次
   reconnectDelay?: number; // 重连延迟，默认1秒
   enablePollingFallback?: boolean; // 是否启用轮询备用，默认true
+  apiKey?: string; // 用户API密钥，用于轮询认证
 }
 
 export interface TaskManagerCallbacks {
@@ -48,7 +49,8 @@ export function useTaskManager(
     pollingInterval = 2000,
     maxReconnects = 3,
     reconnectDelay = 1000,
-    enablePollingFallback = true
+    enablePollingFallback = true,
+    apiKey
   } = config;
 
   // 状态管理
@@ -100,17 +102,32 @@ export function useTaskManager(
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 10000); // 10秒超时
 
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+
+      // 添加API密钥认证
+      if (apiKey) {
+        headers['X-API-KEY'] = apiKey;
+      }
+
       const response = await fetch(`/api/backend-proxy/v1/job/${jobId}`, {
         method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers,
         signal: controller.signal,
       });
 
       clearTimeout(timeoutId);
 
       if (!response.ok) {
+        // 400 通常是认证问题
+        if (response.status === 400) {
+          log.error(`Task ${jobId} query failed (400), likely authentication issue`, {
+            hasApiKey: !!apiKey,
+            apiKeyLength: apiKey?.length
+          });
+          return null;
+        }
         // 404 可能表示任务不存在，这是正常情况
         if (response.status === 404) {
           log.warn(`Task ${jobId} not found (404), may have expired`);
@@ -239,9 +256,12 @@ export function useTaskManager(
 
     log.info('🔗 Establishing SSE connection...', {
       endpoint: sseEndpoint,
+      fullUrl: typeof window !== 'undefined' ? `${window.location.origin}${sseEndpoint}` : sseEndpoint,
       currentState: sseConnection?.readyState,
       activeTasks: activeTasks.size,
-      reconnectAttempts: reconnectAttempts.current
+      reconnectAttempts: reconnectAttempts.current,
+      environment: process.env.NODE_ENV,
+      host: typeof window !== 'undefined' ? window.location.host : 'server-side'
     });
 
     // 清理旧连接和定时器

@@ -255,8 +255,9 @@ export async function POST(request: NextRequest) {
 
     // Enhanced logging with performance tracking
     const processingStart = Date.now();
+    const isDebugMode = process.env.NODE_ENV === 'development' || process.env.NODE_ENV !== 'production';
 
-    if (process.env.NODE_ENV === 'development') {
+    if (isDebugMode) {
       console.log('📨 Webhook received:', {
         job_id: body.data.job_id,
         task_type: body.data.task_type,
@@ -264,6 +265,10 @@ export async function POST(request: NextRequest) {
         image_count: body.data.output?.image_urls?.length || 0,
         connections: sseConnections.size,
         parseTime: processingStart - startTime,
+        environment: process.env.NODE_ENV,
+        timestamp: new Date().toISOString(),
+        hasOutput: !!body.data.output,
+        imageUrls: body.data.output?.image_urls?.slice(0, 2), // Log first 2 URLs for debugging
       });
     } else {
       // Production: optimized logging
@@ -393,9 +398,13 @@ export async function GET(request: NextRequest) {
         userAgent
       });
 
-      // Log connection in development
-      if (process.env.NODE_ENV === 'development') {
-        console.log(`🔗 New SSE connection: ${clientId} from ${clientIP}, total: ${sseConnections.size}`);
+      // Log connection in development and staging
+      if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV !== 'production') {
+        console.log(`🔗 New SSE connection: ${clientId} from ${clientIP}, total: ${sseConnections.size}`, {
+          environment: process.env.NODE_ENV,
+          userAgent: userAgent.substring(0, 50) + '...',
+          timestamp: new Date().toISOString(),
+        });
       }
 
       // Set up heartbeat mechanism
