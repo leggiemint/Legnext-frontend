@@ -2,15 +2,15 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 
-// Helper function to calculate task duration
-function calculateDuration(startedAt?: string, endedAt?: string): string {
-  if (!startedAt || !endedAt) return 'unknown';
-  const start = new Date(startedAt).getTime();
-  const end = new Date(endedAt).getTime();
-  const durationMs = end - start;
-  const seconds = Math.round(durationMs / 1000);
-  return `${seconds}s`;
-}
+// Helper function to calculate task duration (currently unused but may be needed for future metrics)
+// function calculateDuration(startedAt?: string, endedAt?: string): string {
+//   if (!startedAt || !endedAt) return 'unknown';
+//   const start = new Date(startedAt).getTime();
+//   const end = new Date(endedAt).getTime();
+//   const durationMs = end - start;
+//   const seconds = Math.round(durationMs / 1000);
+//   return `${seconds}s`;
+// }
 
 // Global store for SSE connections - in production, use Redis or similar
 const sseConnections = new Map<string, {
@@ -59,12 +59,18 @@ function scheduleCleanup() {
 
     // Clean up old rate limit entries
     const oneHourAgo = now - 60 * 60 * 1000;
-    for (const [key] of connectionAttempts.entries()) {
+    const keysToDelete: string[] = [];
+
+    connectionAttempts.forEach((_, key) => {
       const timestamp = parseInt(key.split(':')[1] || '0') * 60000;
       if (timestamp < oneHourAgo) {
-        connectionAttempts.delete(key);
+        keysToDelete.push(key);
       }
-    }
+    });
+
+    keysToDelete.forEach(key => {
+      connectionAttempts.delete(key);
+    });
 
     if (process.env.NODE_ENV === 'development') {
       console.log(`🧹 Cleanup completed: ${staleConnections.length} stale connections removed, active: ${sseConnections.size}`);
