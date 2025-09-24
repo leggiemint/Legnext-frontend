@@ -47,6 +47,7 @@ export function useImageGenerationTask(
       maxReconnects: 3,
       reconnectDelay: 1000,
       enablePollingFallback: true,
+      apiKey: userApiKey, // 传递用户API密钥用于轮询认证
     },
     {
       onTaskUpdate: handleTaskUpdate,
@@ -287,9 +288,14 @@ export function useImageGenerationTask(
       callbackUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3001'}/api/backend-proxy/callback`;
     }
 
-    // 在开发环境下记录回调URL用于调试
-    if (process.env.NODE_ENV === 'development') {
-      log.info('🔄 Callback URL generated:', callbackUrl);
+    // 记录回调URL用于调试（包括staging环境）
+    if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV !== 'production') {
+      log.info('🔄 Callback URL generated:', {
+        url: callbackUrl,
+        environment: process.env.NODE_ENV,
+        windowHost: typeof window !== 'undefined' ? window.location.host : 'server-side',
+        nextPublicAppUrl: process.env.NEXT_PUBLIC_APP_URL,
+      });
     }
 
     return callbackUrl;
