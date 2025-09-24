@@ -16,21 +16,46 @@ function calculateDuration(startedAt?: string, endedAt?: string): string {
 const sseConnections = new Map<string, {
   controller: ReadableStreamDefaultController<Uint8Array>;
   writer: WritableStreamDefaultWriter<Uint8Array>;
+  lastHeartbeat: number;
+  createdAt: number;
 }>();
+
+// Rate limiting for connection attempts
+const connectionAttempts = new Map<string, number>();
+const MAX_CONNECTIONS_PER_MINUTE = 10;
 
 // Broadcast notification to all connected clients
 function broadcastNotification(notification: any) {
   const message = `data: ${JSON.stringify(notification)}\n\n`;
   const encoder = new TextEncoder();
   const data = encoder.encode(message);
+  const now = Date.now();
 
+  // Clean up stale connections
+  const staleConnections: string[] = [];
+  
   sseConnections.forEach((connection, clientId) => {
     try {
+      // Check if connection is stale (no heartbeat for 2 minutes)
+      if (now - connection.lastHeartbeat > 2 * 60 * 1000) {
+        staleConnections.push(clientId);
+        return;
+      }
+      
       connection.controller.enqueue(data);
+      connection.lastHeartbeat = now;
     } catch (error) {
-      console.error('Error sending SSE message to client:', clientId, error);
-      sseConnections.delete(clientId);
+      // Only log errors in development or if LOG_LEVEL is debug
+      if (process.env.NODE_ENV === 'development' || process.env.LOG_LEVEL === 'debug') {
+        console.error('Error sending SSE message to client:', clientId, error);
+      }
+      staleConnections.push(clientId);
     }
+  });
+
+  // Remove stale connections
+  staleConnections.forEach(clientId => {
+    sseConnections.delete(clientId);
   });
 }
 
@@ -112,13 +137,18 @@ export async function POST(request: NextRequest) {
   try {
     const body: WebhookCallbackPayload = await request.json();
 
-    // Log the callback payload
-    console.log('Webhook received:', {
-      job_id: body.data.job_id,
-      task_type: body.data.task_type,
-      status: body.data.status,
-      image_count: body.data.output?.image_urls?.length || 0,
-    });
+    // Log the callback payload (production-safe logging)
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Webhook received:', {
+        job_id: body.data.job_id,
+        task_type: body.data.task_type,
+        status: body.data.status,
+        image_count: body.data.output?.image_urls?.length || 0,
+      });
+    } else {
+      // Production: only log essential info
+      console.log(`Webhook: ${body.data.job_id} ${body.data.status}`);
+    }
 
     // Validate required fields
     if (!body.data?.job_id) {
@@ -160,8 +190,26 @@ export async function POST(request: NextRequest) {
 // Handle SSE connections for real-time notifications
 export async function GET(request: NextRequest) {
   const clientId = Date.now().toString() + Math.random().toString(36).substring(2, 9);
+  const clientIP = request.ip || request.headers.get('x-forwarded-for') || 'unknown';
+  
+  // Rate limiting check
+  const now = Date.now();
+  const minuteKey = `${clientIP}:${Math.floor(now / 60000)}`;
+  const attempts = connectionAttempts.get(minuteKey) || 0;
+  
+  if (attempts >= MAX_CONNECTIONS_PER_MINUTE) {
+    return new NextResponse('Rate limit exceeded', { status: 429 });
+  }
+  
+  connectionAttempts.set(minuteKey, attempts + 1);
+  
+  // Clean up old rate limit entries
+  setTimeout(() => {
+    connectionAttempts.delete(minuteKey);
+  }, 60000);
 
   const encoder = new TextEncoder();
+  const createdAt = Date.now();
 
   const stream = new ReadableStream({
     start(controller) {
@@ -170,19 +218,46 @@ export async function GET(request: NextRequest) {
         type: 'connected',
         message: 'SSE connection established',
         clientId,
-        timestamp: Date.now()
+        timestamp: createdAt
       })}\n\n`;
 
       controller.enqueue(encoder.encode(initialMessage));
 
-      // Store the controller for broadcasting
+      // Store the controller for broadcasting with heartbeat tracking
       sseConnections.set(clientId, {
         controller,
-        writer: null as any // Not used in this implementation
+        writer: null as any, // Not used in this implementation
+        lastHeartbeat: createdAt,
+        createdAt
       });
+
+      // Set up heartbeat mechanism
+      const heartbeatInterval = setInterval(() => {
+        try {
+          const heartbeatMessage = `data: ${JSON.stringify({
+            type: 'ping',
+            timestamp: Date.now()
+          })}\n\n`;
+          controller.enqueue(encoder.encode(heartbeatMessage));
+          
+          // Update heartbeat timestamp
+          const connection = sseConnections.get(clientId);
+          if (connection) {
+            connection.lastHeartbeat = Date.now();
+          }
+        } catch (error) {
+          // Only log heartbeat errors in development
+          if (process.env.NODE_ENV === 'development') {
+            console.error('Heartbeat failed for client:', clientId, error);
+          }
+          clearInterval(heartbeatInterval);
+          cleanup();
+        }
+      }, 30000); // Every 30 seconds
 
       // Clean up on disconnect
       const cleanup = () => {
+        clearInterval(heartbeatInterval);
         sseConnections.delete(clientId);
         try {
           controller.close();
@@ -191,8 +266,8 @@ export async function GET(request: NextRequest) {
         }
       };
 
-      // Set up cleanup timer (connection timeout after 30 minutes)
-      const timeoutId = setTimeout(cleanup, 30 * 60 * 1000);
+      // Set up cleanup timer (connection timeout after 5 minutes)
+      const timeoutId = setTimeout(cleanup, 5 * 60 * 1000);
 
       // Handle client disconnect
       request.signal.addEventListener('abort', () => {
