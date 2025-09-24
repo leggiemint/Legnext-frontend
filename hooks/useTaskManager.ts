@@ -194,6 +194,12 @@ export function useTaskManager(
       activeTasks: activeTasks.size
     });
 
+    // 清理旧的连接超时定时器
+    if (connectionTimeout.current) {
+      clearTimeout(connectionTimeout.current);
+      connectionTimeout.current = null;
+    }
+
     const eventSource = new EventSource(sseEndpoint);
     setSseConnection(eventSource);
 
@@ -291,6 +297,12 @@ export function useTaskManager(
       setIsConnected(false);
     } else {
       log.info('🔌 No SSE connection to close');
+    }
+
+    // 清理连接超时定时器
+    if (connectionTimeout.current) {
+      clearTimeout(connectionTimeout.current);
+      connectionTimeout.current = null;
     }
   }, [sseConnection, activeTasks.size]);
 
