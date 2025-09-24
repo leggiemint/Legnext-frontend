@@ -62,6 +62,7 @@ export function useTaskManager(
   const reconnectAttempts = useRef(0);
   const reconnectTimeout = useRef<NodeJS.Timeout | null>(null);
   const taskStatusCache = useRef<Map<string, TaskStatus>>(new Map());
+  const connectionTimeout = useRef<NodeJS.Timeout | null>(null);
 
   // 清理函数
   const cleanup = useCallback(() => {
@@ -75,6 +76,12 @@ export function useTaskManager(
     if (reconnectTimeout.current) {
       clearTimeout(reconnectTimeout.current);
       reconnectTimeout.current = null;
+    }
+
+    // 清理连接超时定时器
+    if (connectionTimeout.current) {
+      clearTimeout(connectionTimeout.current);
+      connectionTimeout.current = null;
     }
 
     // 关闭SSE连接
@@ -186,9 +193,20 @@ export function useTaskManager(
       currentState: sseConnection?.readyState,
       activeTasks: activeTasks.size
     });
-    
+
     const eventSource = new EventSource(sseEndpoint);
     setSseConnection(eventSource);
+
+    // 设置280秒超时，主动断开连接避免Vercel 300秒限制
+    connectionTimeout.current = setTimeout(() => {
+      log.warn('⏰ SSE connection approaching 280s timeout, proactive disconnect');
+      if (eventSource.readyState === EventSource.OPEN) {
+        eventSource.close();
+        setSseConnection(null);
+        setIsConnected(false);
+        setConnectionError('Connection timeout');
+      }
+    }, 280000);
 
     eventSource.onopen = () => {
       log.info('✅ SSE connection established', {
@@ -307,26 +325,27 @@ export function useTaskManager(
   // 结束任务
   const endTask = useCallback((jobId: string) => {
     log.info(`🏁 Ending task: ${jobId}`);
-    
+
     // 停止轮询
     stopPolling(jobId);
-    
+
+    // 清理任务缓存
+    taskStatusCache.current.delete(jobId);
+
     // 从活跃任务列表移除
     setActiveTasks(prev => {
       const newSet = new Set(prev);
       newSet.delete(jobId);
       const newSize = newSet.size;
-      
+
       log.info(`📊 Active tasks after removal: ${newSize} (was ${prev.size})`);
-      
-      // 如果没有活跃任务，延迟关闭SSE连接
+
+      // 如果没有活跃任务，立即关闭SSE连接
       if (newSize === 0) {
-        setTimeout(() => {
-          log.info('🔌 No active tasks remaining, closing SSE connection');
-          closeSSEConnection();
-        }, 2000); // 延迟2秒关闭，避免频繁开关
+        log.info('🔌 No active tasks remaining, closing SSE connection immediately');
+        closeSSEConnection();
       }
-      
+
       return newSet;
     });
   }, [stopPolling, closeSSEConnection]);
@@ -352,7 +371,7 @@ export function useTaskManager(
 
   // 定期检查连接健康状态
   useEffect(() => {
-    const healthCheckInterval = setInterval(checkConnectionHealth, 10000); // 每10秒检查一次
+    const healthCheckInterval = setInterval(checkConnectionHealth, 30000); // 每30秒检查一次
     return () => clearInterval(healthCheckInterval);
   }, [checkConnectionHealth]);
 
