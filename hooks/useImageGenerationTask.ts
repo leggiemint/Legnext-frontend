@@ -279,10 +279,20 @@ export function useImageGenerationTask(
 
   // 获取回调URL
   const getCallbackUrl = () => {
+    let callbackUrl: string;
+
     if (typeof window !== 'undefined') {
-      return `${window.location.protocol}//${window.location.host}/api/backend-proxy/callback`;
+      callbackUrl = `${window.location.protocol}//${window.location.host}/api/backend-proxy/callback`;
+    } else {
+      callbackUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3001'}/api/backend-proxy/callback`;
     }
-    return `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3001'}/api/backend-proxy/callback`;
+
+    // 在开发环境下记录回调URL用于调试
+    if (process.env.NODE_ENV === 'development') {
+      log.info('🔄 Callback URL generated:', callbackUrl);
+    }
+
+    return callbackUrl;
   };
 
   // 取消当前任务

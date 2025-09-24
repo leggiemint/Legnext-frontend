@@ -18,11 +18,66 @@ const sseConnections = new Map<string, {
   writer: WritableStreamDefaultWriter<Uint8Array>;
   lastHeartbeat: number;
   createdAt: number;
+  clientIP?: string;
+  userAgent?: string;
 }>();
 
 // Rate limiting for connection attempts
 const connectionAttempts = new Map<string, number>();
-const MAX_CONNECTIONS_PER_MINUTE = 10;
+const MAX_CONNECTIONS_PER_MINUTE = 15; // 增加限制，允许更多并发连接
+
+// Connection cleanup scheduler
+let cleanupScheduled = false;
+
+// Scheduled cleanup to prevent memory leaks
+function scheduleCleanup() {
+  if (cleanupScheduled) return;
+
+  cleanupScheduled = true;
+  setTimeout(() => {
+    const now = Date.now();
+    const staleThreshold = 5 * 60 * 1000; // 5 minutes
+    const staleConnections: string[] = [];
+
+    sseConnections.forEach((connection, clientId) => {
+      if (now - connection.lastHeartbeat > staleThreshold) {
+        staleConnections.push(clientId);
+      }
+    });
+
+    staleConnections.forEach(clientId => {
+      const connection = sseConnections.get(clientId);
+      if (connection) {
+        try {
+          connection.controller.close();
+        } catch (error) {
+          // Connection already closed
+        }
+        sseConnections.delete(clientId);
+      }
+    });
+
+    // Clean up old rate limit entries
+    const oneHourAgo = now - 60 * 60 * 1000;
+    for (const [key] of connectionAttempts.entries()) {
+      const timestamp = parseInt(key.split(':')[1] || '0') * 60000;
+      if (timestamp < oneHourAgo) {
+        connectionAttempts.delete(key);
+      }
+    }
+
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`🧹 Cleanup completed: ${staleConnections.length} stale connections removed, active: ${sseConnections.size}`);
+    }
+
+    cleanupScheduled = false;
+
+    // Schedule next cleanup if there are still connections
+    if (sseConnections.size > 0) {
+      scheduleCleanup();
+    }
+  }, 60000); // Every minute
+}
 
 // Broadcast notification to all connected clients
 function broadcastNotification(notification: any) {
@@ -31,32 +86,51 @@ function broadcastNotification(notification: any) {
   const data = encoder.encode(message);
   const now = Date.now();
 
-  // Clean up stale connections
+  // Clean up stale connections during broadcast
   const staleConnections: string[] = [];
-  
+  const failedConnections: string[] = [];
+  let successCount = 0;
+
   sseConnections.forEach((connection, clientId) => {
     try {
-      // Check if connection is stale (no heartbeat for 2 minutes)
-      if (now - connection.lastHeartbeat > 2 * 60 * 1000) {
+      // Check if connection is stale (no heartbeat for 3 minutes)
+      if (now - connection.lastHeartbeat > 3 * 60 * 1000) {
         staleConnections.push(clientId);
         return;
       }
-      
+
       connection.controller.enqueue(data);
       connection.lastHeartbeat = now;
+      successCount++;
     } catch (error) {
       // Only log errors in development or if LOG_LEVEL is debug
       if (process.env.NODE_ENV === 'development' || process.env.LOG_LEVEL === 'debug') {
         console.error('Error sending SSE message to client:', clientId, error);
       }
-      staleConnections.push(clientId);
+      failedConnections.push(clientId);
     }
   });
 
-  // Remove stale connections
-  staleConnections.forEach(clientId => {
-    sseConnections.delete(clientId);
+  // Remove stale and failed connections
+  [...staleConnections, ...failedConnections].forEach(clientId => {
+    const connection = sseConnections.get(clientId);
+    if (connection) {
+      try {
+        connection.controller.close();
+      } catch (error) {
+        // Connection already closed
+      }
+      sseConnections.delete(clientId);
+    }
   });
+
+  // Log broadcast stats in development
+  if (process.env.NODE_ENV === 'development' && notification.type !== 'ping') {
+    console.log(`📡 Broadcast ${notification.type}: ${successCount} delivered, ${staleConnections.length + failedConnections.length} cleaned up`);
+  }
+
+  // Schedule cleanup if not already scheduled
+  scheduleCleanup();
 }
 
 // Notification functions
@@ -134,54 +208,118 @@ export interface WebhookCallbackPayload {
 }
 
 export async function POST(request: NextRequest) {
+  const startTime = Date.now();
+
   try {
-    const body: WebhookCallbackPayload = await request.json();
+    // Add request timeout protection
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => {
+      controller.abort();
+    }, 5000); // 5 second timeout for webhook processing
 
-    // Log the callback payload (production-safe logging)
-    if (process.env.NODE_ENV === 'development') {
-      console.log('Webhook received:', {
-        job_id: body.data.job_id,
-        task_type: body.data.task_type,
-        status: body.data.status,
-        image_count: body.data.output?.image_urls?.length || 0,
-      });
-    } else {
-      // Production: only log essential info
-      console.log(`Webhook: ${body.data.job_id} ${body.data.status}`);
-    }
+    let body: WebhookCallbackPayload;
 
-    // Validate required fields
-    if (!body.data?.job_id) {
-      console.error('Missing job_id in webhook payload');
+    try {
+      body = await request.json();
+    } catch (parseError) {
+      clearTimeout(timeoutId);
+      console.error('Invalid JSON in webhook payload:', parseError);
       return NextResponse.json(
-        { error: 'Missing job_id in payload' },
+        { error: 'Invalid JSON payload' },
         { status: 400 }
       );
     }
 
-    // Process the callback data - Pure proxy mode (no database storage)
-    const { data } = body;
+    clearTimeout(timeoutId);
 
-    if (data.status === 'completed') {
-      await notifyTaskCompleted(data);
-    } else if (data.status === 'failed') {
-      await notifyTaskFailed(data);
-    } else if (data.status === 'running' || data.status === 'queued') {
-      await notifyTaskProgress(data);
+    // Validate required fields early
+    if (!body.data?.job_id || !body.data?.status) {
+      console.error('Missing required fields in webhook payload:', {
+        hasJobId: !!body.data?.job_id,
+        hasStatus: !!body.data?.status,
+      });
+      return NextResponse.json(
+        {
+          error: 'Missing required fields in payload',
+          required: ['data.job_id', 'data.status']
+        },
+        { status: 400 }
+      );
     }
 
-    // Acknowledge successful receipt
-    return NextResponse.json({
+    // Enhanced logging with performance tracking
+    const processingStart = Date.now();
+
+    if (process.env.NODE_ENV === 'development') {
+      console.log('📨 Webhook received:', {
+        job_id: body.data.job_id,
+        task_type: body.data.task_type,
+        status: body.data.status,
+        image_count: body.data.output?.image_urls?.length || 0,
+        connections: sseConnections.size,
+        parseTime: processingStart - startTime,
+      });
+    } else {
+      // Production: optimized logging
+      console.log(`📨 ${body.data.job_id}:${body.data.status} (${sseConnections.size} clients)`);
+    }
+
+    // Process the callback data with error handling
+    const { data } = body;
+    let notificationSent = false;
+
+    try {
+      if (data.status === 'completed') {
+        await notifyTaskCompleted(data);
+        notificationSent = true;
+      } else if (data.status === 'failed') {
+        await notifyTaskFailed(data);
+        notificationSent = true;
+      } else if (data.status === 'running' || data.status === 'queued') {
+        await notifyTaskProgress(data);
+        notificationSent = true;
+      }
+    } catch (notifyError) {
+      console.error('Error sending notification:', notifyError);
+      // Don't fail the webhook because of notification errors
+    }
+
+    const processingTime = Date.now() - processingStart;
+
+    // Enhanced response with metrics
+    const response = {
       success: true,
       message: 'Webhook callback processed successfully',
       job_id: data.job_id,
       status: data.status,
       timestamp: body.timestamp,
-    });
+      processing_time_ms: processingTime,
+      notification_sent: notificationSent,
+      active_connections: sseConnections.size,
+    };
+
+    // Log performance metrics in development
+    if (process.env.NODE_ENV === 'development' && processingTime > 1000) {
+      console.warn(`⚠️ Slow webhook processing: ${processingTime}ms for ${data.job_id}`);
+    }
+
+    return NextResponse.json(response);
+
   } catch (error) {
-    console.error('Webhook callback processing error:', error);
+    const processingTime = Date.now() - startTime;
+
+    console.error('Webhook callback processing error:', {
+      error: error instanceof Error ? error.message : error,
+      stack: error instanceof Error ? error.stack : undefined,
+      processingTime,
+    });
+
     return NextResponse.json(
-      { error: 'Failed to process webhook callback' },
+      {
+        error: 'Failed to process webhook callback',
+        processing_time_ms: processingTime,
+        timestamp: Date.now(),
+      },
       { status: 500 }
     );
   }
@@ -191,22 +329,38 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
   const clientId = Date.now().toString() + Math.random().toString(36).substring(2, 9);
   const clientIP = request.ip || request.headers.get('x-forwarded-for') || 'unknown';
-  
-  // Rate limiting check
+  const userAgent = request.headers.get('user-agent') || 'unknown';
+
+  // Rate limiting check with per-IP tracking
   const now = Date.now();
   const minuteKey = `${clientIP}:${Math.floor(now / 60000)}`;
   const attempts = connectionAttempts.get(minuteKey) || 0;
-  
+
   if (attempts >= MAX_CONNECTIONS_PER_MINUTE) {
-    return new NextResponse('Rate limit exceeded', { status: 429 });
+    // Log rate limiting in development
+    if (process.env.NODE_ENV === 'development') {
+      console.warn(`🚫 Rate limit exceeded for IP: ${clientIP}, attempts: ${attempts}`);
+    }
+    return new NextResponse(
+      JSON.stringify({
+        error: 'Rate limit exceeded',
+        retryAfter: 60 - (now % 60000) / 1000
+      }),
+      {
+        status: 429,
+        headers: { 'Content-Type': 'application/json' }
+      }
+    );
   }
-  
+
   connectionAttempts.set(minuteKey, attempts + 1);
-  
-  // Clean up old rate limit entries
-  setTimeout(() => {
-    connectionAttempts.delete(minuteKey);
-  }, 60000);
+
+  // Optimized cleanup scheduling
+  if (attempts === 0) {
+    setTimeout(() => {
+      connectionAttempts.delete(minuteKey);
+    }, 65000); // Slightly longer than a minute for safety
+  }
 
   const encoder = new TextEncoder();
   const createdAt = Date.now();
@@ -228,8 +382,15 @@ export async function GET(request: NextRequest) {
         controller,
         writer: null as any, // Not used in this implementation
         lastHeartbeat: createdAt,
-        createdAt
+        createdAt,
+        clientIP,
+        userAgent
       });
+
+      // Log connection in development
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`🔗 New SSE connection: ${clientId} from ${clientIP}, total: ${sseConnections.size}`);
+      }
 
       // Set up heartbeat mechanism
       const heartbeatInterval = setInterval(() => {
@@ -258,22 +419,47 @@ export async function GET(request: NextRequest) {
       // Clean up on disconnect
       const cleanup = () => {
         clearInterval(heartbeatInterval);
+        const wasConnected = sseConnections.has(clientId);
         sseConnections.delete(clientId);
+
         try {
           controller.close();
         } catch (error) {
           // Connection already closed
         }
+
+        // Log cleanup in development
+        if (process.env.NODE_ENV === 'development' && wasConnected) {
+          console.log(`🔌 SSE connection closed: ${clientId}, remaining: ${sseConnections.size}`);
+        }
       };
 
-      // Set up cleanup timer (connection timeout after 5 minutes)
-      const timeoutId = setTimeout(cleanup, 5 * 60 * 1000);
+      // Set up cleanup timer with enhanced timeout handling
+      // Use 270s to ensure we close before Vercel's 300s limit
+      const timeoutId = setTimeout(() => {
+        if (process.env.NODE_ENV === 'development') {
+          console.log(`⏰ SSE connection timeout: ${clientId} after 270s`);
+        }
+        cleanup();
+      }, 270 * 1000);
 
-      // Handle client disconnect
-      request.signal.addEventListener('abort', () => {
+      // Handle client disconnect with proper cleanup
+      const abortHandler = () => {
         clearTimeout(timeoutId);
         cleanup();
-      });
+      };
+
+      request.signal.addEventListener('abort', abortHandler);
+
+      // Store cleanup function for potential manual cleanup
+      const connection = sseConnections.get(clientId);
+      if (connection) {
+        (connection as any).cleanup = () => {
+          clearTimeout(timeoutId);
+          request.signal.removeEventListener('abort', abortHandler);
+          cleanup();
+        };
+      }
     },
     
     cancel() {
