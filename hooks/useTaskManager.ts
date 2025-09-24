@@ -94,22 +94,33 @@ export function useTaskManager(
     setConnectionError(null);
   }, [sseConnection]);
 
-  // 轮询任务状态
+  // 轮询任务状态 - 优化错误处理和缓存
   const pollTaskStatus = useCallback(async (jobId: string): Promise<TaskStatus | null> => {
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10秒超时
+
       const response = await fetch(`/api/backend-proxy/v1/job/${jobId}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
         },
+        signal: controller.signal,
       });
 
+      clearTimeout(timeoutId);
+
       if (!response.ok) {
+        // 404 可能表示任务不存在，这是正常情况
+        if (response.status === 404) {
+          log.warn(`Task ${jobId} not found (404), may have expired`);
+          return null;
+        }
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
       const data = await response.json();
-      
+
       const taskStatus: TaskStatus = {
         jobId: data.job_id,
         status: data.status,
@@ -122,12 +133,28 @@ export function useTaskManager(
         completedAt: data.meta?.ended_at,
       };
 
-      // 更新缓存
-      taskStatusCache.current.set(jobId, taskStatus);
-      
+      // 更新缓存，但只缓存最近30分钟的任务
+      const thirtyMinutesAgo = Date.now() - 30 * 60 * 1000;
+      const taskTime = new Date(data.meta?.created_at || 0).getTime();
+
+      if (taskTime > thirtyMinutesAgo) {
+        taskStatusCache.current.set(jobId, taskStatus);
+      }
+
       return taskStatus;
     } catch (error) {
-      log.error('Error polling task status:', error);
+      // 处理不同类型的错误
+      if (error instanceof Error) {
+        if (error.name === 'AbortError') {
+          log.warn(`Polling timeout for task ${jobId}`);
+        } else if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+          log.warn(`Network error polling task ${jobId}: ${error.message}`);
+        } else {
+          log.error(`Error polling task status for ${jobId}:`, error);
+        }
+      } else {
+        log.error('Unknown error polling task status:', error);
+      }
       return null;
     }
   }, []);
@@ -148,29 +175,6 @@ export function useTaskManager(
     }
   }, [callbacks]);
 
-  // 开始轮询
-  const startPolling = useCallback((jobId: string) => {
-    if (!enablePollingFallback) return;
-    
-    // 如果已经在轮询，先停止
-    stopPolling(jobId);
-    
-    const interval = setInterval(async () => {
-      const taskStatus = await pollTaskStatus(jobId);
-      if (taskStatus) {
-        handleTaskUpdate(taskStatus);
-        
-        // 任务完成或失败时停止轮询
-        if (['completed', 'failed', 'canceled'].includes(taskStatus.status)) {
-          stopPolling(jobId);
-        }
-      }
-    }, pollingInterval);
-    
-    pollingIntervals.current.set(jobId, interval);
-    log.info(`🔄 Started polling for task: ${jobId}`);
-  }, [enablePollingFallback, pollingInterval, pollTaskStatus, handleTaskUpdate]);
-
   // 停止轮询
   const stopPolling = useCallback((jobId: string) => {
     const interval = pollingIntervals.current.get(jobId);
@@ -181,6 +185,45 @@ export function useTaskManager(
     }
   }, []);
 
+  // 开始轮询
+  const startPolling = useCallback((jobId: string) => {
+    if (!enablePollingFallback) return;
+
+    // 如果已经在轮询，先停止
+    stopPolling(jobId);
+
+    let pollCount = 0;
+    const maxPolls = 120; // 最多轮询4分钟 (120 * 2s = 240s)
+
+    const interval = setInterval(async () => {
+      pollCount++;
+
+      // 检查是否超过最大轮询次数
+      if (pollCount > maxPolls) {
+        log.warn(`⏰ Polling timeout for task ${jobId}, stopping after ${maxPolls} attempts`);
+        stopPolling(jobId);
+        return;
+      }
+
+      const taskStatus = await pollTaskStatus(jobId);
+      if (taskStatus) {
+        handleTaskUpdate(taskStatus);
+
+        // 任务完成或失败时停止轮询
+        if (['completed', 'failed', 'canceled'].includes(taskStatus.status)) {
+          stopPolling(jobId);
+          log.info(`✅ Polling completed for task ${jobId} after ${pollCount} attempts`);
+        }
+      } else {
+        // 轮询失败，可能是网络问题，但继续尝试
+        log.warn(`⚠️ Polling failed for task ${jobId}, attempt ${pollCount}/${maxPolls}`);
+      }
+    }, pollingInterval);
+
+    pollingIntervals.current.set(jobId, interval);
+    log.info(`🔄 Started polling for task: ${jobId} (max ${maxPolls} attempts)`);
+  }, [enablePollingFallback, pollingInterval, pollTaskStatus, handleTaskUpdate, stopPolling]);
+
   // 建立SSE连接
   const establishSSEConnection = useCallback(() => {
     if (sseConnection?.readyState === EventSource.OPEN) {
@@ -188,13 +231,23 @@ export function useTaskManager(
       return; // 已连接
     }
 
+    // 如果存在连接正在尝试连接，不要创建新的
+    if (sseConnection?.readyState === EventSource.CONNECTING) {
+      log.info('🔗 SSE connection already connecting, waiting');
+      return;
+    }
+
     log.info('🔗 Establishing SSE connection...', {
       endpoint: sseEndpoint,
       currentState: sseConnection?.readyState,
-      activeTasks: activeTasks.size
+      activeTasks: activeTasks.size,
+      reconnectAttempts: reconnectAttempts.current
     });
 
-    // 清理旧的连接超时定时器
+    // 清理旧连接和定时器
+    if (sseConnection) {
+      sseConnection.close();
+    }
     if (connectionTimeout.current) {
       clearTimeout(connectionTimeout.current);
       connectionTimeout.current = null;
@@ -258,29 +311,44 @@ export function useTaskManager(
     };
 
     eventSource.onerror = (error) => {
-      log.error('❌ SSE connection error:', error);
+      log.error('❌ SSE connection error:', {
+        error,
+        readyState: eventSource.readyState,
+        activeTasks: activeTasks.size,
+        reconnectAttempts: reconnectAttempts.current
+      });
+
       setIsConnected(false);
       setConnectionError('Connection error');
       callbacks.onConnectionError?.(error);
-      
-      // 自动重连
-      if (reconnectAttempts.current < maxReconnects) {
+
+      // 只有在有活跃任务时才尝试重连
+      if (activeTasks.size > 0 && reconnectAttempts.current < maxReconnects) {
         reconnectAttempts.current++;
-        const delay = reconnectDelay * Math.pow(2, reconnectAttempts.current - 1);
-        
+        const delay = Math.min(reconnectDelay * Math.pow(2, reconnectAttempts.current - 1), 30000); // 最大30秒
+
         log.info(`🔄 Reconnecting SSE in ${delay}ms (attempt ${reconnectAttempts.current}/${maxReconnects})`);
-        
+
         reconnectTimeout.current = setTimeout(() => {
-          if (eventSource.readyState === EventSource.CLOSED) {
+          // 双重检查：确保连接已关闭且仍有活跃任务
+          if (eventSource.readyState === EventSource.CLOSED && activeTasks.size > 0) {
             establishSSEConnection();
+          } else if (activeTasks.size === 0) {
+            log.info('🔗 No active tasks, skipping reconnection');
+            reconnectAttempts.current = 0; // 重置重连次数
           }
         }, delay);
-      } else {
-        log.error('❌ Max reconnection attempts reached, falling back to polling');
-        // 切换到轮询模式
+      } else if (activeTasks.size > 0) {
+        log.error('❌ Max reconnection attempts reached, falling back to polling only');
+        reconnectAttempts.current = 0; // 重置以便后续任务可以重新尝试SSE
+
+        // 对所有活跃任务启用轮询
         activeTasks.forEach(jobId => {
           startPolling(jobId);
         });
+      } else {
+        log.info('🔗 No active tasks, not attempting reconnection');
+        reconnectAttempts.current = 0; // 重置重连次数
       }
     };
   }, [sseEndpoint, sseConnection, maxReconnects, reconnectDelay, callbacks, handleTaskUpdate, activeTasks, startPolling]);
@@ -364,28 +432,59 @@ export function useTaskManager(
 
   // 连接健康检查
   const checkConnectionHealth = useCallback(() => {
-    if (sseConnection && sseConnection.readyState === EventSource.OPEN) {
+    if (!sseConnection) {
+      // 如果有活跃任务但没有连接，尝试建立连接
+      if (activeTasks.size > 0) {
+        log.info('🔄 No SSE connection but has active tasks, attempting to establish');
+        establishSSEConnection();
+      }
+      return;
+    }
+
+    const readyState = sseConnection.readyState;
+
+    if (readyState === EventSource.OPEN) {
       // 连接正常
       setIsConnected(true);
       setConnectionError(null);
-    } else if (sseConnection && sseConnection.readyState === EventSource.CLOSED) {
+      // 重置重连计数
+      if (reconnectAttempts.current > 0) {
+        reconnectAttempts.current = 0;
+        log.info('🔗 Connection health restored, reset reconnect attempts');
+      }
+    } else if (readyState === EventSource.CLOSED) {
       // 连接已关闭
       setIsConnected(false);
       setConnectionError('Connection closed');
-      
-      // 如果有活跃任务，尝试重连
-      if (activeTasks.size > 0) {
+
+      // 如果有活跃任务且还未达到最大重连次数，尝试重连
+      if (activeTasks.size > 0 && reconnectAttempts.current < maxReconnects) {
         log.info('🔄 Connection closed with active tasks, attempting reconnection');
         establishSSEConnection();
+      } else if (activeTasks.size > 0 && reconnectAttempts.current >= maxReconnects) {
+        log.warn('❌ Connection closed but max reconnects reached, using polling only');
+        // 确保所有活跃任务都有轮询
+        activeTasks.forEach(jobId => {
+          if (!pollingIntervals.current.has(jobId)) {
+            startPolling(jobId);
+          }
+        });
       }
+    } else if (readyState === EventSource.CONNECTING) {
+      // 连接中，等待
+      setIsConnected(false);
+      setConnectionError('Connecting...');
     }
-  }, [sseConnection, activeTasks.size, establishSSEConnection]);
+  }, [sseConnection, activeTasks.size, establishSSEConnection, maxReconnects, reconnectAttempts, startPolling]);
 
-  // 定期检查连接健康状态
+  // 定期检查连接健康状态 - 优化检查频率
   useEffect(() => {
-    const healthCheckInterval = setInterval(checkConnectionHealth, 30000); // 每30秒检查一次
+    // 有活跃任务时更频繁检查，无任务时降低频率
+    const checkInterval = activeTasks.size > 0 ? 15000 : 60000; // 15s vs 60s
+
+    const healthCheckInterval = setInterval(checkConnectionHealth, checkInterval);
     return () => clearInterval(healthCheckInterval);
-  }, [checkConnectionHealth]);
+  }, [checkConnectionHealth, activeTasks.size]);
 
   // 获取任务状态
   const getTaskStatus = useCallback((jobId: string): TaskStatus | undefined => {

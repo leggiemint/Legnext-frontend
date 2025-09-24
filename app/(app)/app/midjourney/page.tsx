@@ -274,25 +274,30 @@ export default function CreatePage() {
                 </div>
               ) : generatedImages.length > 0 ? (
                 <div className="space-y-6">
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {/* 四宫格显示 */}
+                  <div className="grid grid-cols-2 gap-3 max-w-2xl mx-auto">
                     {generatedImages.map((imageUrl, index) => (
                       <div key={index} className="relative group">
-                        <div className="aspect-square overflow-hidden rounded-lg border-2 border-gray-200 hover:border-[#4f46e5] transition-colors max-w-[200px] mx-auto">
+                        <div className="aspect-square overflow-hidden rounded-lg border-2 border-gray-200 hover:border-[#4f46e5] transition-colors">
                           <Image 
                             src={imageUrl} 
                             alt={`Generated image ${index + 1}`}
-                            width={200}
-                            height={200}
+                            width={400}
+                            height={400}
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                           />
                         </div>
-                        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/20 rounded-lg">
                           <button 
-                            className="btn btn-sm bg-[#4f46e5] hover:bg-[#4f46e5]/90 text-white border-none"
+                            className="btn btn-sm bg-[#4f46e5] hover:bg-[#4f46e5]/90 text-white border-none shadow-lg"
                             onClick={() => handleUpscale(index)}
                           >
                             Upscale
                           </button>
+                        </div>
+                        {/* 图片编号 */}
+                        <div className="absolute top-2 left-2 bg-black/50 text-white text-xs px-2 py-1 rounded">
+                          {index + 1}
                         </div>
                       </div>
                     ))}
