@@ -113,6 +113,7 @@ export function useImageGenerationTask(
         log.info(`🎨 Generated ${imageTask.images.length} images`);
       }
       setIsGenerating(false);
+      // 注意：diffusion任务完成后不清空currentTaskId，因为upscale还需要这个ID
     } else if (task.taskType === 'upscale') {
       // 处理图像放大完成
       if (imageTask.upscaledImage) {
@@ -121,13 +122,12 @@ export function useImageGenerationTask(
         log.info('🔍 Image upscaled successfully');
       }
       setIsUpscaling(false);
+      // upscale完成后才清空currentTaskId
+      setCurrentTaskId(null);
     }
 
     // 清理任务并立即断开SSE连接
     taskManager.endTask(task.jobId);
-    
-    // 重置当前任务ID，表示没有活跃任务
-    setCurrentTaskId(null);
   }
 
   // 处理任务失败
@@ -157,15 +157,15 @@ export function useImageGenerationTask(
 
     if (task.taskType === 'diffusion') {
       setIsGenerating(false);
+      // diffusion失败后不清空currentTaskId，用户可能会重试
     } else {
       setIsUpscaling(false);
+      // upscale失败后清空currentTaskId
+      setCurrentTaskId(null);
     }
 
     // 清理任务并立即断开SSE连接
     taskManager.endTask(task.jobId);
-    
-    // 重置当前任务ID，表示没有活跃任务
-    setCurrentTaskId(null);
   }
 
   // 处理连接错误
