@@ -205,6 +205,12 @@ export function useTaskManager(
       try {
         const data = JSON.parse(event.data);
         
+        // Handle heartbeat pings
+        if (data.type === 'ping') {
+          log.debug('💓 Received heartbeat ping');
+          return;
+        }
+        
         if (data.type === 'task_completed' || data.type === 'task_failed' || data.type === 'task_progress') {
           const taskStatus: TaskStatus = {
             jobId: data.job_id,
@@ -324,6 +330,31 @@ export function useTaskManager(
       return newSet;
     });
   }, [stopPolling, closeSSEConnection]);
+
+  // 连接健康检查
+  const checkConnectionHealth = useCallback(() => {
+    if (sseConnection && sseConnection.readyState === EventSource.OPEN) {
+      // 连接正常
+      setIsConnected(true);
+      setConnectionError(null);
+    } else if (sseConnection && sseConnection.readyState === EventSource.CLOSED) {
+      // 连接已关闭
+      setIsConnected(false);
+      setConnectionError('Connection closed');
+      
+      // 如果有活跃任务，尝试重连
+      if (activeTasks.size > 0) {
+        log.info('🔄 Connection closed with active tasks, attempting reconnection');
+        establishSSEConnection();
+      }
+    }
+  }, [sseConnection, activeTasks.size, establishSSEConnection]);
+
+  // 定期检查连接健康状态
+  useEffect(() => {
+    const healthCheckInterval = setInterval(checkConnectionHealth, 10000); // 每10秒检查一次
+    return () => clearInterval(healthCheckInterval);
+  }, [checkConnectionHealth]);
 
   // 获取任务状态
   const getTaskStatus = useCallback((jobId: string): TaskStatus | undefined => {
