@@ -123,8 +123,11 @@ export function useImageGenerationTask(
       setIsUpscaling(false);
     }
 
-    // 清理任务
+    // 清理任务并立即断开SSE连接
     taskManager.endTask(task.jobId);
+    
+    // 重置当前任务ID，表示没有活跃任务
+    setCurrentTaskId(null);
   }
 
   // 处理任务失败
@@ -158,8 +161,11 @@ export function useImageGenerationTask(
       setIsUpscaling(false);
     }
 
-    // 清理任务
+    // 清理任务并立即断开SSE连接
     taskManager.endTask(task.jobId);
+    
+    // 重置当前任务ID，表示没有活跃任务
+    setCurrentTaskId(null);
   }
 
   // 处理连接错误
