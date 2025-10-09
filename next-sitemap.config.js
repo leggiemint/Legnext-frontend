@@ -4,8 +4,8 @@ module.exports = {
   generateRobotsTxt: true,
   // use this to exclude routes from the sitemap (i.e. a user dashboard). By default, NextJS app router metadata files are excluded (https://nextjs.org/docs/app/api-reference/file-conventions/metadata)
   exclude: [
-    "/twitter-image.*", 
-    "/opengraph-image.*", 
+    "/twitter-image.*",
+    "/opengraph-image.*",
     "/icon.*",
     "/api/*", // 排除API路由
     "/admin/*", // 排除管理页面
@@ -22,5 +22,21 @@ module.exports = {
     await config.transform(config, '/tos'),
     await config.transform(config, '/app/midjourney'),
     await config.transform(config, '/blog'),
-  ]
+  ],
+  // robots.txt 配置
+  robotsTxtOptions: {
+    additionalSitemaps: [
+      'https://api.legnext.ai/sitemap.xml',
+    ],
+    policies: [
+      {
+        userAgent: '*',
+        allow: '/',
+      },
+      {
+        userAgent: '*',
+        allow: ['/llms.txt', '/llms-full.txt'], // 允许AI爬虫访问LLM文档
+      },
+    ],
+  },
 };
