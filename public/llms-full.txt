@@ -1,0 +1,263 @@
+# Legnext AI - Midjourney API Integration Platform
+
+> The #1 unofficial Midjourney API service for developers. Enterprise-grade REST API access to Midjourney's image and video generation without Discord or Midjourney account required.
+
+## Platform Overview
+
+Legnext AI provides production-ready, scalable Midjourney API integration for businesses and developers. Our platform eliminates the complexity of Discord automation by offering a simple REST API that brings Midjourney's powerful AI generation directly to your applications.
+
+### Key Advantages
+
+- **No Discord Automation**: Direct API access without complex Discord bot setup
+- **Simple REST API**: Standard HTTP endpoints with comprehensive documentation
+- **Production-Ready**: Enterprise-grade stability with 99.9% uptime
+- **Scalable Architecture**: Built for bulk generation and high-volume workloads
+- **Latest Models**: Support for Midjourney V6, V7, and Niji 6
+
+## Product Features
+
+### Bring Midjourney-Powered Generation to Any App
+
+![Example 1](https://legnext.ai/_next/image?url=%2Fimages%2Fexample%2F0_640_n.WEBP&w=384&q=75)![Example 2](https://legnext.ai/_next/image?url=%2Fimages%2Fexample%2F0_640_n(1).WEBP&w=384&q=75)![Example 3](https://legnext.ai/_next/image?url=%2Fimages%2Fexample%2F0_640_n(2).WEBP&w=384&q=75)![Example 4](https://legnext.ai/_next/image?url=%2Fimages%2Fexample%2F0_640_n(3).WEBP&w=384&q=75)![Example 5](https://legnext.ai/_next/image?url=%2Fimages%2Fexample%2F0_640_n(4).WEBP&w=384&q=75)![Example 6](https://legnext.ai/_next/image?url=%2Fimages%2Fexample%2F0_640_n(5).WEBP&w=384&q=75)![Example 7](https://legnext.ai/_next/image?url=%2Fimages%2Fexample%2F0_640_n(6).WEBP&w=384&q=75)![Example 8](https://legnext.ai/_next/image?url=%2Fimages%2Fexample%2F0_640_n(7).WEBP&w=384&q=75)![Example 9](https://legnext.ai/_next/image?url=%2Fimages%2Fexample%2F0_640_n(8).WEBP&w=384&q=75)![Example 10](https://legnext.ai/_next/image?url=%2Fimages%2Fexample%2F0_640_n(9).WEBP&w=384&q=75)![Example 11](https://legnext.ai/_next/image?url=%2Fimages%2Fexample%2F0_640_n(10).WEBP&w=384&q=75)![Example 12](https://legnext.ai/_next/image?url=%2Fimages%2Fexample%2F1.WEBP&w=384&q=75)![Example 13](https://legnext.ai/_next/image?url=%2Fimages%2Fexample%2F2.WEBP&w=384&q=75)![Example 14](https://legnext.ai/_next/image?url=%2Fimages%2Fexample%2F3.WEBP&w=384&q=75)![Example 15](https://legnext.ai/_next/image?url=%2Fimages%2Fexample%2F4.WEBP&w=384&q=75)![Example 16](https://legnext.ai/_next/image?url=%2Fimages%2Fexample%2F5.WEBP&w=384&q=75)![Example 17](https://legnext.ai/_next/image?url=%2Fimages%2Fexample%2F0_640_n.WEBP&w=384&q=75)![Example 18](https://legnext.ai/_next/image?url=%2Fimages%2Fexample%2F0_640_n(1).WEBP&w=384&q=75)![Example 19](https://legnext.ai/_next/image?url=%2Fimages%2Fexample%2F0_640_n(2).WEBP&w=384&q=75)![Example 20](https://legnext.ai/_next/image?url=%2Fimages%2Fexample%2F0_640_n(3).WEBP&w=384&q=75)![Example 21](https://legnext.ai/_next/image?url=%2Fimages%2Fexample%2F0_640_n(4).WEBP&w=384&q=75)![Example 22](https://legnext.ai/_next/image?url=%2Fimages%2Fexample%2F0_640_n(5).WEBP&w=384&q=75)![Example 23](https://legnext.ai/_next/image?url=%2Fimages%2Fexample%2F0_640_n(6).WEBP&w=384&q=75)![Example 24](https://legnext.ai/_next/image?url=%2Fimages%2Fexample%2F0_640_n(7).WEBP&w=384&q=75)![Example 25](https://legnext.ai/_next/image?url=%2Fimages%2Fexample%2F0_640_n(8).WEBP&w=384&q=75)![Example 26](https://legnext.ai/_next/image?url=%2Fimages%2Fexample%2F0_640_n(9).WEBP&w=384&q=75)![Example 27](https://legnext.ai/_next/image?url=%2Fimages%2Fexample%2F0_640_n(10).WEBP&w=384&q=75)![Example 28](https://legnext.ai/_next/image?url=%2Fimages%2Fexample%2F1.WEBP&w=384&q=75)![Example 29](https://legnext.ai/_next/image?url=%2Fimages%2Fexample%2F2.WEBP&w=384&q=75)![Example 30](https://legnext.ai/_next/image?url=%2Fimages%2Fexample%2F3.WEBP&w=384&q=75)![Example 31](https://legnext.ai/_next/image?url=%2Fimages%2Fexample%2F4.WEBP&w=384&q=75)![Example 32](https://legnext.ai/_next/image?url=%2Fimages%2Fexample%2F5.WEBP&w=384&q=75)
+
+![Example 17](https://legnext.ai/_next/image?url=%2Fimages%2Fexample%2F0_640_n(11).WEBP&w=384&q=75)![Example 18](https://legnext.ai/_next/image?url=%2Fimages%2Fexample%2F0_640_n(12).WEBP&w=384&q=75)![Example 19](https://legnext.ai/_next/image?url=%2Fimages%2Fexample%2F0_640_n(13).WEBP&w=384&q=75)![Example 20](https://legnext.ai/_next/image?url=%2Fimages%2Fexample%2F0_640_n(14).WEBP&w=384&q=75)![Example 21](https://legnext.ai/_next/image?url=%2Fimages%2Fexample%2F0_640_n(15).WEBP&w=384&q=75)![Example 22](https://legnext.ai/_next/image?url=%2Fimages%2Fexample%2F0_640_n(16).WEBP&w=384&q=75)![Example 23](https://legnext.ai/_next/image?url=%2Fimages%2Fexample%2F0_640_n(17).WEBP&w=384&q=75)![Example 24](https://legnext.ai/_next/image?url=%2Fimages%2Fexample%2F0_640_n(18).WEBP&w=384&q=75)![Example 25](https://legnext.ai/_next/image?url=%2Fimages%2Fexample%2F0_640_n(19).WEBP&w=384&q=75)![Example 26](https://legnext.ai/_next/image?url=%2Fimages%2Fexample%2F0_640_n(20).WEBP&w=384&q=75)![Example 27](https://legnext.ai/_next/image?url=%2Fimages%2Fexample%2F0_640_n(21).WEBP&w=384&q=75)![Example 28](https://legnext.ai/_next/image?url=%2Fimages%2Fexample%2F6.WEBP&w=384&q=75)![Example 29](https://legnext.ai/_next/image?url=%2Fimages%2Fexample%2F7.WEBP&w=384&q=75)![Example 30](https://legnext.ai/_next/image?url=%2Fimages%2Fexample%2F8.WEBP&w=384&q=75)![Example 31](https://legnext.ai/_next/image?url=%2Fimages%2Fexample%2F9.WEBP&w=384&q=75)![Example 32](https://legnext.ai/_next/image?url=%2Fimages%2Fexample%2F10.WEBP&w=384&q=75)![Example 33](https://legnext.ai/_next/image?url=%2Fimages%2Fexample%2F0_640_n(11).WEBP&w=384&q=75)![Example 34](https://legnext.ai/_next/image?url=%2Fimages%2Fexample%2F0_640_n(12).WEBP&w=384&q=75)![Example 35](https://legnext.ai/_next/image?url=%2Fimages%2Fexample%2F0_640_n(13).WEBP&w=384&q=75)![Example 36](https://legnext.ai/_next/image?url=%2Fimages%2Fexample%2F0_640_n(14).WEBP&w=384&q=75)![Example 37](https://legnext.ai/_next/image?url=%2Fimages%2Fexample%2F0_640_n(15).WEBP&w=384&q=75)![Example 38](https://legnext.ai/_next/image?url=%2Fimages%2Fexample%2F0_640_n(16).WEBP&w=384&q=75)![Example 39](https://legnext.ai/_next/image?url=%2Fimages%2Fexample%2F0_640_n(17).WEBP&w=384&q=75)![Example 40](https://legnext.ai/_next/image?url=%2Fimages%2Fexample%2F0_640_n(18).WEBP&w=384&q=75)![Example 41](https://legnext.ai/_next/image?url=%2Fimages%2Fexample%2F0_640_n(19).WEBP&w=384&q=75)![Example 42](https://legnext.ai/_next/image?url=%2Fimages%2Fexample%2F0_640_n(20).WEBP&w=384&q=75)![Example 43](https://legnext.ai/_next/image?url=%2Fimages%2Fexample%2F0_640_n(21).WEBP&w=384&q=75)![Example 44](https://legnext.ai/_next/image?url=%2Fimages%2Fexample%2F6.WEBP&w=384&q=75)![Example 45](https://legnext.ai/_next/image?url=%2Fimages%2Fexample%2F7.WEBP&w=384&q=75)![Example 46](https://legnext.ai/_next/image?url=%2Fimages%2Fexample%2F8.WEBP&w=384&q=75)![Example 47](https://legnext.ai/_next/image?url=%2Fimages%2Fexample%2F9.WEBP&w=384&q=75)![Example 48](https://legnext.ai/_next/image?url=%2Fimages%2Fexample%2F10.WEBP&w=384&q=75)
+
+## What is Legnext Midjourney API?
+
+Legnext provides enterprise-grade Midjourney API integration — the easiest way to add AI-powered image and video generation to your applications and grow your business.
+
+### Complete Feature Set
+
+**All Core Midjourney Features Available**
+- Text-to-image generation with all Midjourney models
+- Image editing (inpaint, outpaint, variations, upscale)
+- HD quality output with professional-grade results
+- AI video generation and enhancement
+- All features accessible through one unified REST API
+
+### Latest Model Support
+
+**V7, V6, and Niji 6** - Support for all current Midjourney models:
+- Midjourney V7: Latest flagship model with enhanced photorealism
+- Midjourney V6: Proven quality for production workloads
+- Niji 6: Specialized anime and illustration style model
+
+### Enterprise-Grade Infrastructure
+
+**99.9% Uptime Guarantee**
+- Reliable performance for mission-critical applications
+- Smooth operation under high-volume workloads
+- Professional support and SLA commitments
+- Redundant infrastructure for continuous availability
+
+### Built for Scale
+
+**Production-Ready for Business Needs**
+- Batch generation for high-volume operations
+- Fast iteration cycles for rapid development
+- Concurrent request handling
+- Efficient queue management for bulk tasks
+
+### Flexible Speed Modes
+
+**Optimize for Speed or Cost**
+- **Fast Mode**: Standard production speed with consistent results
+- **Turbo Mode**: 2x faster generation for time-sensitive projects
+- Dynamic mode switching per request
+- Cost-effective pricing across all modes
+
+### Video Generation Capabilities
+
+**Midjourney's Latest AI Video Model**
+- Text-to-video generation
+- Image-to-video animation
+- Video upscaling and enhancement
+- Professional motion graphics creation
+
+[Get API Access Now](https://legnext.ai/dashboard)
+
+## Image Generation Capabilities
+
+### High-Quality AI Image Generation Powered by Midjourney
+
+The most advanced AI image models available through a simple REST API. Legnext provides full access to Midjourney's features with enterprise-grade stability and comprehensive developer support.
+
+**Key Image Generation Features:**
+- Text-to-image generation with natural language prompts
+- Advanced parameter support (aspect ratio, style references, character references)
+- Multi-model support (V6, V7, Niji 6)
+- Batch processing for high-volume needs
+- Fast and Turbo speed modes
+
+#### Customer Testimonial
+
+**Ondrej B., CEO & Founder - Small Business**
+
+> "Legnext's Midjourney API works flawlessly at scale. I've tested many providers, but this is by far the most reliable and stable solution."
+
+**Get Started:** [Image Generation API Documentation](https://docs.legnext.ai/diffusion)
+
+## Video Generation Capabilities
+
+### Stunning AI Video Generation with Midjourney
+
+Create professional-quality AI videos powered by Midjourney's latest video model. Generate motion graphics from text prompts or animate existing images — all through Legnext's production-ready API.
+
+**Key Video Generation Features:**
+- Text-to-video generation with natural language prompts
+- Image-to-video animation (extend from first frame)
+- Video upscaling and enhancement
+- Customizable motion effects and camera movement
+- Professional-grade output quality
+
+#### Customer Testimonial
+
+**Sarah Chen, Creative Director - Digital Agency**
+
+> "Amazing video quality. What took days now takes minutes with Legnext's API."
+
+**Get Started:** [Video Generation API Documentation](https://docs.legnext.ai/video-diffusion)
+
+## API Feature Categories
+
+### 1. Image Generation
+
+**Familiar Midjourney Workflow via REST API**
+
+Generate images using Midjourney's proven `/imagine` workflow, but through simple API calls. Support for prompts, reference images, and all Midjourney parameters.
+
+**Available Endpoints:**
+- `/imagine` - Text-to-image generation
+- `/reroll` - Generate new variations of the same prompt
+- `/blend` - Combine multiple images seamlessly
+- `/pan` - Extend images in any direction
+
+**Benefit:** Seamless Midjourney experience without Discord
+
+### 2. Image Modification
+
+**Enhance and Transform Generated Images**
+
+Modify and enhance your generated images with powerful editing tools. Upscale resolution, create variations, or modify specific regions — all while preserving the original composition and artistic style.
+
+**Available Endpoints:**
+- `/upscale` - Increase image resolution with AI
+- `/variations` - Create alternative versions with controlled changes
+- `/inpaint` - Edit specific regions using mask-based selection
+- `/outpaint` - Extend images beyond original boundaries
+
+**Benefit:** Professional editing capabilities without complexity
+
+### 3. Image Enhancement
+
+**Professional-Grade Image Refinement**
+
+Improve and optimize your images with AI-powered enhancement tools. Boost quality, adjust lighting, remove backgrounds, change textures, and transform images for any use case.
+
+**Available Endpoints:**
+- `/remove-background` - Automatic background removal with precision
+- `/retexture` - AI-powered texture and material transformation
+- `/enhance` - Overall quality improvement and refinement
+- `/remix` - Transform images with new prompts while preserving structure
+
+**Benefit:** Transform any image into professional quality
+
+### 4. Video Generation
+
+**Create Dynamic AI Videos**
+
+Generate stunning AI videos from text prompts or static images. Create motion graphics, animations, and dynamic content using Midjourney's latest video generation models.
+
+**Available Endpoints:**
+- `/video-diffusion` - Text-to-video and image-to-video generation
+- `/extend-video` - Extend video duration with AI-generated frames
+- `/video-upscale` - Enhance video resolution and quality
+- Model support: Midjourney Video Model V1
+
+**Benefit:** Professional video creation in minutes, not hours
+
+## Pricing Plans
+
+Flexible pricing designed for developers and businesses of all sizes. Start free, scale as you grow.
+
+### Free Tier (No Credit Card Required)
+
+**Perfect for Testing and Development**
+
+- **200 Free API Points** (one-time)
+- Full image generation access
+- Video generation support
+- Moodboard feature included
+- All Midjourney models (V6, V7, Niji 6)
+- Fast & Turbo generation modes
+- Community support via Telegram
+- Rate-limited requests
+
+[Try Free Now](https://legnext.ai/dashboard)
+
+### Pro Plan - $30/month (Regular: $99)
+
+**Best for Production Applications**
+
+- **33,000 API Points Monthly** (approximately 11,000-33,000 generations depending on model and mode)
+- All Free tier features included
+- Top-up recharge support for additional credits
+- Priority customer support
+- Higher rate limits
+- Commercial usage rights (per Midjourney's terms)
+- Automatic monthly renewal
+
+[Subscribe to Pro](https://legnext.ai/dashboard)
+
+### Pricing Calculation
+
+**API Point Costs by Model:**
+- Midjourney V6 Fast: 1 point per generation
+- Midjourney V7 Fast: 2 points per generation
+- Midjourney Turbo: 3 points per generation
+- Video generation: Varies by length and resolution
+
+### Need Custom Solution?
+
+Enterprise plans with custom credit limits, dedicated support, and SLA guarantees available.
+
+[Contact Sales: support@legnext.ai](mailto:support@legnext.ai)
+
+## Frequently Asked Questions
+
+What is Legnext Midjourney API and how does it work?
+
+Legnext provides a simple and stable API for Midjourney. You can generate images and videos using Midjourney's powerful AI directly through our API — no Discord accounts or manual setup required.
+
+What Midjourney features are available through the API?
+
+Our API includes all core Midjourney functions: text-to-image, upscale, variations, describe, blend, inpainting, zoom, and pan. We also support advanced parameters like --sref and --cref.
+
+How can I use the different generation modes?
+
+We support Fast Mode and Turbo Mode. You can select the mode in your API requests to balance speed, quality, and cost.
+
+Is the content generated by Legnext API unique and original?
+
+Yes. All content is generated by Midjourney's AI models and is unique to your prompts.
+
+Can beginners use Legnext's Midjourney API?
+
+Absolutely. Our API is beginner-friendly with clear docs, simple guides, and easy endpoints for developers at any level.
+
+Can I use the content generated by Legnext API for commercial purposes?
+
+Commercial use depends on Midjourney's terms of service and your subscription plan. Please check Midjourney's official terms for details on AI content usage rights.
+
+Can I upload images or files to the API?
+
+Yes. You can upload images for features like Describe, Blend, and reference-based generation
+
+How do I get support if I encounter issues?
+
+You can get help through our docs, Telegram community, and direct support email. Contact us at support@legnext.ai for immediate assistance with any issues.
+
+## Be Part of Our Telegram Group!
+
+Our last group reset, but we're rebuilding stronger. Come be part of it!
+

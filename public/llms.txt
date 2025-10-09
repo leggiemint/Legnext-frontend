@@ -1,0 +1,49 @@
+# Legnext AI
+
+> Unofficial Midjourney API integration platform providing developers seamless access to Midjourney image and video generation capabilities without requiring a Discord or Midjourney account.
+
+## Overview
+
+Legnext AI is a production-ready REST API service that brings Midjourney's powerful AI generation features to any application. We provide enterprise-grade stability, support for all Midjourney models (V6, V7, Niji 6), and flexible pricing plans starting with 200 free API points.
+
+## Getting Started
+
+- [Quickstart Guide](https://docs.legnext.ai/quickstart): Get up and running with Legnext AI API
+- [API Overview](https://docs.legnext.ai/overview): Comprehensive platform documentation
+- [Account Management](https://docs.legnext.ai/account-info): Manage your API keys and subscription
+
+## Core Features
+
+### Image Generation
+- [Text-to-Image Generation](https://docs.legnext.ai/diffusion): Generate images from text prompts
+- [Image Upscaling](https://docs.legnext.ai/upscale): Enhance resolution with AI upscaling
+- [Image Variations](https://docs.legnext.ai/variation): Create variations with controllable intensity
+- [Image Reroll](https://docs.legnext.ai/reroll): Re-execute generation for new results
+- [Blend Images](https://docs.legnext.ai/blend): Combine multiple images seamlessly
+
+### Image Editing
+- [Image Editing API](https://docs.legnext.ai/edit): Edit and repaint specific areas
+- [Image Inpainting](https://docs.legnext.ai/inpaint): Mask-based region modification
+- [Image Outpainting](https://docs.legnext.ai/outpaint): Extend images beyond original bounds
+- [Image Extension (Pan)](https://docs.legnext.ai/pan): Extend in specified directions
+- [Upload & Paint](https://docs.legnext.ai/upload-paint): Upload and edit with mask control
+
+### Image Enhancement
+- [Image Enhancement](https://docs.legnext.ai/enhance): Improve quality with AI algorithms
+- [Remove Background](https://docs.legnext.ai/remove-background): Automatic background removal
+- [Image Retexture](https://docs.legnext.ai/retexture): AI-powered texture transformation
+- [Image Remix](https://docs.legnext.ai/remix): Transform with new prompts
+
+### Video Generation
+- [Video Generation](https://docs.legnext.ai/video-diffusion): Create videos from text or images
+- [Extend Video](https://docs.legnext.ai/extend-video): Generate additional frames
+- [Video Upscaling](https://docs.legnext.ai/video-upscale): Enhance video quality
+
+## API Reference
+
+- [Get Task Status](https://docs.legnext.ai/get-task): Retrieve job status and results
+- [Image Parameters](https://docs.legnext.ai/image-parameters): Generation parameter reference
+- [Video Parameters](https://docs.legnext.ai/video-parameters): Video generation parameters
+- [Model Versions](https://docs.legnext.ai/models): Supported Midjourney models
+- [API Limitations](https://docs.legnext.ai/notice): Usage requirements and limitations
+- [Image Storage](https://docs.legnext.ai/output-storage): Storage duration and policies
