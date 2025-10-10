@@ -506,6 +506,27 @@ export default function SubscriptionPage() {
                     <td className="px-6 py-4 text-center text-sm text-gray-500">-</td>
                     <td className="px-6 py-4 text-center text-sm text-gray-500">-</td>
                   </tr>
+                  <tr className="hover:bg-gray-50">
+                    <td className="px-6 py-4 text-sm font-medium text-gray-900">Blend</td>
+                    <td className="px-6 py-4 text-center text-sm text-gray-600">80</td>
+                    <td className="px-6 py-4 text-center text-sm text-gray-500">-</td>
+                    <td className="px-6 py-4 text-center text-sm text-gray-500">-</td>
+                    <td className="px-6 py-4 text-center text-sm text-gray-500">-</td>
+                  </tr>
+                  <tr className="hover:bg-gray-50">
+                    <td className="px-6 py-4 text-sm font-medium text-gray-900">Describe</td>
+                    <td className="px-6 py-4 text-center text-sm text-gray-600">20</td>
+                    <td className="px-6 py-4 text-center text-sm text-gray-500">-</td>
+                    <td className="px-6 py-4 text-center text-sm text-gray-500">-</td>
+                    <td className="px-6 py-4 text-center text-sm text-gray-500">-</td>
+                  </tr>
+                  <tr className="hover:bg-gray-50">
+                    <td className="px-6 py-4 text-sm font-medium text-gray-900">Shorten</td>
+                    <td className="px-6 py-4 text-center text-sm text-gray-600">20</td>
+                    <td className="px-6 py-4 text-center text-sm text-gray-500">-</td>
+                    <td className="px-6 py-4 text-center text-sm text-gray-500">-</td>
+                    <td className="px-6 py-4 text-center text-sm text-gray-500">-</td>
+                  </tr>
                   <tr className="hover:bg-gray-50 bg-blue-50">
                     <td className="px-6 py-4 text-sm font-medium text-gray-900 font-semibold">Image to Video (480p)</td>
                     <td className="px-6 py-4 text-center text-sm text-gray-600 font-semibold">480</td>
