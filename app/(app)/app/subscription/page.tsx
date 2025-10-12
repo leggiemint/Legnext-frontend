@@ -69,35 +69,11 @@ export default function SubscriptionPage() {
   // Specific customer subscription expiration reminder configuration
   const getSubscriptionExpirationNotice = (userEmail: string) => {
     // Configuration for specific emails with their expiration dates
-    const affectedEmails = {
-      'm.t.pham@kardiachain.io': {
-        expirationDate: '2025-10-16', // Current Period End from CSV
-        message: 'Due to system upgrade, your subscription was automatically canceled. Please resubscribe to continue using Pro features.'
-      },
-      'info@leonardopicollo.com': {
-        expirationDate: '2025-10-15',
-        message: 'Due to system upgrade, your subscription was automatically canceled. Please resubscribe to continue using Pro features.'
-      },
-      'wangbolwq@gmail.com': {
-        expirationDate: '2025-10-14',
-        message: 'Due to system upgrade, your subscription was automatically canceled. Please resubscribe to continue using Pro features.'
-      },
-      'timboooxd33@gmail.com': {
-        expirationDate: '2025-10-14',
-        message: 'Due to system upgrade, your subscription was automatically canceled. Please resubscribe to continue using Pro features.'
-      },
-      'huikai.work@gmail.com': {
-        expirationDate: '2025-10-13',
-        message: 'Due to system upgrade, your subscription was automatically canceled. Please resubscribe to continue using Pro features.'
-      },
-      'emolgroupste@gmail.com': {
-        expirationDate: '2025-10-13',
-        message: 'Due to system upgrade, your subscription was automatically canceled. Please resubscribe to continue using Pro features.'
-      },
-    };
+    // All users have been manually expired, list is now empty
+    const affectedEmails = {};
 
     const userConfig = affectedEmails[userEmail as keyof typeof affectedEmails];
-    
+
     if (userConfig) {
       return {
         show: true,
