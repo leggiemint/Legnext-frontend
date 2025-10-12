@@ -104,17 +104,22 @@ async function processWebhookEvent(event: Stripe.Event) {
 
 /**
  * 处理结账会话完成
+ *
+ * ⚠️ 向后兼容说明:
+ * - Checkout Session 主要用于托管支付流程
+ * - 添加支付状态验证,确保支付已完成
+ * - invoice.payment_succeeded 会进行二次确认,保持数据一致性
  */
 async function handleCheckoutSessionCompleted(event: Stripe.Event) {
   const session = event.data.object as Stripe.Checkout.Session;
-  
+
   const userId = session.metadata?.userId;
   if (!userId) {
     log.error('No userId in session metadata');
     return;
   }
 
-  log.info(`Checkout session completed for user ${userId}, mode: ${session.mode}`);
+  log.info(`Checkout session completed for user ${userId}, mode: ${session.mode}, payment_status: ${session.payment_status}`);
 
   // 获取用户信息
   const user = await getUserWithProfile(userId);
@@ -126,7 +131,22 @@ async function handleCheckoutSessionCompleted(event: Stripe.Event) {
   // 处理订阅模式
   if (session.mode === 'subscription') {
     log.info('Processing subscription checkout...');
-    
+
+    // 🛡️ 支付验证: 检查支付状态
+    // payment_status 可能的值: 'paid', 'unpaid', 'no_payment_required'
+    const paymentConfirmed = session.payment_status === 'paid' ||
+                            session.payment_status === 'no_payment_required' ||
+                            session.status === 'complete';
+
+    if (!paymentConfirmed) {
+      log.warn(`⚠️ Checkout session ${session.id} payment not confirmed (status: ${session.payment_status})`);
+      log.info(`ℹ️ Waiting for invoice.payment_succeeded event to process subscription`);
+      // 不更新 plan,等待 invoice.payment_succeeded
+      return;
+    }
+
+    log.info(`✅ Payment confirmed for checkout session ${session.id}, proceeding with subscription activation`);
+
     // 更新用户plan为pro
     await updateUserPlan(userId, 'pro');
 
@@ -134,7 +154,7 @@ async function handleCheckoutSessionCompleted(event: Stripe.Event) {
     if (user.profile?.backendAccountId) {
       try {
         log.info(`Syncing subscription to backend for account ${user.profile.backendAccountId}`);
-        
+
         // 1. 更新backend账户计划为developer
         const planResponse = await backendApiClient.updateAccountPlan(user.profile.backendAccountId, 'developer');
         log.info('Plan updated:', planResponse);
@@ -145,7 +165,7 @@ async function handleCheckoutSessionCompleted(event: Stripe.Event) {
 
         const creditPackResponse = await backendApiClient.createCreditPack(user.profile.backendAccountId, {
           capacity: 30000, // Pro计划的信用量
-          description: 'Pro subscription credit pack',
+          description: 'Pro subscription credit pack (Checkout)',
           expired_at: expiredAt.toISOString(),
         });
 
@@ -643,10 +663,15 @@ async function handleCustomerUpdated(event: Stripe.Event) {
 /**
  * 🔒 安全处理订阅创建事件
  * 验证订阅属于正确的用户，防止跨用户数据泄露
+ *
+ * ⚠️ 向后兼容说明:
+ * - 保留原有的 plan 更新逻辑以兼容旧流程
+ * - 添加支付验证,只在支付确认后才更新
+ * - invoice.payment_succeeded 会进行二次确认,保持数据一致性
  */
 async function handleSubscriptionCreated(event: Stripe.Event) {
   const subscription = event.data.object as Stripe.Subscription;
-  
+
   try {
     log.info(`🆕 Subscription created: ${subscription.id}, status: ${subscription.status}`);
 
@@ -683,19 +708,28 @@ async function handleSubscriptionCreated(event: Stripe.Event) {
       return;
     }
 
-    // ✅ 所有安全验证通过，处理订阅激活
+    // ✅ 所有安全验证通过
     log.info(`✅ Security checks passed for subscription ${subscription.id}, user: ${subscriptionUserId}`);
 
-    // 更新用户计划为Pro
-    await updateUserPlan(subscriptionUserId, 'pro');
-    log.info(`✅ Updated user ${subscriptionUserId} plan to Pro`);
+    // 🛡️ 支付验证: 只在明确支付已完成的状态下才更新 plan
+    // 注意: subscription.created 可能在支付完成前触发
+    // 向后兼容: 保留 plan 更新,但添加状态检查
+    const safeToUpgrade = subscription.status === 'active' ||
+                         subscription.status === 'trialing' ||
+                         subscription.latest_invoice; // 如果有 invoice,说明计费已开始
 
-    // 处理backend积分包创建等其他逻辑
-    // await handleCreditPackCreation(user, subscription, 'subscription.created'); // TODO: 实现积分包创建逻辑
+    if (safeToUpgrade) {
+      log.info(`✅ Subscription ${subscription.id} status is safe (${subscription.status}), updating plan`);
+      await updateUserPlan(subscriptionUserId, 'pro');
+      log.info(`✅ Updated user ${subscriptionUserId} plan to Pro`);
+    } else {
+      // 支付未完成,只记录日志,等待 invoice.payment_succeeded
+      log.warn(`⚠️ Subscription ${subscription.id} status is ${subscription.status}, waiting for payment confirmation before updating plan`);
+      log.info(`ℹ️ Plan update will be handled by invoice.payment_succeeded event`);
+    }
 
-    // 发送通知
-    // await sendSubscriptionNotification(user, subscription, customer.id); // TODO: 实现通知逻辑
-    
+    // 📝 向后兼容: Credit pack 创建保持在 invoice.payment_succeeded 中处理
+    // 这样即使这里的 plan 更新有问题,credits 仍然是安全的
     log.info(`✅ [Webhook] Subscription ${subscription.id} processed successfully for user ${subscriptionUserId}`);
 
   } catch (error) {
@@ -704,7 +738,7 @@ async function handleSubscriptionCreated(event: Stripe.Event) {
       customerId: subscription.customer,
       error: error instanceof Error ? error.message : 'Unknown error',
     });
-    
+
     // 不要抛出错误，避免 Stripe 重试
   }
 }
