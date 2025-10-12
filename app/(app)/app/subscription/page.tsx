@@ -59,12 +59,34 @@ export default function SubscriptionPage() {
   }, [session?.user]);
 
   // Get current active subscription
-  const activeSubscription = subscriptions.find(sub => 
+  const activeSubscription = subscriptions.find(sub =>
     sub.status === 'active' || sub.status === 'trialing'
   );
 
   // Check if subscription is set to cancel at period end
   const subscriptionCanceled = activeSubscription?.cancel_at_period_end || false;
+
+  // 🐛 Debug logging
+  useEffect(() => {
+    if (session?.user && !subscriptionLoading) {
+      console.log('🔍 [Subscription Debug]', {
+        isProUser,
+        hasActiveSubscription,
+        subscriptionsCount: subscriptions.length,
+        subscriptions: subscriptions.map(s => ({
+          id: s.id,
+          status: s.status,
+          cancel_at_period_end: s.cancel_at_period_end,
+        })),
+        activeSubscription: activeSubscription ? {
+          id: activeSubscription.id,
+          status: activeSubscription.status,
+          cancel_at_period_end: activeSubscription.cancel_at_period_end,
+        } : null,
+        shouldShowCancelButton: !!(hasActiveSubscription && activeSubscription),
+      });
+    }
+  }, [session?.user, subscriptionLoading, subscriptions, isProUser, hasActiveSubscription, activeSubscription]);
 
   // Specific customer subscription expiration reminder configuration
   const getSubscriptionExpirationNotice = (userEmail: string) => {

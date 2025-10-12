@@ -63,6 +63,19 @@ export async function GET() {
       sub => sub.status === 'active' || sub.status === 'trialing'
     );
 
+    // 🐛 Debug logging
+    console.log('🔍 [API /api/stripe/subscription]', {
+      userId: session.user.id,
+      email: user.email,
+      subscriptionsCount: formattedSubscriptions.length,
+      hasActiveSubscription,
+      subscriptions: formattedSubscriptions.map(s => ({
+        id: s.id,
+        status: s.status,
+        cancel_at_period_end: s.cancel_at_period_end,
+      })),
+    });
+
     return NextResponse.json({
       subscriptions: formattedSubscriptions,
       hasActiveSubscription,
