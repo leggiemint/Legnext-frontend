@@ -70,9 +70,12 @@ export default function SubscriptionPage() {
   const getSubscriptionExpirationNotice = (userEmail: string) => {
     // Configuration for specific emails with their expiration dates
     // All users have been manually expired, list is now empty
-    const affectedEmails = {};
+    const affectedEmails: Record<string, {
+      expirationDate: string;
+      message: string;
+    }> = {};
 
-    const userConfig = affectedEmails[userEmail as keyof typeof affectedEmails];
+    const userConfig = affectedEmails[userEmail];
 
     if (userConfig) {
       return {
