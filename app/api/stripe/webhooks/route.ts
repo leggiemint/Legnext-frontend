@@ -414,9 +414,35 @@ async function handleSubscriptionUpdated(event: Stripe.Event) {
       await updateUserPlan(user.id, 'pro');
     }
   } else if (isCancelled) {
+    // 🔄 向后兼容修复: 同步前端和后端plan降级
+    log.info(`🔽 Subscription cancelled for user ${user.id}, downgrading plan...`);
+
+    // 1. 降级前端系统plan
     await updateUserPlan(user.id, 'free');
-    
-    // 发送取消订阅通知给客服团队
+    log.info(`✅ Frontend plan downgraded to free for user ${user.id}`);
+
+    // 2. 同步降级后端系统plan (与 handleSubscriptionDeleted 保持一致)
+    if (user.profile?.backendAccountId) {
+      try {
+        log.info(`🔄 Syncing backend plan downgrade for account ${user.profile.backendAccountId}`);
+        await backendApiClient.updateAccountPlan(
+          user.profile.backendAccountId,
+          'hobbyist'
+        );
+        log.info(`✅ Backend account ${user.profile.backendAccountId} downgraded to hobbyist plan`);
+      } catch (error) {
+        // ⚠️ 向后兼容: 后端同步失败不应阻断主流程
+        log.error(`❌ Failed to downgrade backend account ${user.profile.backendAccountId}:`, error);
+        if (error instanceof Error) {
+          log.error('Error details:', error.message);
+        }
+        // 继续执行，不抛出错误
+      }
+    } else {
+      log.warn(`⚠️ User ${user.id} has no backend account ID, skipping backend plan downgrade`);
+    }
+
+    // 3. 发送取消订阅通知给客服团队
     try {
       await sendFeishuMessage({
         event: 'subscription.cancelled',
